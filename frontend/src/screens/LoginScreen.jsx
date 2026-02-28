@@ -1,5 +1,6 @@
 import { useState } from "react";
-import logo from '../assets/images/ponyLogo.jpg';
+import { register, login } from '../services/authService';
+import logo from '../assets/images/ponyLogo.png';
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 48 48" style={{ marginRight: 10 }}>
@@ -12,7 +13,7 @@ const GoogleIcon = () => (
 
 export default function PonytailLogin() {
   const [hoveredBtn, setHoveredBtn] = useState(null);
-  const [screen, setScreen] = useState("landing"); // landing | signup | login
+  const [screen, setScreen] = useState("landing");
   const [form, setForm] = useState({ email: "", password: "", username: "" });
   const [focused, setFocused] = useState(null);
 
@@ -119,7 +120,6 @@ export default function PonytailLogin() {
       width: "100%",
       padding: "14px 16px",
       borderRadius: "50px",
-      backgroundColor: "transparent",
       border: `1.5px solid ${hoveredBtn === "google" ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.2)"}`,
       color: colors.text,
       fontSize: "15px",
@@ -145,7 +145,6 @@ export default function PonytailLogin() {
       fontFamily: "'DM Sans', sans-serif",
       padding: "8px",
     },
-    // Form styles
     formContainer: {
       width: "100%",
       animation: "fadeSlideUp 0.4s ease forwards",
@@ -258,20 +257,12 @@ export default function PonytailLogin() {
     },
   };
 
+  // ─── Landing Screen ───────────────────────────────────────────────────────────
   const LandingScreen = () => (
     <>
       <div style={styles.gradientOrb} />
       <div style={styles.logoContainer}>
-        <img
-          src="/mnt/user-data/uploads/ponytailLogin.png"
-          alt="Ponytail"
-          style={{ display: "none" }}
-        />
-        <img
-            src={logo}
-            alt="Ponytail"
-            style={styles.logoImage}
-        />
+        <img src={logo} alt="Ponytail" style={styles.logoImage} />
         <div style={styles.logoText}>ponytail</div>
         <div style={styles.tagline}>the social music platform.</div>
       </div>
@@ -290,6 +281,7 @@ export default function PonytailLogin() {
           style={styles.googleBtn}
           onMouseEnter={() => setHoveredBtn("google")}
           onMouseLeave={() => setHoveredBtn(null)}
+          onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
         >
           <GoogleIcon />
           Continue with Google
@@ -307,150 +299,185 @@ export default function PonytailLogin() {
     </>
   );
 
-  const SignupScreen = () => (
-    <div style={styles.formContainer}>
-      <button style={styles.backBtn} onClick={() => setScreen("landing")}>←</button>
-      <div style={{ marginTop: "20px" }}>
-        <div style={styles.formTitle}>Create account</div>
-        <div style={styles.formSubtitle}>Join the social music platform</div>
+  // ─── Signup Screen ────────────────────────────────────────────────────────────
+  const SignupScreen = () => {
+    const handleSignup = async () => {
+      try {
+        const data = await register(form.email, form.username, form.password);
+        console.log('Registered successfully:', data.user);
+        alert('Account created! Welcome to Ponytail.');
+      } catch (err) {
+        const message = err.response?.data?.error || 'Something went wrong.';
+        alert(message);
+      }
+    };
 
-        <div style={styles.inputGroup}>
-          <label style={styles.inputLabel}>Username</label>
-          <input
-            style={styles.input("username")}
-            placeholder="@yourname"
-            value={form.username}
-            onChange={e => setForm({...form, username: e.target.value})}
-            onFocus={() => setFocused("username")}
-            onBlur={() => setFocused(null)}
-          />
-        </div>
+    return (
+      <div style={styles.formContainer}>
+        <button style={styles.backBtn} onClick={() => setScreen("landing")}>←</button>
+        <div style={{ marginTop: "20px" }}>
+          <div style={styles.formTitle}>Create account</div>
+          <div style={styles.formSubtitle}>Join the social music platform</div>
 
-        <div style={styles.inputGroup}>
-          <label style={styles.inputLabel}>Email</label>
-          <input
-            style={styles.input("email")}
-            placeholder="you@example.com"
-            type="email"
-            value={form.email}
-            onChange={e => setForm({...form, email: e.target.value})}
-            onFocus={() => setFocused("email")}
-            onBlur={() => setFocused(null)}
-          />
-        </div>
+          <div style={styles.inputGroup}>
+            <label style={styles.inputLabel}>Username</label>
+            <input
+              style={styles.input("username")}
+              placeholder="@yourname"
+              value={form.username}
+              onChange={e => setForm({...form, username: e.target.value})}
+              onFocus={() => setFocused("username")}
+              onBlur={() => setFocused(null)}
+            />
+          </div>
 
-        <div style={styles.inputGroup}>
-          <label style={styles.inputLabel}>Password</label>
-          <input
-            style={styles.input("password")}
-            placeholder="Min. 8 characters"
-            type="password"
-            value={form.password}
-            onChange={e => setForm({...form, password: e.target.value})}
-            onFocus={() => setFocused("password")}
-            onBlur={() => setFocused(null)}
-          />
-        </div>
+          <div style={styles.inputGroup}>
+            <label style={styles.inputLabel}>Email</label>
+            <input
+              style={styles.input("email")}
+              placeholder="you@example.com"
+              type="email"
+              value={form.email}
+              onChange={e => setForm({...form, email: e.target.value})}
+              onFocus={() => setFocused("email")}
+              onBlur={() => setFocused(null)}
+            />
+          </div>
 
-        <button
-          style={styles.submitBtn(hoveredBtn === "submit")}
-          onMouseEnter={() => setHoveredBtn("submit")}
-          onMouseLeave={() => setHoveredBtn(null)}
-        >
-          Create account
-        </button>
+          <div style={styles.inputGroup}>
+            <label style={styles.inputLabel}>Password</label>
+            <input
+              style={styles.input("password")}
+              placeholder="Min. 8 characters"
+              type="password"
+              value={form.password}
+              onChange={e => setForm({...form, password: e.target.value})}
+              onFocus={() => setFocused("password")}
+              onBlur={() => setFocused(null)}
+            />
+          </div>
 
-        <div style={styles.divider}>
-          <div style={styles.dividerLine}/>
-          <span style={styles.dividerText}>or</span>
-          <div style={styles.dividerLine}/>
-        </div>
-
-        <button style={{...styles.googleBtn, width: "100%", justifyContent: "center"}}
-          onMouseEnter={() => setHoveredBtn("google2")}
-          onMouseLeave={() => setHoveredBtn(null)}
-        >
-          <GoogleIcon />
-          Continue with Google
-        </button>
-
-        <div style={styles.switchText}>
-          Already have an account?{" "}
-          <button style={styles.switchLink} onClick={() => setScreen("login")}>Log in</button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const LoginScreen = () => (
-    <div style={styles.formContainer}>
-      <button style={styles.backBtn} onClick={() => setScreen("landing")}>←</button>
-      <div style={{ marginTop: "20px" }}>
-        <div style={styles.formTitle}>Welcome back</div>
-        <div style={styles.formSubtitle}>Log in to your account</div>
-
-        <div style={styles.inputGroup}>
-          <label style={styles.inputLabel}>Email</label>
-          <input
-            style={styles.input("email")}
-            placeholder="you@example.com"
-            type="email"
-            value={form.email}
-            onChange={e => setForm({...form, email: e.target.value})}
-            onFocus={() => setFocused("email")}
-            onBlur={() => setFocused(null)}
-          />
-        </div>
-
-        <div style={styles.inputGroup}>
-          <label style={styles.inputLabel}>Password</label>
-          <input
-            style={styles.input("password")}
-            placeholder="Your password"
-            type="password"
-            value={form.password}
-            onChange={e => setForm({...form, password: e.target.value})}
-            onFocus={() => setFocused("password")}
-            onBlur={() => setFocused(null)}
-          />
-        </div>
-
-        <div style={{ textAlign: "right", marginBottom: "20px", marginTop: "-8px" }}>
-          <button style={{ background: "none", border: "none", color: colors.teal, fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
-            Forgot password?
+          <button
+            style={styles.submitBtn(hoveredBtn === "submit")}
+            onMouseEnter={() => setHoveredBtn("submit")}
+            onMouseLeave={() => setHoveredBtn(null)}
+            onClick={handleSignup}
+          >
+            Create account
           </button>
-        </div>
 
-        <button
-          style={styles.submitBtn(hoveredBtn === "submit")}
-          onMouseEnter={() => setHoveredBtn("submit")}
-          onMouseLeave={() => setHoveredBtn(null)}
-        >
-          Log in
-        </button>
+          <div style={styles.divider}>
+            <div style={styles.dividerLine}/>
+            <span style={styles.dividerText}>or</span>
+            <div style={styles.dividerLine}/>
+          </div>
 
-        <div style={styles.divider}>
-          <div style={styles.dividerLine}/>
-          <span style={styles.dividerText}>or</span>
-          <div style={styles.dividerLine}/>
-        </div>
+          <button
+            style={{...styles.googleBtn, justifyContent: "center"}}
+            onMouseEnter={() => setHoveredBtn("google2")}
+            onMouseLeave={() => setHoveredBtn(null)}
+            onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
+          >
+            <GoogleIcon />
+            Continue with Google
+          </button>
 
-        <button style={{...styles.googleBtn, width: "100%", justifyContent: "center"}}
-          onMouseEnter={() => setHoveredBtn("google2")}
-          onMouseLeave={() => setHoveredBtn(null)}
-        >
-          <GoogleIcon />
-          Continue with Google
-        </button>
-
-        <div style={styles.switchText}>
-          Don't have an account?{" "}
-          <button style={styles.switchLink} onClick={() => setScreen("signup")}>Sign up</button>
+          <div style={styles.switchText}>
+            Already have an account?{" "}
+            <button style={styles.switchLink} onClick={() => setScreen("login")}>Log in</button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
+  // ─── Login Screen ─────────────────────────────────────────────────────────────
+  const LoginScreen = () => {
+    const handleLogin = async () => {
+      try {
+        const data = await login(form.email, form.password);
+        console.log('Logged in successfully:', data.user);
+        alert('Welcome back!');
+      } catch (err) {
+        const message = err.response?.data?.error || 'Invalid email or password.';
+        alert(message);
+      }
+    };
+
+    return (
+      <div style={styles.formContainer}>
+        <button style={styles.backBtn} onClick={() => setScreen("landing")}>←</button>
+        <div style={{ marginTop: "20px" }}>
+          <div style={styles.formTitle}>Welcome back</div>
+          <div style={styles.formSubtitle}>Log in to your account</div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.inputLabel}>Email</label>
+            <input
+              style={styles.input("email")}
+              placeholder="you@example.com"
+              type="email"
+              value={form.email}
+              onChange={e => setForm({...form, email: e.target.value})}
+              onFocus={() => setFocused("email")}
+              onBlur={() => setFocused(null)}
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.inputLabel}>Password</label>
+            <input
+              style={styles.input("password")}
+              placeholder="Your password"
+              type="password"
+              value={form.password}
+              onChange={e => setForm({...form, password: e.target.value})}
+              onFocus={() => setFocused("password")}
+              onBlur={() => setFocused(null)}
+            />
+          </div>
+
+          <div style={{ textAlign: "right", marginBottom: "20px", marginTop: "-8px" }}>
+            <button style={{ background: "none", border: "none", color: colors.teal, fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+              Forgot password?
+            </button>
+          </div>
+
+          <button
+            style={styles.submitBtn(hoveredBtn === "submit")}
+            onMouseEnter={() => setHoveredBtn("submit")}
+            onMouseLeave={() => setHoveredBtn(null)}
+            onClick={handleLogin}
+          >
+            Log in
+          </button>
+
+          <div style={styles.divider}>
+            <div style={styles.dividerLine}/>
+            <span style={styles.dividerText}>or</span>
+            <div style={styles.dividerLine}/>
+          </div>
+
+          <button
+            style={{...styles.googleBtn, justifyContent: "center"}}
+            onMouseEnter={() => setHoveredBtn("google2")}
+            onMouseLeave={() => setHoveredBtn(null)}
+            onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
+          >
+            <GoogleIcon />
+            Continue with Google
+          </button>
+
+          <div style={styles.switchText}>
+            Don't have an account?{" "}
+            <button style={styles.switchLink} onClick={() => setScreen("signup")}>Sign up</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ─── Root Render ──────────────────────────────────────────────────────────────
   return (
     <>
       <style>{`
