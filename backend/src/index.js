@@ -12,7 +12,10 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: 'http://localhost:19006', credentials: true }));
+app.use(cors({
+  origin: ['http://localhost:8081', 'http://localhost:19006'],
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use(session({
