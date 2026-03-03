@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { getMe, getToken } from '../services/authService';
+import { getMe } from '../services/authService';
 
 // ─── Color palette consistent with LoginScreen ───────────────────────────────
 const colors = {
   bg: "#222222",
-  bgDeep: "#1a1a1a",
+  bgDeep: "#222222",
   bgCard: "#2a2a2a",
   bgCardHover: "#303030",
   teal: "#5DEBD7",
@@ -117,7 +117,7 @@ const Avatar = ({ name, size = 42 }) => {
       fontSize: size * 0.35,
       fontWeight: "700",
       color: "#fff",
-      fontFamily: "'DM Sans', sans-serif",
+      fontFamily: "'Kanit', sans-serif",
       flexShrink: 0,
     }}>
       {initials}
@@ -179,109 +179,74 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
         animation: `fadeSlideUp 0.4s ease ${index * 0.07}s forwards`,
         opacity: 0,
         cursor: "pointer",
+        width: "100%",
+        boxSizing: "border-box",
       }}
     >
-      {/* Artist row */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
         <Avatar name={track.artist} size={32} />
-        <div style={{ flex: 1 }}>
-          <div style={{
-            fontSize: "13px",
-            fontWeight: "600",
-            color: colors.text,
-            fontFamily: "'DM Sans', sans-serif",
-          }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: "13px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
             {track.artist}
           </div>
-          <div style={{
-            fontSize: "11px",
-            color: colors.muted,
-            fontFamily: "'DM Sans', sans-serif",
-          }}>
+          <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
             {track.postedAt}
           </div>
         </div>
         {track.isNew && (
           <div style={{
-            fontSize: "10px",
-            fontWeight: "700",
-            color: colors.teal,
-            backgroundColor: colors.tealGlow,
-            padding: "3px 8px",
-            borderRadius: "20px",
-            letterSpacing: "0.5px",
-            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "10px", fontWeight: "700", color: colors.teal,
+            backgroundColor: colors.tealGlow, padding: "3px 8px",
+            borderRadius: "20px", letterSpacing: "0.5px",
+            fontFamily: "'Kanit', sans-serif", flexShrink: 0,
           }}>
             NEW
           </div>
         )}
       </div>
 
-      {/* Track info + controls */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <PlayButton playing={isPlaying} onToggle={() => onTogglePlay(track.id)} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontSize: "15px",
-            fontWeight: "600",
-            color: colors.text,
-            fontFamily: "'DM Sans', sans-serif",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            fontSize: "15px", fontWeight: "600", color: colors.text,
+            fontFamily: "'Kanit', sans-serif",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
           }}>
             {track.trackTitle}
           </div>
-          <div style={{
-            fontSize: "12px",
-            color: colors.textSecondary,
-            fontFamily: "'DM Sans', sans-serif",
-            marginTop: "2px",
-          }}>
+          <div style={{ fontSize: "12px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
             {track.genre}
           </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px", flexShrink: 0 }}>
           {isPlaying
             ? <WaveformIcon playing={true} />
-            : <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'DM Sans', sans-serif" }}>{track.duration}</div>
+            : <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>{track.duration}</div>
           }
-          <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'DM Sans', sans-serif" }}>
+          <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
             {track.plays} plays
           </div>
         </div>
       </div>
 
-      {/* Tip button */}
       <div style={{
-        marginTop: "12px",
-        paddingTop: "12px",
+        marginTop: "12px", paddingTop: "12px",
         borderTop: `1px solid ${colors.border}`,
-        display: "flex",
-        justifyContent: "flex-end",
-        gap: "8px",
+        display: "flex", justifyContent: "flex-end", gap: "8px",
       }}>
         <button style={{
-          background: "none",
-          border: "none",
-          color: colors.muted,
-          fontSize: "12px",
-          cursor: "pointer",
-          fontFamily: "'DM Sans', sans-serif",
-          padding: "4px 8px",
+          background: "none", border: "none", color: colors.muted,
+          fontSize: "12px", cursor: "pointer",
+          fontFamily: "'Kanit', sans-serif", padding: "4px 8px",
         }}>
           ♡ Like
         </button>
         <button style={{
-          background: "none",
-          border: `1px solid ${colors.teal}`,
-          color: colors.teal,
-          fontSize: "12px",
-          cursor: "pointer",
-          fontFamily: "'DM Sans', sans-serif",
-          padding: "4px 12px",
-          borderRadius: "20px",
-          transition: "all 0.2s",
+          background: "none", border: `1px solid ${colors.teal}`,
+          color: colors.teal, fontSize: "12px", cursor: "pointer",
+          fontFamily: "'Kanit', sans-serif", padding: "4px 12px",
+          borderRadius: "20px", transition: "all 0.2s",
         }}>
           Tip
         </button>
@@ -304,49 +269,38 @@ const DiscoverCard = ({ artist, index }) => {
       flexDirection: "column",
       alignItems: "center",
       gap: "10px",
-      minWidth: "130px",
+      width: "100%",
+      boxSizing: "border-box",
       animation: `fadeSlideUp 0.4s ease ${index * 0.08}s forwards`,
       opacity: 0,
     }}>
       <Avatar name={artist.artist} size={48} />
-      <div style={{ textAlign: "center" }}>
+      <div style={{ textAlign: "center", width: "100%" }}>
         <div style={{
-          fontSize: "13px",
-          fontWeight: "600",
-          color: colors.text,
-          fontFamily: "'DM Sans', sans-serif",
+          fontSize: "13px", fontWeight: "600", color: colors.text,
+          fontFamily: "'Kanit', sans-serif",
+          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
         }}>
           {artist.artist}
         </div>
-        <div style={{
-          fontSize: "11px",
-          color: colors.muted,
-          fontFamily: "'DM Sans', sans-serif",
-          marginTop: "2px",
-        }}>
+        <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
           {artist.genre}
         </div>
-        <div style={{
-          fontSize: "11px",
-          color: colors.textSecondary,
-          fontFamily: "'DM Sans', sans-serif",
-        }}>
+        <div style={{ fontSize: "11px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif" }}>
           {artist.followers} followers
         </div>
       </div>
       <button
         onClick={() => setFollowing(!following)}
         style={{
-          padding: "6px 16px",
-          borderRadius: "20px",
+          padding: "6px 16px", borderRadius: "20px",
           border: `1px solid ${following ? colors.muted : colors.teal}`,
           backgroundColor: following ? "transparent" : colors.tealGlow,
           color: following ? colors.muted : colors.teal,
-          fontSize: "12px",
-          fontWeight: "600",
-          cursor: "pointer",
+          fontSize: "12px", fontWeight: "600", cursor: "pointer",
           transition: "all 0.2s ease",
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "'Kanit', sans-serif",
+          width: "100%", boxSizing: "border-box",
         }}
       >
         {following ? "Following" : "+ Follow"}
@@ -364,29 +318,18 @@ const FeedTab = ({ user }) => {
   };
 
   return (
-    <div style={{ padding: "0 16px 100px" }}>
-      {/* Greeting */}
+    <div style={{ padding: "0 16px 40px", width: "100%", boxSizing: "border-box" }}>
       <div style={{ marginBottom: "20px" }}>
         <div style={{
-          fontSize: "22px",
-          fontWeight: "700",
-          color: colors.text,
-          fontFamily: "'DM Sans', sans-serif",
-          letterSpacing: "-0.3px",
+          fontSize: "22px", fontWeight: "700", color: colors.text,
+          fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px",
         }}>
-          Hey {user?.username || "there"} 
+          Hey {user?.username || "there"}
         </div>
-        <div style={{
-          fontSize: "14px",
-          color: colors.textSecondary,
-          fontFamily: "'DM Sans', sans-serif",
-          marginTop: "4px",
-        }}>
+        <div style={{ fontSize: "14px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginTop: "4px" }}>
           Here's what the artists you follow have been up to.
         </div>
       </div>
-
-      {/* Track feed */}
       {MOCK_FEED.map((track, i) => (
         <TrackCard
           key={track.id}
@@ -402,33 +345,21 @@ const FeedTab = ({ user }) => {
 
 // ─── Discover Tab ─────────────────────────────────────────────────────────────
 const DiscoverTab = () => (
-  <div style={{ padding: "0 16px 100px" }}>
+  <div style={{ padding: "0 16px 40px", width: "100%", boxSizing: "border-box" }}>
     <div style={{ marginBottom: "20px" }}>
       <div style={{
-        fontSize: "22px",
-        fontWeight: "700",
-        color: colors.text,
-        fontFamily: "'DM Sans', sans-serif",
-        letterSpacing: "-0.3px",
+        fontSize: "22px", fontWeight: "700", color: colors.text,
+        fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px",
       }}>
         Discover
       </div>
-      <div style={{
-        fontSize: "14px",
-        color: colors.textSecondary,
-        fontFamily: "'DM Sans', sans-serif",
-        marginTop: "4px",
-      }}>
+      <div style={{ fontSize: "14px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginTop: "4px" }}>
         Independent artists you might love.
       </div>
     </div>
-
     <div style={{
-      display: "flex",
-      gap: "12px",
-      overflowX: "auto",
-      paddingBottom: "8px",
-      scrollbarWidth: "none",
+      display: "grid", gridTemplateColumns: "1fr 1fr",
+      gap: "12px", width: "100%", boxSizing: "border-box",
     }}>
       {MOCK_DISCOVER.map((artist, i) => (
         <DiscoverCard key={artist.id} artist={artist} index={i} />
@@ -457,112 +388,121 @@ export default function HomeScreen({ setScreen }) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #1a1a1a; }
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
+        body { background: #222222; }
         @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         @keyframes wave {
-          from { transform: scaleY(0.3); }
-          to { transform: scaleY(1); }
+            from { transform: scaleY(0.3); }
+            to { transform: scaleY(1); }
         }
         ::-webkit-scrollbar { display: none; }
-      `}</style>
-
+        `}</style>
+      {/* ── Full viewport background ── */}
       <div style={{
         minHeight: "100vh",
+        width: "100%",
         backgroundColor: colors.bgDeep,
-        fontFamily: "'DM Sans', sans-serif",
-        maxWidth: "480px",
-        margin: "0 auto",
-        position: "relative",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        fontFamily: "'Kanit', sans-serif",
       }}>
 
-        {/* ── Header ── */}
+        {/* ── Phone frame — matches LoginScreen exactly ── */}
         <div style={{
-          padding: "52px 20px 0",
-          backgroundColor: colors.bgDeep,
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          borderBottom: `1px solid ${colors.border}`,
+          width: "375px",
+          minHeight: "750px",
+          backgroundColor: colors.bg,
+          borderRadius: "40px",
+          boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05)",
+          position: "relative",
+          overflow: "hidden",
+          marginTop: "40px",
+          marginBottom: "40px",
+          display: "flex",
+          flexDirection: "column",
         }}>
-          {/* Logo row */}
+
+          {/* ── Header ── */}
           <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "16px",
+            padding: "32px 20px 0",
+            backgroundColor: colors.bg,
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+            borderBottom: `1px solid ${colors.border}`,
+            width: "100%",
+            boxSizing: "border-box",
+            flexShrink: 0,
           }}>
             <div style={{
-              fontSize: "20px",
-              fontWeight: "700",
-              color: colors.text,
-              fontFamily: "'DM Sans', sans-serif",
-              letterSpacing: "-0.5px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "16px",
             }}>
-              ponytail
-              <span style={{
-                display: "inline-block",
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                backgroundColor: colors.teal,
-                marginLeft: "4px",
-                marginBottom: "6px",
-              }} />
+              <div style={{
+                fontSize: "20px", fontWeight: "700", color: colors.text,
+                fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.5px",
+              }}>
+                ponytail
+                <span style={{
+                  display: "inline-block",
+                  width: "6px", height: "6px",
+                  borderRadius: "50%",
+                  backgroundColor: colors.teal,
+                  marginLeft: "4px", marginBottom: "6px",
+                }} />
+              </div>
+              <button style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                <Avatar name={user?.username || "User"} size={34} />
+              </button>
             </div>
 
-            {/* Avatar / profile */}
-            <button
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-              }}
-            >
-              <Avatar name={user?.username || "User"} size={34} />
-            </button>
+            {/* Top navigation tabs */}
+            <div style={{ display: "flex", gap: "4px", width: "100%" }}>
+              {["feed", "discover"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    flex: 1, padding: "10px",
+                    background: "none", border: "none", cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: activeTab === tab ? "700" : "400",
+                    color: activeTab === tab ? colors.teal : colors.muted,
+                    fontFamily: "'Kanit', sans-serif",
+                    textTransform: "capitalize", letterSpacing: "0.3px",
+                    borderBottom: `2px solid ${activeTab === tab ? colors.teal : "transparent"}`,
+                    transition: "all 0.2s ease",
+                    marginBottom: "-1px",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Top navigation tabs */}
-          <div style={{ display: "flex", gap: "4px" }}>
-            {["feed", "discover"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  flex: 1,
-                  padding: "10px",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: activeTab === tab ? "700" : "400",
-                  color: activeTab === tab ? colors.teal : colors.muted,
-                  fontFamily: "'DM Sans', sans-serif",
-                  textTransform: "capitalize",
-                  letterSpacing: "0.3px",
-                  borderBottom: `2px solid ${activeTab === tab ? colors.teal : "transparent"}`,
-                  transition: "all 0.2s ease",
-                  marginBottom: "-1px",
-                }}
-              >
-                {tab}
-              </button>
-            ))}
+          {/* ── Scrollable tab content ── */}
+          <div style={{
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+            paddingTop: "20px",
+            width: "100%",
+            boxSizing: "border-box",
+          }}>
+            {activeTab === "feed" && <FeedTab user={user} />}
+            {activeTab === "discover" && <DiscoverTab />}
           </div>
-        </div>
 
-        {/* ── Tab Content ── */}
-        <div style={{ paddingTop: "20px" }}>
-          {activeTab === "feed" && <FeedTab user={user} />}
-          {activeTab === "discover" && <DiscoverTab />}
         </div>
-
       </div>
     </>
   );

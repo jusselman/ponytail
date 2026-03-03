@@ -4,8 +4,8 @@ import logo from '../assets/images/ponyLogo.png';
 
 // ─── Colors & Styles ──────────────────────────────────────────────────────────
 const colors = {
-  bg: "#000000",
-  bgDeep: "#000000",
+  bg: "#222222",
+  bgDeep: "#222222",
   teal: "#5DEBD7",
   tealDark: "#3ecfba",
   text: "#ffffff",
@@ -17,13 +17,14 @@ const colors = {
 const baseStyles = {
   wrapper: {
     minHeight: "100vh",
+    width: "100%",        
     backgroundColor: colors.bg,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Kanit', sans-serif",
     padding: "20px",
-  },
+    },
   phone: {
     width: "375px",
     minHeight: "750px",
@@ -56,7 +57,7 @@ const baseStyles = {
     fontWeight: "700",
     color: colors.text,
     letterSpacing: "-0.5px",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Kanit', sans-serif",
     marginBottom: "6px",
   },
   tagline: {
@@ -99,14 +100,14 @@ const baseStyles = {
     fontWeight: "700",
     color: colors.text,
     marginBottom: "8px",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Kanit', sans-serif",
     letterSpacing: "-0.3px",
   },
   formSubtitle: {
     fontSize: "14px",
     color: colors.muted,
     marginBottom: "32px",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Kanit', sans-serif",
   },
   inputGroup: {
     marginBottom: "16px",
@@ -119,7 +120,7 @@ const baseStyles = {
     marginBottom: "8px",
     letterSpacing: "0.8px",
     textTransform: "uppercase",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Kanit', sans-serif",
   },
   divider: {
     display: "flex",
@@ -135,14 +136,14 @@ const baseStyles = {
   dividerText: {
     color: colors.muted,
     fontSize: "12px",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Kanit', sans-serif",
   },
   switchText: {
     textAlign: "center",
     color: colors.muted,
     fontSize: "14px",
     marginTop: "20px",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Kanit', sans-serif",
   },
   switchLink: {
     color: colors.teal,
@@ -150,7 +151,7 @@ const baseStyles = {
     fontWeight: "600",
     background: "none",
     border: "none",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Kanit', sans-serif",
     fontSize: "14px",
     padding: 0,
   },
@@ -160,7 +161,7 @@ const baseStyles = {
     color: colors.teal,
     fontSize: "13px",
     cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Kanit', sans-serif",
   },
 };
 
@@ -187,7 +188,7 @@ const PonytailInput = ({ name, focused, onFocus, onBlur, ...props }) => (
       fontSize: "15px",
       outline: "none",
       transition: "border 0.2s ease, box-shadow 0.2s ease",
-      fontFamily: "'DM Sans', sans-serif",
+      fontFamily: "'Kanit', sans-serif",
       boxSizing: "border-box",
       boxShadow: focused === name ? `0 0 0 4px rgba(93,235,215,0.1)` : "none",
     }}
@@ -218,7 +219,7 @@ const LandingScreen = ({ setLocalScreen }) => {
             transition: "all 0.2s ease", letterSpacing: "0.2px",
             transform: hovered === "signup" ? "translateY(-1px)" : "translateY(0)",
             boxShadow: hovered === "signup" ? "0 8px 24px rgba(93,235,215,0.35)" : "0 4px 12px rgba(93,235,215,0.2)",
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Kanit', sans-serif",
           }}
           onMouseEnter={() => setHovered("signup")}
           onMouseLeave={() => setHovered(null)}
@@ -236,7 +237,7 @@ const LandingScreen = ({ setLocalScreen }) => {
             transition: "all 0.2s ease",
             transform: hovered === "google" ? "translateY(-1px)" : "translateY(0)",
             backgroundColor: hovered === "google" ? "rgba(255,255,255,0.05)" : "transparent",
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Kanit', sans-serif",
           }}
           onMouseEnter={() => setHovered("google")}
           onMouseLeave={() => setHovered(null)}
@@ -252,7 +253,7 @@ const LandingScreen = ({ setLocalScreen }) => {
             color: hovered === "login" ? colors.text : colors.muted,
             fontSize: "15px", fontWeight: "400", cursor: "pointer",
             transition: "color 0.2s ease", background: "none", border: "none",
-            fontFamily: "'DM Sans', sans-serif", padding: "8px",
+            fontFamily: "'Kanit', sans-serif", padding: "8px",
           }}
           onMouseEnter={() => setHovered("login")}
           onMouseLeave={() => setHovered(null)}
@@ -284,7 +285,6 @@ const SignupScreen = ({ setLocalScreen }) => {
 
   return (
     <div style={baseStyles.formContainer}>
-      <button style={baseStyles.backBtn} onClick={() => setLocalScreen("landing")}>←</button>
       <div style={{ marginTop: "20px" }}>
         <div style={baseStyles.formTitle}>Create account</div>
         <div style={baseStyles.formSubtitle}>Join the social music platform</div>
@@ -330,7 +330,7 @@ const SignupScreen = ({ setLocalScreen }) => {
             transition: "all 0.2s ease", marginTop: "8px",
             transform: hovered === "submit" ? "translateY(-1px)" : "translateY(0)",
             boxShadow: hovered === "submit" ? "0 8px 24px rgba(93,235,215,0.35)" : "0 4px 12px rgba(93,235,215,0.2)",
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Kanit', sans-serif",
           }}
           onMouseEnter={() => setHovered("submit")}
           onMouseLeave={() => setHovered(null)}
@@ -353,7 +353,7 @@ const SignupScreen = ({ setLocalScreen }) => {
             display: "flex", alignItems: "center", justifyContent: "center",
             transition: "all 0.2s ease",
             backgroundColor: hovered === "google" ? "rgba(255,255,255,0.05)" : "transparent",
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Kanit', sans-serif",
           }}
           onMouseEnter={() => setHovered("google")}
           onMouseLeave={() => setHovered(null)}
@@ -391,7 +391,6 @@ const LoginScreen = ({ setLocalScreen, setAppScreen }) => {
 
   return (
     <div style={baseStyles.formContainer}>
-      <button style={baseStyles.backBtn} onClick={() => setLocalScreen("landing")}>←</button>
       <div style={{ marginTop: "20px" }}>
         <div style={baseStyles.formTitle}>Welcome back</div>
         <div style={baseStyles.formSubtitle}>Log in to your account</div>
@@ -430,7 +429,7 @@ const LoginScreen = ({ setLocalScreen, setAppScreen }) => {
             transition: "all 0.2s ease", marginTop: "8px",
             transform: hovered === "submit" ? "translateY(-1px)" : "translateY(0)",
             boxShadow: hovered === "submit" ? "0 8px 24px rgba(93,235,215,0.35)" : "0 4px 12px rgba(93,235,215,0.2)",
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Kanit', sans-serif",
           }}
           onMouseEnter={() => setHovered("submit")}
           onMouseLeave={() => setHovered(null)}
@@ -453,7 +452,7 @@ const LoginScreen = ({ setLocalScreen, setAppScreen }) => {
             display: "flex", alignItems: "center", justifyContent: "center",
             transition: "all 0.2s ease",
             backgroundColor: hovered === "google" ? "rgba(255,255,255,0.05)" : "transparent",
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Kanit', sans-serif",
           }}
           onMouseEnter={() => setHovered("google")}
           onMouseLeave={() => setHovered(null)}
@@ -479,22 +478,18 @@ export default function AuthScreen({ setScreen: setAppScreen }) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #000; }
-        @keyframes fadeSlideDown {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
+        body { background: #222222; }
         @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        input::placeholder { color: #555; }
-        input:-webkit-autofill {
-          -webkit-box-shadow: 0 0 0 30px #2c2c2c inset !important;
-          -webkit-text-fill-color: white !important;
+        @keyframes wave {
+            from { transform: scaleY(0.3); }
+            to { transform: scaleY(1); }
         }
+        ::-webkit-scrollbar { display: none; }
       `}</style>
       <div style={baseStyles.wrapper}>
         <div style={baseStyles.phone}>
