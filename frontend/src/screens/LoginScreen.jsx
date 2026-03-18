@@ -199,7 +199,7 @@ const PonytailInput = ({ name, focused, onFocus, onBlur, ...props }) => (
 );
 
 // ─── Landing Screen ───────────────────────────────────────────────────────────
-const LandingScreen = ({ setLocalScreen }) => {
+const LandingScreen = ({ setLocalScreen, setAppScreen }) => {
   const [hovered, setHovered] = useState(null);
 
   return (
@@ -223,7 +223,7 @@ const LandingScreen = ({ setLocalScreen }) => {
           }}
           onMouseEnter={() => setHovered("signup")}
           onMouseLeave={() => setHovered(null)}
-          onClick={() => setLocalScreen("signup")}
+          onClick={() => setAppScreen("onboarding")}
         >
           Sign up
         </button>
@@ -494,7 +494,10 @@ export default function AuthScreen({ setScreen: setAppScreen }) {
       <div style={baseStyles.wrapper}>
         <div style={baseStyles.phone}>
           {localScreen === "landing" && (
-            <LandingScreen setLocalScreen={setLocalScreen} />
+            <LandingScreen
+              setLocalScreen={setLocalScreen}
+              setAppScreen={setAppScreen}
+            />
           )}
           {localScreen === "signup" && (
             <SignupScreen setLocalScreen={setLocalScreen} />

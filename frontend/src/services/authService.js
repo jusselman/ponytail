@@ -47,3 +47,12 @@ export const getMe = async () => {
   });
   return response.data;
 };
+
+// Update profile with favorite artists
+export const updateProfile = async (data) => {
+  const token = await getToken();
+  const response = await axios.put(`${API_URL}/auth/update-profile`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
