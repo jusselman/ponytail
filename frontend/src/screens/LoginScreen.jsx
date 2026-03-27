@@ -199,7 +199,7 @@ const PonytailInput = ({ name, focused, onFocus, onBlur, ...props }) => (
 );
 
 // ─── Landing Screen ───────────────────────────────────────────────────────────
-const LandingScreen = ({ setLocalScreen }) => {
+const LandingScreen = ({ setLocalScreen, setAppScreen }) => {
   const [hovered, setHovered] = useState(null);
 
   return (
@@ -223,7 +223,7 @@ const LandingScreen = ({ setLocalScreen }) => {
           }}
           onMouseEnter={() => setHovered("signup")}
           onMouseLeave={() => setHovered(null)}
-          onClick={() => setLocalScreen("signup")}
+          onClick={() => setAppScreen("onboarding")}
         >
           Sign up
         </button>
@@ -284,6 +284,7 @@ const SignupScreen = ({ setLocalScreen }) => {
   };
 
   return (
+    // Delete this because user is now rerouted to the onboarding process //
     <div style={baseStyles.formContainer}>
       <div style={{ marginTop: "20px" }}>
         <div style={baseStyles.formTitle}>Create account</div>
@@ -464,7 +465,7 @@ const LoginScreen = ({ setLocalScreen, setAppScreen }) => {
 
         <div style={baseStyles.switchText}>
           Don't have an account?{" "}
-          <button style={baseStyles.switchLink} onClick={() => setLocalScreen("signup")}>Sign up</button>
+          <button style={baseStyles.switchLink} onClick={() => setAppScreen("onboarding")}>Sign up</button>
         </div>
       </div>
     </div>
@@ -494,10 +495,10 @@ export default function AuthScreen({ setScreen: setAppScreen }) {
       <div style={baseStyles.wrapper}>
         <div style={baseStyles.phone}>
           {localScreen === "landing" && (
-            <LandingScreen setLocalScreen={setLocalScreen} />
-          )}
-          {localScreen === "signup" && (
-            <SignupScreen setLocalScreen={setLocalScreen} />
+            <LandingScreen
+              setLocalScreen={setLocalScreen}
+              setAppScreen={setAppScreen}
+            />
           )}
           {localScreen === "login" && (
             <LoginScreen

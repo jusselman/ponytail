@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { getMe } from '../services/authService';
+import MiniPlayer from '../components/MiniPlayer';
+import FooterNav from '../components/FooterNav';
 
 // ─── Color palette consistent with LoginScreen ───────────────────────────────
 const colors = {
@@ -412,10 +414,10 @@ export default function HomeScreen({ setScreen }) {
         fontFamily: "'Kanit', sans-serif",
       }}>
 
-        {/* ── Phone frame — matches LoginScreen exactly ── */}
+        {/* ── Phone frame ── */}
         <div style={{
           width: "375px",
-          minHeight: "750px",
+          height: "750px",
           backgroundColor: colors.bg,
           borderRadius: "40px",
           boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05)",
@@ -501,6 +503,12 @@ export default function HomeScreen({ setScreen }) {
             {activeTab === "feed" && <FeedTab user={user} />}
             {activeTab === "discover" && <DiscoverTab />}
           </div>
+
+          {/* ── Mini Player ── */}
+  <MiniPlayer track={null} />
+
+  {/* ── Footer Nav ── */}
+  <FooterNav activeTab="home" onTabPress={(tab) => console.log('tab pressed:', tab)} />
 
         </div>
       </div>
