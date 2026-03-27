@@ -266,9 +266,11 @@ const FavoriteArtistsStep = ({ onNext, loading }) => {
 // ─── Slide 4: Intro ───────────────────────────────────────────────────────────
 const IntroSlide = ({ onNext, onSwipeUp }) => {
   const touchStartY = useRef(null);
-  const mouseStartY = useRef(null);
 
-  const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
   const handleTouchEnd = (e) => {
     if (touchStartY.current === null) return;
     const deltaY = touchStartY.current - e.changedTouches[0].clientY;
@@ -340,6 +342,7 @@ const ArtistSlide = ({ artist, onSwipeUp, setAppScreen }) => {
   const touchStartY = useRef(null);
   const mouseStartY = useRef(null);
 
+  // ── Fetch cover art from Cover Art Archive via MusicBrainz ──
   useEffect(() => {
     if (!artist?.id) return;
     const fetchCover = async () => {
@@ -394,15 +397,25 @@ const ArtistSlide = ({ artist, onSwipeUp, setAppScreen }) => {
       onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}
     >
       {/* ── Background ── */}
-      <div style={{ position: "absolute", inset: 0, background: coverUrl ? "none" : gradientBg, zIndex: 0 }}>
+      <div style={{
+        position: "absolute", inset: 0,
+        background: coverUrl ? "none" : gradientBg,
+        zIndex: 0,
+      }}>
         {coverUrl && (
           <img
             src={coverUrl}
             alt=""
             onLoad={() => setBgLoaded(true)}
-            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: bgLoaded ? 0.35 : 0, transition: "opacity 0.8s ease" }}
+            style={{
+              width: "100%", height: "100%",
+              objectFit: "cover",
+              opacity: bgLoaded ? 0.35 : 0,
+              transition: "opacity 0.8s ease",
+            }}
           />
         )}
+        {/* Dark overlay */}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(34,34,34,0.5) 0%, rgba(34,34,34,0.85) 100%)" }} />
       </div>
 
