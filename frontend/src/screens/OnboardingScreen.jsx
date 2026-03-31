@@ -175,22 +175,22 @@ const FavoriteArtistsStep = ({ onNext, loading }) => {
   const debounceRef = useRef(null);
 
   const searchArtists = async (q) => {
-  if (!q || q.length < 2) { setSuggestions([]); return; }
-  setSearching(true);
-  try {
-    const res = await fetch(`http://localhost:5000/api/auth/artists/search?q=${encodeURIComponent(q)}`);
-    const data = await res.json();
-    setSuggestions((data.artists || []).map(a => ({
-      id: a.id,
-      name: a.name,
-      disambiguation: a.disambiguation || null,
-    })));
-  } catch (err) {
-    console.log('Artist search error:', err);
-  } finally {
-    setSearching(false);
-  }
-};
+    if (!q || q.length < 2) { setSuggestions([]); return; }
+    setSearching(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/auth/artists/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      setSuggestions((data.artists || []).map(a => ({
+        id: a.id,
+        name: a.name,
+        disambiguation: a.disambiguation || null,
+      })));
+    } catch (err) {
+      console.log('Artist search error:', err);
+    } finally {
+      setSearching(false);
+    }
+  };
 
   const handleQueryChange = (e) => {
     const val = e.target.value;
@@ -266,11 +266,9 @@ const FavoriteArtistsStep = ({ onNext, loading }) => {
 // ─── Slide 4: Intro ───────────────────────────────────────────────────────────
 const IntroSlide = ({ onNext, onSwipeUp }) => {
   const touchStartY = useRef(null);
+  const mouseStartY = useRef(null);
 
-  const handleTouchStart = (e) => {
-    touchStartY.current = e.touches[0].clientY;
-  };
-
+  const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
   const handleTouchEnd = (e) => {
     if (touchStartY.current === null) return;
     const deltaY = touchStartY.current - e.changedTouches[0].clientY;
@@ -288,12 +286,9 @@ const IntroSlide = ({ onNext, onSwipeUp }) => {
   return (
     <div
       style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", animation: "fadeSlideUp 0.5s ease forwards", userSelect: "none" }}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}
     >
-      {/* ── Paragraphs at the top ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginBottom: "40px" }}>
         <p style={{ fontSize: "16px", fontWeight: "400", color: colors.text, fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
           {"     While we put together a starting collection for you, let's take a brief dive into what Ponytail is all about."}
@@ -308,16 +303,12 @@ const IntroSlide = ({ onNext, onSwipeUp }) => {
         </p>
       </div>
 
-      {/* ── Swipe instruction + Next button ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        <div style={{ textAlign: "center" }}>
-          <span style={{ fontSize: "14px", color: colors.muted, fontFamily: "'Kanit', sans-serif", fontStyle: "italic", lineHeight: 1.5 }}>
-            Swipe up to learn more, or tap the Next button to jump straight into the app.
-          </span>
-        </div>
-
-        {/* ── Chevrons ── */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", animation: "chevronPulse 1.5s ease-in-out infinite" }}>
+      <div
+          onClick={onSwipeUp}
+          onMouseDown={e => e.stopPropagation()}
+          onMouseUp={e => e.stopPropagation()}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", animation: "chevronPulse 1.5s ease-in-out infinite", cursor: "pointer", padding: "8px" }}
+        >
           {[0, 1, 2].map(i => (
             <svg key={i} width="24" height="14" viewBox="0 0 24 14" fill="none" style={{ opacity: 1 - i * 0.25 }}>
               <path d="M2 12L12 2L22 12" stroke="#5DEBD7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -327,22 +318,23 @@ const IntroSlide = ({ onNext, onSwipeUp }) => {
             swipe up
           </span>
         </div>
-
-        {/* ── Next button ── */}
-        <NextButton onPress={onNext} label="Next" />
-      </div>
+        <div
+          onMouseDown={e => e.stopPropagation()}
+          onMouseUp={e => e.stopPropagation()}
+        >
+          <NextButton onPress={onNext} label="Next" />
+        </div>
     </div>
   );
 };
 
 // ─── Slide 5: Artist Background ───────────────────────────────────────────────
-const ArtistSlide = ({ artist, onSwipeUp, setAppScreen }) => {
+const ArtistSlide = ({ artist, onSwipeUp }) => {
   const [coverUrl, setCoverUrl] = useState(null);
   const [bgLoaded, setBgLoaded] = useState(false);
   const touchStartY = useRef(null);
   const mouseStartY = useRef(null);
 
-  // ── Fetch cover art from Cover Art Archive via MusicBrainz ──
   useEffect(() => {
     if (!artist?.id) return;
     const fetchCover = async () => {
@@ -355,10 +347,7 @@ const ArtistSlide = ({ artist, onSwipeUp, setAppScreen }) => {
         const releases = relData.releases || [];
         for (const release of releases) {
           try {
-            const coverRes = await fetch(
-              `https://coverartarchive.org/release/${release.id}/front`,
-              { method: 'HEAD' }
-            );
+            const coverRes = await fetch(`https://coverartarchive.org/release/${release.id}/front`, { method: 'HEAD' });
             if (coverRes.ok) {
               setCoverUrl(`https://coverartarchive.org/release/${release.id}/front`);
               return;
@@ -378,15 +367,13 @@ const ArtistSlide = ({ artist, onSwipeUp, setAppScreen }) => {
   const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
   const handleTouchEnd = (e) => {
     if (touchStartY.current === null) return;
-    const deltaY = touchStartY.current - e.changedTouches[0].clientY;
-    if (deltaY > 50) onSwipeUp();
+    if (touchStartY.current - e.changedTouches[0].clientY > 50) onSwipeUp();
     touchStartY.current = null;
   };
   const handleMouseDown = (e) => { mouseStartY.current = e.clientY; };
   const handleMouseUp = (e) => {
     if (mouseStartY.current === null) return;
-    const deltaY = mouseStartY.current - e.clientY;
-    if (deltaY > 50) onSwipeUp();
+    if (mouseStartY.current - e.clientY > 50) onSwipeUp();
     mouseStartY.current = null;
   };
 
@@ -396,30 +383,13 @@ const ArtistSlide = ({ artist, onSwipeUp, setAppScreen }) => {
       onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
       onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}
     >
-      {/* ── Background ── */}
-      <div style={{
-        position: "absolute", inset: 0,
-        background: coverUrl ? "none" : gradientBg,
-        zIndex: 0,
-      }}>
+      <div style={{ position: "absolute", inset: 0, background: coverUrl ? "none" : gradientBg, zIndex: 0 }}>
         {coverUrl && (
-          <img
-            src={coverUrl}
-            alt=""
-            onLoad={() => setBgLoaded(true)}
-            style={{
-              width: "100%", height: "100%",
-              objectFit: "cover",
-              opacity: bgLoaded ? 0.35 : 0,
-              transition: "opacity 0.8s ease",
-            }}
-          />
+          <img src={coverUrl} alt="" onLoad={() => setBgLoaded(true)}
+            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: bgLoaded ? 0.35 : 0, transition: "opacity 0.8s ease" }} />
         )}
-        {/* Dark overlay */}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(34,34,34,0.5) 0%, rgba(34,34,34,0.85) 100%)" }} />
       </div>
-
-      {/* ── Content ── */}
       <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px" }}>
         <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "12px" }}>
           Based on your love of
@@ -431,23 +401,175 @@ const ArtistSlide = ({ artist, onSwipeUp, setAppScreen }) => {
           we've put together something special for you.
         </div>
       </div>
-
-      {/* ── Swipe up chevrons ── */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", paddingBottom: "16px", animation: "chevronPulse 1.5s ease-in-out infinite" }}>
         {[0, 1, 2].map(i => (
           <svg key={i} width="24" height="14" viewBox="0 0 24 14" fill="none" style={{ opacity: 1 - i * 0.25 }}>
             <path d="M2 12L12 2L22 12" stroke="#5DEBD7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         ))}
-        <span style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "4px", letterSpacing: "0.5px" }}>
-          swipe up
-        </span>
+        <span style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "4px", letterSpacing: "0.5px" }}>swipe up</span>
       </div>
     </div>
   );
 };
 
-// ─── Slide 6: Placeholder (next screen to be built) ──────────────────────────
+// ─── Slide 6: Pony Mode ───────────────────────────────────────────────────────
+const PonyModeSlide = ({ artist, onPonyPress }) => {
+  const [hovered, setHovered] = useState(false);
+  const artistName = artist?.name || "your favorite artist";
+
+  // Ref for measuring the word "Pony" position for the arrow
+  const ponyWordRef = useRef(null);
+  const [arrowStyle, setArrowStyle] = useState(null);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    // Give DOM time to paint before measuring
+    const timer = setTimeout(() => {
+      if (!ponyWordRef.current || !containerRef.current) return;
+      const ponyRect = ponyWordRef.current.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
+      setArrowStyle({
+        fromX: ponyRect.left - containerRect.left + ponyRect.width / 2,
+        fromY: ponyRect.bottom - containerRect.top,
+      });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        animation: "fadeSlideUp 0.5s ease forwards",
+      }}
+    >
+      {/* ── Text content at top ── */}
+      <div style={{ padding: "0 4px", display: "flex", flexDirection: "column", gap: "22px" }}>
+
+        {/* Paragraph 1 */}
+        <p style={{ fontSize: "16px", fontWeight: "400", color: colors.text, fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+          First things first,{"\n"}
+          Ponytail is about{" "}
+          <em style={{ color: colors.teal, fontStyle: "italic" }}>you</em>
+        </p>
+
+        {/* Paragraph 2 */}
+        <p style={{ fontSize: "16px", fontWeight: "400", color: colors.text, fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+          {"     "}We saw you like{" "}
+          <span style={{ color: colors.teal, fontWeight: "600" }}>{artistName}</span>
+          {". So we generated a "}
+          <span style={{ color: colors.teal, fontWeight: "600" }}>Radio Station</span>
+          {" of what we think you might like based on this input. This is called "}
+          <span style={{ color: colors.teal, fontWeight: "600" }}>Pony Mode</span>
+          {". Just like any other platform, you type in what you like, and we'll do the rest."}
+        </p>
+
+        {/* Paragraph 3 */}
+        <p style={{ fontSize: "16px", fontWeight: "400", color: colors.text, fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+          {"     "}Now...{" "}
+          <strong>Click the </strong>
+          <strong ref={ponyWordRef}>Pony</strong>
+        </p>
+      </div>
+
+      {/* ── Red arrow + Pony circle in bottom left ── */}
+      <div style={{
+        position: "absolute",
+        bottom: "0",
+        left: "0",
+        right: "0",
+        height: "200px",
+        pointerEvents: "none",
+      }}>
+        {/* SVG arrow from "Pony" word down to circle */}
+        {arrowStyle && (
+          <svg
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }}
+            viewBox={`0 0 311 200`}
+          >
+            <defs>
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#FF4444" />
+              </marker>
+            </defs>
+            <path
+              d={`M ${arrowStyle.fromX} -80 C ${arrowStyle.fromX - 20} 20, 60 80, 52 140`}
+              stroke="#FF4444"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray="6 3"
+              markerEnd="url(#arrowhead)"
+            />
+          </svg>
+        )}
+
+        {/* Chevrons above pony circle */}
+        <div style={{
+          position: "absolute",
+          bottom: "68px",
+          left: "20px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "2px",
+          animation: "chevronPulse 1.5s ease-in-out infinite",
+          pointerEvents: "none",
+        }}>
+          {[0, 1].map(i => (
+            <svg key={i} width="20" height="12" viewBox="0 0 24 14" fill="none" style={{ opacity: 1 - i * 0.35 }}>
+              <path d="M2 12L12 2L22 12" stroke="#5DEBD7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ))}
+        </div>
+
+        {/* Pony circle placeholder — bottom left, just above MiniPlayer */}
+        <div
+          onClick={onPonyPress}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          style={{
+            position: "absolute",
+            bottom: "10px",
+            left: "20px",
+            width: "52px",
+            height: "52px",
+            borderRadius: "50%",
+            backgroundColor: hovered ? colors.tealDark : colors.teal,
+            boxShadow: hovered
+              ? `0 0 28px rgba(93,235,215,0.6), 0 0 0 4px rgba(93,235,215,0.2)`
+              : `0 0 18px rgba(93,235,215,0.4), 0 0 0 3px rgba(93,235,215,0.15)`,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            transform: hovered ? "scale(1.08)" : "scale(1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "all",
+          }}
+        >
+          {/* Placeholder pony icon — simple silhouette */}
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <ellipse cx="16" cy="20" rx="9" ry="7" fill="#1a1a1a" />
+            <circle cx="22" cy="13" r="5" fill="#1a1a1a" />
+            <path d="M26 10 C28 6, 30 4, 28 2 C26 4, 24 6, 23 9" fill="#1a1a1a" />
+            <path d="M10 18 C8 22, 7 26, 8 28" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" />
+            <path d="M14 22 C13 26, 13 28, 14 30" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" />
+            <path d="M18 22 C18 26, 18 28, 19 30" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" />
+            <path d="M22 20 C23 24, 24 27, 24 29" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Slide 7: Placeholder ────────────────────────────────────────────────────
 const PlaceholderSlide = ({ setAppScreen }) => (
   <div style={{ width: "100%", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "fadeSlideUp 0.5s ease forwards" }}>
     <div style={{ fontSize: "18px", fontWeight: "600", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center", lineHeight: 1.5 }}>
@@ -467,28 +589,23 @@ export default function OnboardingScreen({ setScreen }) {
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(false);
 
- const handleFinishSignup = async (selectedArtists) => {
-  setLoading(true);
-  try {
-    const username = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
-    console.log('Attempting register with:', email, username);
-    await register(email, username, password);
-    console.log('Register succeeded');
-    await updateProfile({ favorite_artists: selectedArtists });
-    console.log('Profile updated, going to intro');
-    setArtists(selectedArtists);
-    setStep("intro");
-  } catch (err) {
-    console.log('Error caught:', err);
-    const message = err.response?.data?.error || 'Something went wrong.';
-    alert(message);
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleFinishSignup = async (selectedArtists) => {
+    setLoading(true);
+    try {
+      const username = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
+      await register(email, username, password);
+      await updateProfile({ favorite_artists: selectedArtists });
+      setArtists(selectedArtists);
+      setStep("intro");
+    } catch (err) {
+      const message = err.response?.data?.error || 'Something went wrong.';
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Slides that use the full phone frame height (no padding)
-  const isFullHeightSlide = ["intro", "artist", "placeholder"].includes(step);
+  const isFullHeightSlide = ["intro", "artist", "ponymode", "placeholder"].includes(step);
 
   return (
     <>
@@ -511,14 +628,11 @@ export default function OnboardingScreen({ setScreen }) {
         }
       `}</style>
 
-      {/* ── Full viewport wrapper ── */}
       <div style={{
         minHeight: "100vh", width: "100%", backgroundColor: colors.bg,
         display: "flex", alignItems: "center", justifyContent: "center",
         fontFamily: "'Kanit', sans-serif", padding: "20px",
       }}>
-
-        {/* ── Phone frame ── */}
         <div style={{
           width: "375px",
           minHeight: "750px",
@@ -528,40 +642,37 @@ export default function OnboardingScreen({ setScreen }) {
           boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05)",
           display: "flex",
           flexDirection: "column",
-          justifyContent: isFullHeightSlide ? "flex-start" : "flex-start",
           padding: isFullHeightSlide ? "0" : "60px 32px 40px",
           position: "relative",
           overflow: "hidden",
         }}>
 
-          {/* ── Form steps (with padding) ── */}
-          {step === "email" && (
-            <EmailStep email={email} setEmail={setEmail} onNext={() => setStep("password")} />
-          )}
-          {step === "password" && (
-            <PasswordStep password={password} setPassword={setPassword} onNext={() => setStep("artists")} loading={loading} />
-          )}
-          {step === "artists" && (
-            <FavoriteArtistsStep onNext={handleFinishSignup} loading={loading} />
-          )}
+          {step === "email" && <EmailStep email={email} setEmail={setEmail} onNext={() => setStep("password")} />}
+          {step === "password" && <PasswordStep password={password} setPassword={setPassword} onNext={() => setStep("artists")} loading={loading} />}
+          {step === "artists" && <FavoriteArtistsStep onNext={handleFinishSignup} loading={loading} />}
 
-          {/* ── Full height slides (no padding, include MiniPlayer + FooterNav) ── */}
           {step === "intro" && (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0" }}>
-              <IntroSlide
-                onNext={() => setScreen("home")}
-                onSwipeUp={() => setStep("artist")}
-              />
+              <IntroSlide onNext={() => setScreen("home")} onSwipeUp={() => setStep("artist")} />
             </div>
           )}
 
           {step === "artist" && (
             <>
               <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                <ArtistSlide
+                <ArtistSlide artist={artists[0]} onSwipeUp={() => setStep("ponymode")} />
+              </div>
+              <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
+              <FooterNav activeTab="home" onTabPress={() => {}} />
+            </>
+          )}
+
+          {step === "ponymode" && (
+            <>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0", overflow: "hidden" }}>
+                <PonyModeSlide
                   artist={artists[0]}
-                  onSwipeUp={() => setStep("placeholder")}
-                  setAppScreen={setScreen}
+                  onPonyPress={() => setStep("placeholder")}
                 />
               </div>
               <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
