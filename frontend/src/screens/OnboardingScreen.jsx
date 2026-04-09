@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { register, updateProfile } from '../services/authService';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
+import GoatModeSvg from '../components/icons/GoatMode.svg';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const colors = {
@@ -417,14 +418,11 @@ const ArtistSlide = ({ artist, onSwipeUp }) => {
 const PonyModeSlide = ({ artist, onPonyPress }) => {
   const [hovered, setHovered] = useState(false);
   const artistName = artist?.name || "your favorite artist";
-
-  // Ref for measuring the word "Pony" position for the arrow
   const ponyWordRef = useRef(null);
   const [arrowStyle, setArrowStyle] = useState(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // Give DOM time to paint before measuring
     const timer = setTimeout(() => {
       if (!ponyWordRef.current || !containerRef.current) return;
       const ponyRect = ponyWordRef.current.getBoundingClientRect();
@@ -451,15 +449,11 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
     >
       {/* ── Text content at top ── */}
       <div style={{ padding: "0 4px", display: "flex", flexDirection: "column", gap: "22px" }}>
-
-        {/* Paragraph 1 */}
         <p style={{ fontSize: "16px", fontWeight: "400", color: colors.text, fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
           First things first,{"\n"}
           Ponytail is about{" "}
           <em style={{ color: colors.teal, fontStyle: "italic" }}>you</em>
         </p>
-
-        {/* Paragraph 2 */}
         <p style={{ fontSize: "16px", fontWeight: "400", color: colors.text, fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
           {"     "}We saw you like{" "}
           <span style={{ color: colors.teal, fontWeight: "600" }}>{artistName}</span>
@@ -469,8 +463,6 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
           <span style={{ color: colors.teal, fontWeight: "600" }}>Pony Mode</span>
           {". Just like any other platform, you type in what you like, and we'll do the rest."}
         </p>
-
-        {/* Paragraph 3 */}
         <p style={{ fontSize: "16px", fontWeight: "400", color: colors.text, fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
           {"     "}Now...{" "}
           <strong>Click the </strong>
@@ -478,20 +470,20 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
         </p>
       </div>
 
-      {/* ── Red arrow + Pony circle in bottom left ── */}
+      {/* ── Red arrow + Pony icon bottom right ── */}
       <div style={{
         position: "absolute",
         bottom: "0",
         left: "0",
         right: "0",
-        height: "200px",
+        height: "220px",
         pointerEvents: "none",
       }}>
-        {/* SVG arrow from "Pony" word down to circle */}
+        {/* ── SVG arrow curving from "Pony" word to bottom right circle ── */}
         {arrowStyle && (
           <svg
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }}
-            viewBox={`0 0 311 200`}
+            viewBox="0 0 311 220"
           >
             <defs>
               <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
@@ -499,7 +491,7 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
               </marker>
             </defs>
             <path
-              d={`M ${arrowStyle.fromX} -80 C ${arrowStyle.fromX - 20} 20, 60 80, 52 140`}
+              d={`M ${arrowStyle.fromX} -80 C ${arrowStyle.fromX + 40} 40, 280 80, 270 148`}
               stroke="#FF4444"
               strokeWidth="2"
               fill="none"
@@ -509,11 +501,11 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
           </svg>
         )}
 
-        {/* Chevrons above pony circle */}
+        {/* ── Chevrons above pony icon — bottom right ── */}
         <div style={{
           position: "absolute",
-          bottom: "68px",
-          left: "20px",
+          bottom: "76px",
+          right: "22px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -528,7 +520,7 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
           ))}
         </div>
 
-        {/* Pony circle placeholder — bottom left, just above MiniPlayer */}
+        {/* ── PonyMode icon — bottom right, just above MiniPlayer ── */}
         <div
           onClick={onPonyPress}
           onMouseEnter={() => setHovered(true)}
@@ -536,33 +528,259 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
           style={{
             position: "absolute",
             bottom: "10px",
-            left: "20px",
+            right: "20px",
             width: "52px",
             height: "52px",
-            borderRadius: "50%",
-            backgroundColor: hovered ? colors.tealDark : colors.teal,
-            boxShadow: hovered
-              ? `0 0 28px rgba(93,235,215,0.6), 0 0 0 4px rgba(93,235,215,0.2)`
-              : `0 0 18px rgba(93,235,215,0.4), 0 0 0 3px rgba(93,235,215,0.15)`,
             cursor: "pointer",
             transition: "all 0.2s ease",
             transform: hovered ? "scale(1.08)" : "scale(1)",
+            filter: hovered
+              ? "drop-shadow(0 0 12px rgba(93,235,215,0.7))"
+              : "drop-shadow(0 0 6px rgba(93,235,215,0.4))",
+            pointerEvents: "all",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+          }}
+        >
+          <img
+            src={require('../components/icons/PonyMode.svg')}
+            alt="Pony Mode"
+            style={{ width: "52px", height: "52px", objectFit: "contain" }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Slide 7: Goat Mode ───────────────────────────────────────────────────────
+const GoatModeSlide = ({ onGoatPress }) => {
+  const [hovered, setHovered] = useState(false);
+  const doMusicBetterRef = useRef(null);
+  const containerRef = useRef(null);
+  const [arrowStyle, setArrowStyle] = useState(null);
+
+  // Touch / mouse swipe up to advance
+  const touchStartY = useRef(null);
+  const mouseStartY = useRef(null);
+
+  const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+  const handleTouchEnd = (e) => {
+    if (touchStartY.current === null) return;
+    if (touchStartY.current - e.changedTouches[0].clientY > 50) onGoatPress();
+    touchStartY.current = null;
+  };
+  const handleMouseDown = (e) => { mouseStartY.current = e.clientY; };
+  const handleMouseUp = (e) => {
+    if (mouseStartY.current === null) return;
+    if (mouseStartY.current - e.clientY > 50) onGoatPress();
+    mouseStartY.current = null;
+  };
+
+  // Measure "do music better" position for arrow
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!doMusicBetterRef.current || !containerRef.current) return;
+      const textRect = doMusicBetterRef.current.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
+      setArrowStyle({
+        fromX: textRect.right - containerRect.left + 8,
+        fromY: textRect.top - containerRect.top + textRect.height / 2,
+      });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const gold = "#f5cf00";
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        animation: "fadeSlideUp 0.5s ease forwards",
+        userSelect: "none",
+        overflowY: "auto",
+        overflowX: "hidden",
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+    >
+      {/* ── Text content ── */}
+      <div style={{ padding: "0 4px 160px", display: "flex", flexDirection: "column", gap: "16px" }}>
+
+        {/* Introducing... */}
+        <p style={{ fontSize: "16px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+          Introducing...
+        </p>
+
+        {/* GOAT MODE heading */}
+        <h2 style={{
+          fontSize: "26px",
+          fontWeight: "700",
+          color: "#5DEBD7",
+          fontFamily: "'Kanit', sans-serif",
+          letterSpacing: "2px",
+          margin: 0,
+          textAlign: "left",
+        }}>
+          GOAT MODE
+        </h2>
+
+        {/* Para 1 */}
+        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+          ...Welcome to{" "}
+          <span style={{ color: "#5DEBD7", fontWeight: "600" }}>Goat Mode™</span>
+          , the first ever hackable algorithm.
+        </p>
+
+        {/* Para 2 */}
+        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+          Think of it as a way to tweak the algorithm to better suit your vibe.
+        </p>
+
+        {/* Para 3 */}
+        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+          This feature is complex. It's not for the average listener;
+        </p>
+
+        {/* Indented paragraphs */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingLeft: "20px", paddingRight: "20px" }}>
+
+          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+            It's for the{" "}
+            <span style={{ color: "#5DEBD7", fontWeight: "600" }}>music lovers</span>.
+          </p>
+
+          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+            It's for the{" "}
+            <span style={{ color: gold, fontWeight: "600" }}>indie artists</span>.
+          </p>
+
+          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+            It's for the people looking for{" "}
+            <span style={{ color: "#5DEBD7", fontWeight: "600" }}>new shit</span>.
+          </p>
+
+          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+            But especially, It's for{" "}
+            <span style={{ color: gold, fontWeight: "600" }}>that guy</span>
+            {" "}at the old record store.
+          </p>
+
+          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+            You know, the guy with the{" "}
+            <span style={{ color: "#5DEBD7", fontWeight: "600" }}>ponytail</span>
+            . Now you know.
+          </p>
+
+          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+            And maybe{" "}
+            <span style={{ color: "#5DEBD7", fontWeight: "600" }}>ponytail</span>
+            {" "}is for you.{"\n"}
+            Click the arrow to discover{"\n"}
+            how to{" "}
+            <span ref={doMusicBetterRef} style={{ color: gold, fontWeight: "600" }}>do music better</span>
+          </p>
+
+        </div>
+      </div>
+
+      {/* ── Red arrow + chevrons + GoatMode icon — bottom right ── */}
+      <div style={{
+        position: "absolute",
+        bottom: "0",
+        left: "0",
+        right: "0",
+        height: "220px",
+        pointerEvents: "none",
+      }}>
+
+        {/* ── SVG arrow from "do music better" rightward to chevrons ── */}
+        {arrowStyle && (
+          <svg
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }}
+            viewBox="0 0 311 220"
+          >
+            <defs>
+              <marker id="arrowheadGoat" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#FF4444" />
+              </marker>
+            </defs>
+            <path
+              d={`M ${arrowStyle.fromX} ${arrowStyle.fromY + 150} C ${arrowStyle.fromX + 30} ${arrowStyle.fromY + 100}, 280 120, 272 158`}
+              stroke="#FF4444"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray="6 3"
+              markerEnd="url(#arrowheadGoat)"
+            />
+          </svg>
+        )}
+
+        {/* ── Chevrons above goat icon ── */}
+        <div
+          onClick={onGoatPress}
+          onMouseDown={e => e.stopPropagation()}
+          onMouseUp={e => e.stopPropagation()}
+          style={{
+            position: "absolute",
+            bottom: "76px",
+            right: "22px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "2px",
+            animation: "chevronPulse 1.5s ease-in-out infinite",
+            cursor: "pointer",
+            padding: "6px",
             pointerEvents: "all",
           }}
         >
-          {/* Placeholder pony icon — simple silhouette */}
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-            <ellipse cx="16" cy="20" rx="9" ry="7" fill="#1a1a1a" />
-            <circle cx="22" cy="13" r="5" fill="#1a1a1a" />
-            <path d="M26 10 C28 6, 30 4, 28 2 C26 4, 24 6, 23 9" fill="#1a1a1a" />
-            <path d="M10 18 C8 22, 7 26, 8 28" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" />
-            <path d="M14 22 C13 26, 13 28, 14 30" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" />
-            <path d="M18 22 C18 26, 18 28, 19 30" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" />
-            <path d="M22 20 C23 24, 24 27, 24 29" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          {[0, 1].map(i => (
+            <svg key={i} width="20" height="12" viewBox="0 0 24 14" fill="none" style={{ opacity: 1 - i * 0.35 }}>
+              <path d="M2 12L12 2L22 12" stroke="#5DEBD7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ))}
+        </div>
+
+        {/* ── GoatMode icon — bottom right ── */}
+        <div
+          onClick={onGoatPress}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onMouseDown={e => e.stopPropagation()}
+          onMouseUp={e => e.stopPropagation()}
+          style={{
+            position: "absolute",
+            bottom: "10px",
+            right: "20px",
+            width: "52px",
+            height: "52px",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            transform: hovered ? "scale(1.08)" : "scale(1)",
+            filter: hovered
+              ? "drop-shadow(0 0 12px rgba(93,235,215,0.7))"
+              : "drop-shadow(0 0 6px rgba(93,235,215,0.4))",
+            pointerEvents: "all",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <img
+            src={require('../components/icons/GoatMode.svg')}
+            alt="Goat Mode"
+            style={{ width: "52px", height: "52px", objectFit: "contain" }}
+          />
         </div>
       </div>
     </div>
@@ -605,7 +823,7 @@ export default function OnboardingScreen({ setScreen }) {
     }
   };
 
-  const isFullHeightSlide = ["intro", "artist", "ponymode", "placeholder"].includes(step);
+  const isFullHeightSlide = ["intro", "artist", "ponymode", "goatmode", "placeholder"].includes(step);
 
   return (
     <>
@@ -670,15 +888,27 @@ export default function OnboardingScreen({ setScreen }) {
           {step === "ponymode" && (
             <>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0", overflow: "hidden" }}>
-                <PonyModeSlide
-                  artist={artists[0]}
-                  onPonyPress={() => setStep("placeholder")}
-                />
+            <PonyModeSlide
+                artist={artists[0]}
+                onPonyPress={() => setStep("goatmode")}
+            />
               </div>
               <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
               <FooterNav activeTab="home" onTabPress={() => {}} />
             </>
           )}
+
+          {step === "goatmode" && (
+            <>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0", overflow: "hidden" }}>
+                <GoatModeSlide
+                    onGoatPress={() => setStep("placeholder")}
+                />
+                </div>
+                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
+                <FooterNav activeTab="home" onTabPress={() => {}} />
+            </>
+            )}
 
           {step === "placeholder" && (
             <>
