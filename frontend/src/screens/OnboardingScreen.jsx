@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { register, updateProfile } from '../services/authService';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
-import GoatModeSvg from '../components/icons/GoatMode.svg';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const colors = {
@@ -272,15 +271,13 @@ const IntroSlide = ({ onNext, onSwipeUp }) => {
   const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
   const handleTouchEnd = (e) => {
     if (touchStartY.current === null) return;
-    const deltaY = touchStartY.current - e.changedTouches[0].clientY;
-    if (deltaY > 50) onSwipeUp();
+    if (touchStartY.current - e.changedTouches[0].clientY > 50) onSwipeUp();
     touchStartY.current = null;
   };
   const handleMouseDown = (e) => { mouseStartY.current = e.clientY; };
   const handleMouseUp = (e) => {
     if (mouseStartY.current === null) return;
-    const deltaY = mouseStartY.current - e.clientY;
-    if (deltaY > 50) onSwipeUp();
+    if (mouseStartY.current - e.clientY > 50) onSwipeUp();
     mouseStartY.current = null;
   };
 
@@ -304,7 +301,13 @@ const IntroSlide = ({ onNext, onSwipeUp }) => {
         </p>
       </div>
 
-      <div
+      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ textAlign: "center" }}>
+          <span style={{ fontSize: "14px", color: colors.muted, fontFamily: "'Kanit', sans-serif", fontStyle: "italic", lineHeight: 1.5 }}>
+            Swipe up to learn more, or tap the Next button to jump straight into the app.
+          </span>
+        </div>
+        <div
           onClick={onSwipeUp}
           onMouseDown={e => e.stopPropagation()}
           onMouseUp={e => e.stopPropagation()}
@@ -319,51 +322,19 @@ const IntroSlide = ({ onNext, onSwipeUp }) => {
             swipe up
           </span>
         </div>
-        <div
-          onMouseDown={e => e.stopPropagation()}
-          onMouseUp={e => e.stopPropagation()}
-        >
+        <div onMouseDown={e => e.stopPropagation()} onMouseUp={e => e.stopPropagation()}>
           <NextButton onPress={onNext} label="Next" />
         </div>
+      </div>
     </div>
   );
 };
 
 // ─── Slide 5: Artist Background ───────────────────────────────────────────────
+// Background is now handled by root — this slide just renders content
 const ArtistSlide = ({ artist, onSwipeUp }) => {
-  const [coverUrl, setCoverUrl] = useState(null);
-  const [bgLoaded, setBgLoaded] = useState(false);
   const touchStartY = useRef(null);
   const mouseStartY = useRef(null);
-
-  useEffect(() => {
-    if (!artist?.id) return;
-    const fetchCover = async () => {
-      try {
-        const relRes = await fetch(
-          `https://musicbrainz.org/ws/2/release?artist=${artist.id}&limit=5&fmt=json`,
-          { headers: { 'User-Agent': 'Ponytail/1.0 (ponytailapp@example.com)' } }
-        );
-        const relData = await relRes.json();
-        const releases = relData.releases || [];
-        for (const release of releases) {
-          try {
-            const coverRes = await fetch(`https://coverartarchive.org/release/${release.id}/front`, { method: 'HEAD' });
-            if (coverRes.ok) {
-              setCoverUrl(`https://coverartarchive.org/release/${release.id}/front`);
-              return;
-            }
-          } catch { continue; }
-        }
-      } catch (err) {
-        console.log('Cover art fetch error:', err);
-      }
-    };
-    fetchCover();
-  }, [artist]);
-
-  const hue = artist ? artist.name.charCodeAt(0) * 37 % 360 : 200;
-  const gradientBg = `linear-gradient(160deg, hsl(${hue}, 40%, 20%) 0%, hsl(${hue + 40}, 30%, 12%) 100%)`;
 
   const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
   const handleTouchEnd = (e) => {
@@ -380,18 +351,11 @@ const ArtistSlide = ({ artist, onSwipeUp }) => {
 
   return (
     <div
-      style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", animation: "fadeSlideUp 0.5s ease forwards", userSelect: "none" }}
+      style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", animation: "fadeSlideUp 0.5s ease forwards", userSelect: "none" }}
       onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
       onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}
     >
-      <div style={{ position: "absolute", inset: 0, background: coverUrl ? "none" : gradientBg, zIndex: 0 }}>
-        {coverUrl && (
-          <img src={coverUrl} alt="" onLoad={() => setBgLoaded(true)}
-            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: bgLoaded ? 0.35 : 0, transition: "opacity 0.8s ease" }} />
-        )}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(34,34,34,0.5) 0%, rgba(34,34,34,0.85) 100%)" }} />
-      </div>
-      <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px" }}>
         <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "12px" }}>
           Based on your love of
         </div>
@@ -402,7 +366,7 @@ const ArtistSlide = ({ artist, onSwipeUp }) => {
           we've put together something special for you.
         </div>
       </div>
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", paddingBottom: "16px", animation: "chevronPulse 1.5s ease-in-out infinite" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", paddingBottom: "16px", animation: "chevronPulse 1.5s ease-in-out infinite" }}>
         {[0, 1, 2].map(i => (
           <svg key={i} width="24" height="14" viewBox="0 0 24 14" fill="none" style={{ opacity: 1 - i * 0.25 }}>
             <path d="M2 12L12 2L22 12" stroke="#5DEBD7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -438,16 +402,8 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
   return (
     <div
       ref={containerRef}
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        animation: "fadeSlideUp 0.5s ease forwards",
-      }}
+      style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", position: "relative", animation: "fadeSlideUp 0.5s ease forwards" }}
     >
-      {/* ── Text content at top ── */}
       <div style={{ padding: "0 4px", display: "flex", flexDirection: "column", gap: "22px" }}>
         <p style={{ fontSize: "16px", fontWeight: "400", color: colors.text, fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
           First things first,{"\n"}
@@ -471,22 +427,14 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
       </div>
 
       {/* ── Red arrow + Pony icon bottom right ── */}
-      <div style={{
-        position: "absolute",
-        bottom: "0",
-        left: "0",
-        right: "0",
-        height: "220px",
-        pointerEvents: "none",
-      }}>
-        {/* ── SVG arrow curving from "Pony" word to bottom right circle ── */}
+      <div style={{ position: "absolute", bottom: "0", left: "0", right: "0", height: "220px", pointerEvents: "none" }}>
         {arrowStyle && (
           <svg
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }}
             viewBox="0 0 311 220"
           >
             <defs>
-              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+              <marker id="arrowheadPony" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
                 <polygon points="0 0, 10 3.5, 0 7" fill="#FF4444" />
               </marker>
             </defs>
@@ -495,24 +443,12 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
               stroke="#FF4444"
               strokeWidth="2"
               fill="none"
-              strokeDasharray="6 3"
-              markerEnd="url(#arrowhead)"
+              markerEnd="url(#arrowheadPony)"
             />
           </svg>
         )}
 
-        {/* ── Chevrons above pony icon — bottom right ── */}
-        <div style={{
-          position: "absolute",
-          bottom: "76px",
-          right: "22px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "2px",
-          animation: "chevronPulse 1.5s ease-in-out infinite",
-          pointerEvents: "none",
-        }}>
+        <div style={{ position: "absolute", bottom: "76px", right: "22px", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", animation: "chevronPulse 1.5s ease-in-out infinite", pointerEvents: "none" }}>
           {[0, 1].map(i => (
             <svg key={i} width="20" height="12" viewBox="0 0 24 14" fill="none" style={{ opacity: 1 - i * 0.35 }}>
               <path d="M2 12L12 2L22 12" stroke="#5DEBD7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -520,34 +456,20 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
           ))}
         </div>
 
-        {/* ── PonyMode icon — bottom right, just above MiniPlayer ── */}
         <div
           onClick={onPonyPress}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           style={{
-            position: "absolute",
-            bottom: "10px",
-            right: "20px",
-            width: "52px",
-            height: "52px",
-            cursor: "pointer",
+            position: "absolute", bottom: "10px", right: "20px",
+            width: "52px", height: "52px", cursor: "pointer",
             transition: "all 0.2s ease",
             transform: hovered ? "scale(1.08)" : "scale(1)",
-            filter: hovered
-              ? "drop-shadow(0 0 12px rgba(93,235,215,0.7))"
-              : "drop-shadow(0 0 6px rgba(93,235,215,0.4))",
-            pointerEvents: "all",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            filter: hovered ? "drop-shadow(0 0 12px rgba(93,235,215,0.7))" : "drop-shadow(0 0 6px rgba(93,235,215,0.4))",
+            pointerEvents: "all", display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >
-          <img
-            src={require('../components/icons/PonyMode.svg')}
-            alt="Pony Mode"
-            style={{ width: "52px", height: "52px", objectFit: "contain" }}
-          />
+          <img src={require('../components/icons/PonyMode.svg')} alt="Pony Mode" style={{ width: "52px", height: "52px", objectFit: "contain" }} />
         </div>
       </div>
     </div>
@@ -557,11 +479,6 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
 // ─── Slide 7: Goat Mode ───────────────────────────────────────────────────────
 const GoatModeSlide = ({ onGoatPress }) => {
   const [hovered, setHovered] = useState(false);
-  const doMusicBetterRef = useRef(null);
-  const containerRef = useRef(null);
-  const [arrowStyle, setArrowStyle] = useState(null);
-
-  // Touch / mouse swipe up to advance
   const touchStartY = useRef(null);
   const mouseStartY = useRef(null);
 
@@ -578,171 +495,107 @@ const GoatModeSlide = ({ onGoatPress }) => {
     mouseStartY.current = null;
   };
 
-  // Measure "do music better" position for arrow
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!doMusicBetterRef.current || !containerRef.current) return;
-      const textRect = doMusicBetterRef.current.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-      setArrowStyle({
-        fromX: textRect.right - containerRect.left + 8,
-        fromY: textRect.top - containerRect.top + textRect.height / 2,
-      });
-    }, 300);
-    return () => clearTimeout(timer);
-  }, []);
-
   const gold = "#f5cf00";
 
   return (
     <div
-      ref={containerRef}
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        animation: "fadeSlideUp 0.5s ease forwards",
-        userSelect: "none",
-        overflowY: "auto",
-        overflowX: "hidden",
-      }}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+      style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", position: "relative", animation: "fadeSlideUp 0.5s ease forwards", userSelect: "none", overflowY: "auto", overflowX: "hidden" }}
+      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}
     >
       {/* ── Text content ── */}
-      <div style={{ padding: "0 4px 160px", display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ padding: "0 4px 160px", display: "flex", flexDirection: "column", gap: "0px" }}>
 
-        {/* Introducing... */}
         <p style={{ fontSize: "16px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
           Introducing...
         </p>
 
-        {/* GOAT MODE heading */}
-        <h2 style={{
-          fontSize: "26px",
-          fontWeight: "700",
-          color: "#5DEBD7",
-          fontFamily: "'Kanit', sans-serif",
-          letterSpacing: "2px",
-          margin: 0,
-          textAlign: "left",
-        }}>
+        <h2 style={{ fontSize: "26px", fontWeight: "700", color: "#5DEBD7", fontFamily: "'Kanit', sans-serif", letterSpacing: "2px", margin: 0, textAlign: "center" }}>
           GOAT MODE
         </h2>
 
-        {/* Para 1 */}
-        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+        <div style={{ height: "16px" }} />
+
+        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, paddingLeft: "16px" }}>
           ...Welcome to{" "}
           <span style={{ color: "#5DEBD7", fontWeight: "600" }}>Goat Mode™</span>
-          , the first ever hackable algorithm.
+          , the first ever{" "}
+          <strong>hackable algorithm</strong>.
         </p>
 
-        {/* Para 2 */}
-        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+        <div style={{ height: "16px" }} />
+
+        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, paddingLeft: "16px" }}>
           Think of it as a way to tweak the algorithm to better suit your vibe.
         </p>
 
-        {/* Para 3 */}
-        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, paddingLeft: "16px" }}>
           This feature is complex. It's not for the average listener;
         </p>
 
-        {/* Indented paragraphs */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingLeft: "20px", paddingRight: "20px" }}>
+        <div style={{ height: "16px" }} />
 
+        <div style={{ display: "flex", flexDirection: "column", gap: "0px", textAlign: "center" }}>
           <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-            It's for the{" "}
-            <span style={{ color: "#5DEBD7", fontWeight: "600" }}>music lovers</span>.
+            It's for the <span style={{ color: "#5DEBD7", fontWeight: "600" }}>music lovers</span>.
           </p>
-
           <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-            It's for the{" "}
-            <span style={{ color: gold, fontWeight: "600" }}>indie artists</span>.
+            It's for the <span style={{ color: gold, fontWeight: "600" }}>indie artists</span>.
           </p>
-
           <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-            It's for the people looking for{" "}
-            <span style={{ color: "#5DEBD7", fontWeight: "600" }}>new shit</span>.
+            It's for the people looking for <span style={{ color: "#5DEBD7", fontWeight: "600" }}>new shit</span>.
           </p>
-
           <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-            But especially, It's for{" "}
-            <span style={{ color: gold, fontWeight: "600" }}>that guy</span>
-            {" "}at the old record store.
+            But especially,<br />
+            It's for <span style={{ color: gold, fontWeight: "600" }}>that guy</span> at the old record store.
           </p>
-
-          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-            You know, the guy with the{" "}
-            <span style={{ color: "#5DEBD7", fontWeight: "600" }}>ponytail</span>
-            . Now you know.
-          </p>
-
-          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-            And maybe{" "}
-            <span style={{ color: "#5DEBD7", fontWeight: "600" }}>ponytail</span>
-            {" "}is for you.{"\n"}
-            Click the arrow to discover{"\n"}
-            how to{" "}
-            <span ref={doMusicBetterRef} style={{ color: gold, fontWeight: "600" }}>do music better</span>
-          </p>
-
         </div>
+
+        <div style={{ height: "16px" }} />
+
+        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, textAlign: "center" }}>
+          You know, the guy with the <span style={{ color: "#5DEBD7", fontWeight: "600" }}>ponytail</span>. Now you know.
+        </p>
+
+        <div style={{ height: "16px" }} />
+
+        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, textAlign: "center" }}>
+          And maybe <span style={{ color: "#5DEBD7", fontWeight: "600" }}>ponytail</span> is for you.
+        </p>
+
+        <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, textAlign: "left" }}>
+          Click the arrow to discover<br />
+          how to <span style={{ color: gold, fontWeight: "600" }}>do music better</span>
+        </p>
+
       </div>
 
       {/* ── Red arrow + chevrons + GoatMode icon — bottom right ── */}
-      <div style={{
-        position: "absolute",
-        bottom: "0",
-        left: "0",
-        right: "0",
-        height: "220px",
-        pointerEvents: "none",
-      }}>
+      <div style={{ position: "absolute", bottom: "0", left: "0", right: "0", height: "220px", pointerEvents: "none" }}>
 
-        {/* ── SVG arrow from "do music better" rightward to chevrons ── */}
-        {arrowStyle && (
-          <svg
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }}
-            viewBox="0 0 311 220"
-          >
-            <defs>
-              <marker id="arrowheadGoat" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#FF4444" />
-              </marker>
-            </defs>
-            <path
-              d={`M ${arrowStyle.fromX} ${arrowStyle.fromY + 150} C ${arrowStyle.fromX + 30} ${arrowStyle.fromY + 100}, 280 120, 272 158`}
-              stroke="#FF4444"
-              strokeWidth="2"
-              fill="none"
-              strokeDasharray="6 3"
-              markerEnd="url(#arrowheadGoat)"
-            />
-          </svg>
-        )}
+        <svg
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }}
+          viewBox="0 0 311 220"
+        >
+          <defs>
+            <marker id="arrowheadGoat" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#FF4444" />
+            </marker>
+          </defs>
+          <path
+            d="M 171 190 C 210 160, 265 120, 265 144"
+            stroke="#FF4444"
+            strokeWidth="2"
+            fill="none"
+            markerEnd="url(#arrowheadGoat)"
+          />
+        </svg>
 
-        {/* ── Chevrons above goat icon ── */}
         <div
           onClick={onGoatPress}
           onMouseDown={e => e.stopPropagation()}
           onMouseUp={e => e.stopPropagation()}
-          style={{
-            position: "absolute",
-            bottom: "76px",
-            right: "22px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "2px",
-            animation: "chevronPulse 1.5s ease-in-out infinite",
-            cursor: "pointer",
-            padding: "6px",
-            pointerEvents: "all",
-          }}
+          style={{ position: "absolute", bottom: "76px", right: "22px", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", animation: "chevronPulse 1.5s ease-in-out infinite", cursor: "pointer", padding: "6px", pointerEvents: "all" }}
         >
           {[0, 1].map(i => (
             <svg key={i} width="20" height="12" viewBox="0 0 24 14" fill="none" style={{ opacity: 1 - i * 0.35 }}>
@@ -751,7 +604,6 @@ const GoatModeSlide = ({ onGoatPress }) => {
           ))}
         </div>
 
-        {/* ── GoatMode icon — bottom right ── */}
         <div
           onClick={onGoatPress}
           onMouseEnter={() => setHovered(true)}
@@ -759,35 +611,22 @@ const GoatModeSlide = ({ onGoatPress }) => {
           onMouseDown={e => e.stopPropagation()}
           onMouseUp={e => e.stopPropagation()}
           style={{
-            position: "absolute",
-            bottom: "10px",
-            right: "20px",
-            width: "52px",
-            height: "52px",
-            cursor: "pointer",
+            position: "absolute", bottom: "10px", right: "20px",
+            width: "52px", height: "52px", cursor: "pointer",
             transition: "all 0.2s ease",
             transform: hovered ? "scale(1.08)" : "scale(1)",
-            filter: hovered
-              ? "drop-shadow(0 0 12px rgba(93,235,215,0.7))"
-              : "drop-shadow(0 0 6px rgba(93,235,215,0.4))",
-            pointerEvents: "all",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            filter: hovered ? "drop-shadow(0 0 12px rgba(93,235,215,0.7))" : "drop-shadow(0 0 6px rgba(93,235,215,0.4))",
+            pointerEvents: "all", display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >
-          <img
-            src={require('../components/icons/GoatMode.svg')}
-            alt="Goat Mode"
-            style={{ width: "52px", height: "52px", objectFit: "contain" }}
-          />
+          <img src={require('../components/icons/GoatMode.svg')} alt="Goat Mode" style={{ width: "52px", height: "52px", objectFit: "contain" }} />
         </div>
       </div>
     </div>
   );
 };
 
-// ─── Slide 7: Placeholder ────────────────────────────────────────────────────
+// ─── Slide 8: Placeholder ─────────────────────────────────────────────────────
 const PlaceholderSlide = ({ setAppScreen }) => (
   <div style={{ width: "100%", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "fadeSlideUp 0.5s ease forwards" }}>
     <div style={{ fontSize: "18px", fontWeight: "600", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center", lineHeight: 1.5 }}>
@@ -807,6 +646,10 @@ export default function OnboardingScreen({ setScreen }) {
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // ── Shared background state — persists across all full-height slides ──
+  const [coverUrl, setCoverUrl] = useState(null);
+  const [bgLoaded, setBgLoaded] = useState(false);
+
   const handleFinishSignup = async (selectedArtists) => {
     setLoading(true);
     try {
@@ -814,6 +657,30 @@ export default function OnboardingScreen({ setScreen }) {
       await register(email, username, password);
       await updateProfile({ favorite_artists: selectedArtists });
       setArtists(selectedArtists);
+
+      // ── Fetch cover art for first artist upfront ──
+      if (selectedArtists[0]?.id) {
+        try {
+          const relRes = await fetch(
+            `https://musicbrainz.org/ws/2/release?artist=${selectedArtists[0].id}&limit=5&fmt=json`,
+            { headers: { 'User-Agent': 'Ponytail/1.0 (ponytailapp@example.com)' } }
+          );
+          const relData = await relRes.json();
+          const releases = relData.releases || [];
+          for (const release of releases) {
+            try {
+              const coverRes = await fetch(`https://coverartarchive.org/release/${release.id}/front`, { method: 'HEAD' });
+              if (coverRes.ok) {
+                setCoverUrl(`https://coverartarchive.org/release/${release.id}/front`);
+                break;
+              }
+            } catch { continue; }
+          }
+        } catch (err) {
+          console.log('Cover art fetch error:', err);
+        }
+      }
+
       setStep("intro");
     } catch (err) {
       const message = err.response?.data?.error || 'Something went wrong.';
@@ -822,6 +689,10 @@ export default function OnboardingScreen({ setScreen }) {
       setLoading(false);
     }
   };
+
+  // ── Gradient fallback based on first artist name ──
+  const hue = artists[0] ? artists[0].name.charCodeAt(0) * 37 % 360 : 200;
+  const gradientBg = `linear-gradient(160deg, hsl(${hue}, 40%, 20%) 0%, hsl(${hue + 40}, 30%, 12%) 100%)`;
 
   const isFullHeightSlide = ["intro", "artist", "ponymode", "goatmode", "placeholder"].includes(step);
 
@@ -865,58 +736,82 @@ export default function OnboardingScreen({ setScreen }) {
           overflow: "hidden",
         }}>
 
+          {/* ── Persistent background for all full-height slides ── */}
+          {isFullHeightSlide && (
+            <div style={{ position: "absolute", inset: 0, zIndex: 0, background: gradientBg }}>
+              {coverUrl && (
+                <img
+                  src={coverUrl}
+                  alt=""
+                  onLoad={() => setBgLoaded(true)}
+                  style={{
+                    width: "100%", height: "100%", objectFit: "cover",
+                    opacity: bgLoaded ? 0.35 : 0,
+                    transition: "opacity 0.8s ease",
+                  }}
+                />
+              )}
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(34,34,34,0.5) 0%, rgba(34,34,34,0.85) 100%)" }} />
+            </div>
+          )}
+
+          {/* ── Form steps ── */}
           {step === "email" && <EmailStep email={email} setEmail={setEmail} onNext={() => setStep("password")} />}
           {step === "password" && <PasswordStep password={password} setPassword={setPassword} onNext={() => setStep("artists")} loading={loading} />}
           {step === "artists" && <FavoriteArtistsStep onNext={handleFinishSignup} loading={loading} />}
 
+          {/* ── Full height slides — all sit above background via zIndex: 1 ── */}
           {step === "intro" && (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0", position: "relative", zIndex: 1 }}>
               <IntroSlide onNext={() => setScreen("home")} onSwipeUp={() => setStep("artist")} />
             </div>
           )}
 
           {step === "artist" && (
             <>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", zIndex: 1 }}>
                 <ArtistSlide artist={artists[0]} onSwipeUp={() => setStep("ponymode")} />
               </div>
-              <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
-              <FooterNav activeTab="home" onTabPress={() => {}} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
+                <FooterNav activeTab="home" onTabPress={() => {}} />
+              </div>
             </>
           )}
 
           {step === "ponymode" && (
             <>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0", overflow: "hidden" }}>
-            <PonyModeSlide
-                artist={artists[0]}
-                onPonyPress={() => setStep("goatmode")}
-            />
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0", overflow: "hidden", position: "relative", zIndex: 1 }}>
+                <PonyModeSlide artist={artists[0]} onPonyPress={() => setStep("goatmode")} />
               </div>
-              <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
-              <FooterNav activeTab="home" onTabPress={() => {}} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
+                <FooterNav activeTab="home" onTabPress={() => {}} />
+              </div>
             </>
           )}
 
           {step === "goatmode" && (
             <>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0", overflow: "hidden" }}>
-                <GoatModeSlide
-                    onGoatPress={() => setStep("placeholder")}
-                />
-                </div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0", overflow: "hidden", position: "relative", zIndex: 1 }}>
+                <GoatModeSlide onGoatPress={() => setStep("placeholder")} />
+              </div>
+              <div style={{ position: "relative", zIndex: 1 }}>
                 <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
                 <FooterNav activeTab="home" onTabPress={() => {}} />
+              </div>
             </>
-            )}
+          )}
 
           {step === "placeholder" && (
             <>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 20px" }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 20px", position: "relative", zIndex: 1 }}>
                 <PlaceholderSlide setAppScreen={setScreen} />
               </div>
-              <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
-              <FooterNav activeTab="home" onTabPress={() => {}} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
+                <FooterNav activeTab="home" onTabPress={() => {}} />
+              </div>
             </>
           )}
 

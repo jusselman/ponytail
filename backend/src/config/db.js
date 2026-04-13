@@ -5,8 +5,14 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-pool.on('connect', () => {
-  console.log('Connected to the database');
+// ── Test connection on startup ──
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('Error connecting to database:', err.message);
+    process.exit(-1);
+  }
+  console.log('Connected to database');
+  release();
 });
 
 pool.on('error', (err) => {
