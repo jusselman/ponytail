@@ -171,22 +171,37 @@ const FavoriteArtistsStep = ({ onNext, loading }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [selected, setSelected] = useState([]);
   const [searching, setSearching] = useState(false);
-  const [focused, setFocused] = useState(false);
   const debounceRef = useRef(null);
 
   const searchArtists = async (q) => {
-    if (!q || q.length < 2) { setSuggestions([]); return; }
+    if (!q || q.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+
     setSearching(true);
+
     try {
-      const res = await fetch(`http://localhost:5000/api/auth/artists/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(
+        `http://localhost:5000/api/auth/artists/search?q=${encodeURIComponent(q)}`
+      );
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
       const data = await res.json();
-      setSuggestions((data.artists || []).map(a => ({
-        id: a.id,
-        name: a.name,
-        disambiguation: a.disambiguation || null,
-      })));
+      const artistsList = data.artists || data["artists"] || [];
+
+      setSuggestions(
+        artistsList.map((a) => ({
+          id: a.id,
+          name: a.name,
+          disambiguation: a.disambiguation || null,
+        }))
+      );
     } catch (err) {
-      console.log('Artist search error:', err);
+      console.error("MusicBrainz connection error:", err.message);
+      // Optional: you could set a temporary non-intrusive message here if desired
+      setSuggestions([]);
     } finally {
       setSearching(false);
     }
@@ -196,68 +211,167 @@ const FavoriteArtistsStep = ({ onNext, loading }) => {
     const val = e.target.value;
     setQuery(val);
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchArtists(val), 350);
+    debounceRef.current = setTimeout(() => searchArtists(val), 300);
   };
 
   const handleSelect = (artist) => {
-    if (selected.length >= 3 || selected.find(a => a.id === artist.id)) return;
+    if (selected.length >= 3 || selected.some((a) => a.id === artist.id)) return;
+
     setSelected([...selected, artist]);
-    setQuery(""); setSuggestions([]);
+    setQuery("");
+    setSuggestions([]);
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Tab" && suggestions.length > 0) { e.preventDefault(); handleSelect(suggestions[0]); }
+    if ((e.key === "Enter" || e.key === "Tab") && query.trim()) {
+      e.preventDefault();
+      const manualArtist = {
+        id: "manual-" + Date.now(),
+        name: query.trim(),
+        disambiguation: null,
+      };
+      handleSelect(manualArtist);
+    }
+  };
+
+  const removeArtist = (idToRemove) => {
+    setSelected(selected.filter((a) => a.id !== idToRemove));
   };
 
   return (
     <div style={{ width: "100%", animation: "fadeSlideUp 0.4s ease forwards" }}>
-      <div style={{ fontSize: "22px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", marginBottom: "8px", letterSpacing: "-0.2px", lineHeight: 1.3 }}>
+      <div style={{
+        fontSize: "22px", fontWeight: "600", color: colors.text,
+        fontFamily: "'Kanit', sans-serif", marginBottom: "8px",
+        letterSpacing: "-0.2px", lineHeight: 1.3,
+      }}>
         Give us three of your favorite bands or artists:
       </div>
+
       <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginBottom: "24px" }}>
-        Type to search, tap a suggestion or press Tab to select.
+        Type to search or enter any name and press Enter
       </div>
 
+      {/* Selected artists */}
       {selected.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
-          {selected.map(artist => (
-            <div key={artist.id} style={{ display: "flex", alignItems: "center", gap: "6px", backgroundColor: colors.tealGlow, border: `1px solid ${colors.teal}`, borderRadius: "6px", padding: "6px 12px" }}>
-              <span style={{ fontSize: "13px", fontWeight: "600", color: colors.teal, fontFamily: "'Kanit', sans-serif" }}>{artist.name}</span>
-              <button onClick={() => setSelected(selected.filter(a => a.id !== artist.id))} style={{ background: "none", border: "none", color: colors.teal, cursor: "pointer", fontSize: "14px", padding: "0 2px", lineHeight: 1 }}>×</button>
+          {selected.map((artist) => (
+            <div
+              key={artist.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                backgroundColor: colors.tealGlow,
+                border: `1px solid ${colors.teal}`,
+                borderRadius: "6px",
+                padding: "6px 12px",
+              }}
+            >
+              <span style={{ fontSize: "13px", fontWeight: "600", color: colors.teal }}>
+                {artist.name}
+              </span>
+              <button
+                onClick={() => removeArtist(artist.id)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: colors.teal,
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  padding: "0 2px",
+                }}
+              >
+                ×
+              </button>
             </div>
           ))}
         </div>
       )}
 
+      {/* Input + suggestions */}
       {selected.length < 3 && (
         <div style={{ position: "relative" }}>
           <input
-            style={{ width: "100%", padding: "14px 16px", borderRadius: "6px", backgroundColor: colors.inputBg, border: `1.5px solid #FFFFFF`, color: colors.text, fontSize: "15px", outline: "none", fontFamily: "'Kanit', sans-serif", boxSizing: "border-box", boxShadow: focused ? `0 0 0 3px rgba(93,235,215,0.15)` : "none", transition: "box-shadow 0.2s ease" }}
+            style={{
+              width: "100%",
+              padding: "14px 16px",
+              borderRadius: "6px",
+              backgroundColor: colors.inputBg,
+              border: `1.5px solid #FFFFFF`,
+              color: colors.text,
+              fontSize: "15px",
+              outline: "none",
+              fontFamily: "'Kanit', sans-serif",
+              boxSizing: "border-box",
+            }}
             placeholder={`Artist ${selected.length + 1} of 3...`}
-            value={query} onChange={handleQueryChange} onKeyDown={handleKeyDown}
-            onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => setFocused(false), 150)}
+            value={query}
+            onChange={handleQueryChange}
+            onKeyDown={handleKeyDown}
           />
-          {suggestions.length > 0 && focused && (
-            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, backgroundColor: "#2c2c2c", border: `1px solid rgba(255,255,255,0.15)`, borderRadius: "6px", marginTop: "4px", zIndex: 100, overflow: "hidden" }}>
+
+          {/* Suggestions dropdown */}
+          {suggestions.length > 0 && (
+            <div style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              backgroundColor: "#2c2c2c",
+              border: `1px solid rgba(255,255,255,0.15)`,
+              borderRadius: "6px",
+              marginTop: "4px",
+              zIndex: 100,
+              maxHeight: "240px",
+              overflowY: "auto",
+            }}>
               {suggestions.map((artist, i) => (
-                <div key={artist.id} onMouseDown={() => handleSelect(artist)}
-                  style={{ padding: "12px 16px", cursor: "pointer", borderBottom: i < suggestions.length - 1 ? `1px solid rgba(255,255,255,0.07)` : "none", transition: "background 0.15s ease" }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = "#383838"}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}>
-                  <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>{artist.name}</div>
-                  {artist.disambiguation && <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>{artist.disambiguation}</div>}
+                <div
+                  key={artist.id}
+                  onMouseDown={() => handleSelect(artist)}
+                  style={{
+                    padding: "12px 16px",
+                    cursor: "pointer",
+                    borderBottom: i < suggestions.length - 1 ? `1px solid rgba(255,255,255,0.07)` : "none",
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#383838"}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                >
+                  <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text }}>
+                    {artist.name}
+                  </div>
+                  {artist.disambiguation && (
+                    <div style={{ fontSize: "11px", color: colors.muted, marginTop: "2px" }}>
+                      {artist.disambiguation}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
+
           {searching && (
-            <div style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>searching...</div>
+            <div style={{
+              position: "absolute",
+              right: "14px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "12px",
+              color: colors.muted,
+            }}>
+              searching...
+            </div>
           )}
         </div>
       )}
 
       <div style={{ marginTop: "28px" }}>
-        <NextButton onPress={() => onNext(selected)} label={loading ? "Saving..." : "Next"} disabled={selected.length < 3 || loading} />
+        <NextButton
+          onPress={() => onNext(selected)}
+          label={loading ? "Saving..." : "Next"}
+          disabled={selected.length < 3 || loading}
+        />
       </div>
     </div>
   );

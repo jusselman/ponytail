@@ -3,7 +3,7 @@ import { getMe } from '../services/authService';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 
-// ─── Color palette consistent with LoginScreen ───────────────────────────────
+// ─── Colors ───────────────────────────────────────────────────────────────────
 const colors = {
   bg: "#222222",
   bgDeep: "#222222",
@@ -18,71 +18,48 @@ const colors = {
   border: "rgba(255,255,255,0.07)",
 };
 
-// ─── Mock data (will be replaced by real API calls) ───────────────────────────
-const MOCK_FEED = [
-  {
-    id: "1",
-    artist: "Nola Voss",
-    artistAvatar: null,
-    trackTitle: "Hollow Frequencies",
-    genre: "Ambient / Electronic",
-    duration: "4:32",
-    plays: "12.4k",
-    isNew: true,
-    postedAt: "2h ago",
-  },
-  {
-    id: "2",
-    artist: "Cass Ember",
-    artistAvatar: null,
-    trackTitle: "Before the Signal Drops",
-    genre: "Indie Folk",
-    duration: "3:18",
-    plays: "8.1k",
-    isNew: false,
-    postedAt: "5h ago",
-  },
-  {
-    id: "3",
-    artist: "Maren Hex",
-    artistAvatar: null,
-    trackTitle: "Two Moons Collide",
-    genre: "Dream Pop",
-    duration: "5:04",
-    plays: "21.7k",
-    isNew: true,
-    postedAt: "Yesterday",
-  },
-  {
-    id: "4",
-    artist: "Theo Callum",
-    artistAvatar: null,
-    trackTitle: "Static Bloom",
-    genre: "Lo-fi Hip Hop",
-    duration: "2:55",
-    plays: "5.3k",
-    isNew: false,
-    postedAt: "2 days ago",
-  },
-  {
-    id: "5",
-    artist: "Isla Pryor",
-    artistAvatar: null,
-    trackTitle: "Petrichor",
-    genre: "Shoegaze",
-    duration: "6:11",
-    plays: "33.9k",
-    isNew: false,
-    postedAt: "3 days ago",
-  },
-];
+// ─── Mock feed generator ──────────────────────────────────────────────────────
+// Generates mock tracks "similar to" the user's chosen seed artists.
+// Replace with real API call once recommendation engine is built.
+const generateMockFeed = (seedArtists) => {
+  const similarArtists = {
+    default: [
+      { name: "Nola Voss", genre: "Ambient / Electronic" },
+      { name: "Cass Ember", genre: "Indie Folk" },
+      { name: "Maren Hex", genre: "Dream Pop" },
+      { name: "Theo Callum", genre: "Lo-fi Hip Hop" },
+      { name: "Isla Pryor", genre: "Shoegaze" },
+      { name: "Ryn Holt", genre: "Jazz Fusion" },
+      { name: "Pave Lune", genre: "Neo Soul" },
+    ],
+  };
 
-const MOCK_DISCOVER = [
-  { id: "d1", artist: "Ryn Holt", genre: "Jazz Fusion", followers: "2.1k" },
-  { id: "d2", artist: "Pave Lune", genre: "Neo Soul", followers: "4.8k" },
-  { id: "d3", artist: "Ellory Sun", genre: "Experimental", followers: "1.3k" },
-  { id: "d4", artist: "Cade Winters", genre: "Post-Rock", followers: "6.2k" },
-];
+  const trackTitles = [
+    "Hollow Frequencies", "Before the Signal Drops", "Two Moons Collide",
+    "Static Bloom", "Petrichor", "Glass Meridian", "Soft Machinery",
+    "Tender Collapse", "Neon Pastoral", "The Long Dissolve",
+  ];
+
+  const durations = ["2:47", "3:18", "4:02", "3:55", "5:11", "2:59", "4:33"];
+  const plays = ["2.1k", "8.4k", "12.7k", "5.3k", "21.9k", "3.6k", "18.2k"];
+
+  // Build pool from seed artist names for display context
+  const seedNames = seedArtists?.map(a => a.name) || [];
+  const pool = similarArtists.default;
+
+  return pool.map((artist, i) => ({
+    id: String(i + 1),
+    artist: artist.name,
+    genre: artist.genre,
+    trackTitle: trackTitles[i % trackTitles.length],
+    duration: durations[i % durations.length],
+    plays: plays[i % plays.length],
+    isNew: i < 2,
+    postedAt: i === 0 ? "1h ago" : i === 1 ? "3h ago" : i === 2 ? "Yesterday" : `${i} days ago`,
+    // Tag which seed artist this is "similar to"
+    similarTo: seedNames[i % Math.max(seedNames.length, 1)] || null,
+  }));
+};
 
 // ─── Waveform Animation ───────────────────────────────────────────────────────
 const WaveformIcon = ({ playing }) => (
@@ -103,24 +80,17 @@ const WaveformIcon = ({ playing }) => (
   </div>
 );
 
-// ─── Avatar Placeholder ───────────────────────────────────────────────────────
+// ─── Avatar ───────────────────────────────────────────────────────────────────
 const Avatar = ({ name, size = 42 }) => {
   const initials = name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
   const hue = name.charCodeAt(0) * 37 % 360;
   return (
     <div style={{
-      width: size,
-      height: size,
-      borderRadius: "50%",
+      width: size, height: size, borderRadius: "50%",
       background: `linear-gradient(135deg, hsl(${hue}, 60%, 45%), hsl(${hue + 40}, 70%, 35%))`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: size * 0.35,
-      fontWeight: "700",
-      color: "#fff",
-      fontFamily: "'Kanit', sans-serif",
-      flexShrink: 0,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: size * 0.35, fontWeight: "700", color: "#fff",
+      fontFamily: "'Kanit', sans-serif", flexShrink: 0,
     }}>
       {initials}
     </div>
@@ -132,17 +102,11 @@ const PlayButton = ({ playing, onToggle }) => (
   <button
     onClick={onToggle}
     style={{
-      width: 40,
-      height: 40,
-      borderRadius: "50%",
+      width: 40, height: 40, borderRadius: "50%",
       backgroundColor: playing ? colors.teal : "transparent",
       border: `1.5px solid ${playing ? colors.teal : "rgba(255,255,255,0.2)"}`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-      flexShrink: 0,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      cursor: "pointer", transition: "all 0.2s ease", flexShrink: 0,
     }}
   >
     {playing ? (
@@ -165,6 +129,7 @@ const PlayButton = ({ playing, onToggle }) => (
 // ─── Track Card ───────────────────────────────────────────────────────────────
 const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
   const [hovered, setHovered] = useState(false);
+  const [liked, setLiked] = useState(false);
 
   return (
     <div
@@ -185,6 +150,7 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
         boxSizing: "border-box",
       }}
     >
+      {/* ── Artist row ── */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
         <Avatar name={track.artist} size={32} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -195,18 +161,30 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
             {track.postedAt}
           </div>
         </div>
-        {track.isNew && (
-          <div style={{
-            fontSize: "10px", fontWeight: "700", color: colors.teal,
-            backgroundColor: colors.tealGlow, padding: "3px 8px",
-            borderRadius: "20px", letterSpacing: "0.5px",
-            fontFamily: "'Kanit', sans-serif", flexShrink: 0,
-          }}>
-            NEW
-          </div>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          {track.isNew && (
+            <div style={{
+              fontSize: "10px", fontWeight: "700", color: colors.teal,
+              backgroundColor: colors.tealGlow, padding: "3px 8px",
+              borderRadius: "20px", letterSpacing: "0.5px",
+              fontFamily: "'Kanit', sans-serif", flexShrink: 0,
+            }}>
+              NEW
+            </div>
+          )}
+          {track.similarTo && (
+            <div style={{
+              fontSize: "10px", color: colors.muted,
+              fontFamily: "'Kanit', sans-serif", flexShrink: 0,
+              fontStyle: "italic",
+            }}>
+              similar to {track.similarTo}
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* ── Track info + controls ── */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <PlayButton playing={isPlaying} onToggle={() => onTogglePlay(track.id)} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -232,17 +210,23 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
         </div>
       </div>
 
+      {/* ── Actions ── */}
       <div style={{
         marginTop: "12px", paddingTop: "12px",
         borderTop: `1px solid ${colors.border}`,
         display: "flex", justifyContent: "flex-end", gap: "8px",
       }}>
-        <button style={{
-          background: "none", border: "none", color: colors.muted,
-          fontSize: "12px", cursor: "pointer",
-          fontFamily: "'Kanit', sans-serif", padding: "4px 8px",
-        }}>
-          ♡ Like
+        <button
+          onClick={() => setLiked(!liked)}
+          style={{
+            background: "none", border: "none",
+            color: liked ? colors.teal : colors.muted,
+            fontSize: "12px", cursor: "pointer",
+            fontFamily: "'Kanit', sans-serif", padding: "4px 8px",
+            transition: "color 0.2s ease",
+          }}
+        >
+          {liked ? "♥ Liked" : "♡ Like"}
         </button>
         <button style={{
           background: "none", border: `1px solid ${colors.teal}`,
@@ -250,142 +234,76 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
           fontFamily: "'Kanit', sans-serif", padding: "4px 12px",
           borderRadius: "20px", transition: "all 0.2s",
         }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M12 21C12 21 3 16 3 9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 7-9 12-9 12z" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 10v4M10 12h4" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
           Tip
+        </span>
         </button>
       </div>
     </div>
   );
 };
 
-// ─── Discover Card ────────────────────────────────────────────────────────────
-const DiscoverCard = ({ artist, index }) => {
-  const [following, setFollowing] = useState(false);
-
+// ─── Seed Artist Pills ────────────────────────────────────────────────────────
+// Shows which artists the feed is based on
+const SeedArtistPills = ({ artists }) => {
+  if (!artists || artists.length === 0) return null;
   return (
-    <div style={{
-      backgroundColor: colors.bgCard,
-      borderRadius: "14px",
-      padding: "14px",
-      border: `1px solid ${colors.border}`,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "10px",
-      width: "100%",
-      boxSizing: "border-box",
-      animation: `fadeSlideUp 0.4s ease ${index * 0.08}s forwards`,
-      opacity: 0,
-    }}>
-      <Avatar name={artist.artist} size={48} />
-      <div style={{ textAlign: "center", width: "100%" }}>
-        <div style={{
-          fontSize: "13px", fontWeight: "600", color: colors.text,
-          fontFamily: "'Kanit', sans-serif",
-          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-        }}>
-          {artist.artist}
-        </div>
-        <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
-          {artist.genre}
-        </div>
-        <div style={{ fontSize: "11px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif" }}>
-          {artist.followers} followers
-        </div>
-      </div>
-      <button
-        onClick={() => setFollowing(!following)}
-        style={{
-          padding: "6px 16px", borderRadius: "20px",
-          border: `1px solid ${following ? colors.muted : colors.teal}`,
-          backgroundColor: following ? "transparent" : colors.tealGlow,
-          color: following ? colors.muted : colors.teal,
-          fontSize: "12px", fontWeight: "600", cursor: "pointer",
-          transition: "all 0.2s ease",
-          fontFamily: "'Kanit', sans-serif",
-          width: "100%", boxSizing: "border-box",
-        }}
-      >
-        {following ? "Following" : "+ Follow"}
-      </button>
-    </div>
-  );
-};
-
-// ─── Feed Tab ─────────────────────────────────────────────────────────────────
-const FeedTab = ({ user }) => {
-  const [playingId, setPlayingId] = useState(null);
-
-  const handleTogglePlay = (id) => {
-    setPlayingId(prev => prev === id ? null : id);
-  };
-
-  return (
-    <div style={{ padding: "0 16px 40px", width: "100%", boxSizing: "border-box" }}>
-      <div style={{ marginBottom: "20px" }}>
-        <div style={{
-          fontSize: "22px", fontWeight: "700", color: colors.text,
-          fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px",
-        }}>
-          Hey {user?.username || "there"}
-        </div>
-        <div style={{ fontSize: "14px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginTop: "4px" }}>
-          Here's what the artists you follow have been up to.
-        </div>
-      </div>
-      {MOCK_FEED.map((track, i) => (
-        <TrackCard
-          key={track.id}
-          track={track}
-          index={i}
-          isPlaying={playingId === track.id}
-          onTogglePlay={handleTogglePlay}
-        />
-      ))}
-    </div>
-  );
-};
-
-// ─── Discover Tab ─────────────────────────────────────────────────────────────
-const DiscoverTab = () => (
-  <div style={{ padding: "0 16px 40px", width: "100%", boxSizing: "border-box" }}>
     <div style={{ marginBottom: "20px" }}>
-      <div style={{
-        fontSize: "22px", fontWeight: "700", color: colors.text,
-        fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px",
-      }}>
-        Discover
+      <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "8px" }}>
+        Based on your taste for
       </div>
-      <div style={{ fontSize: "14px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginTop: "4px" }}>
-        Independent artists you might love.
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        {artists.map((artist, i) => (
+          <div key={i} style={{
+            fontSize: "12px", fontWeight: "600",
+            color: colors.teal,
+            backgroundColor: colors.tealGlow,
+            border: `1px solid ${colors.teal}`,
+            borderRadius: "20px",
+            padding: "4px 12px",
+            fontFamily: "'Kanit', sans-serif",
+          }}>
+            {artist.name}
+          </div>
+        ))}
       </div>
     </div>
-    <div style={{
-      display: "grid", gridTemplateColumns: "1fr 1fr",
-      gap: "12px", width: "100%", boxSizing: "border-box",
-    }}>
-      {MOCK_DISCOVER.map((artist, i) => (
-        <DiscoverCard key={artist.id} artist={artist} index={i} />
-      ))}
-    </div>
-  </div>
-);
+  );
+};
 
 // ─── Home Screen ──────────────────────────────────────────────────────────────
 export default function HomeScreen({ setScreen }) {
-  const [activeTab, setActiveTab] = useState("feed");
   const [user, setUser] = useState(null);
+  const [feed, setFeed] = useState([]);
+  const [playingId, setPlayingId] = useState(null);
+  const [activeNav, setActiveNav] = useState("home");
 
   useEffect(() => {
     const loadUser = async () => {
       try {
         const me = await getMe();
         setUser(me);
+        // Generate mock feed based on user's favorite artists
+        const seedArtists = me?.favorite_artists || [];
+        setFeed(generateMockFeed(seedArtists));
       } catch (err) {
         console.log('Could not load user:', err);
+        // Fall back to default mock feed
+        setFeed(generateMockFeed([]));
       }
     };
     loadUser();
   }, []);
+
+  const handleTogglePlay = (id) => {
+    setPlayingId(prev => prev === id ? null : id);
+  };
+
+  const currentTrack = feed.find(t => t.id === playingId) || null;
 
   return (
     <>
@@ -394,23 +312,20 @@ export default function HomeScreen({ setScreen }) {
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
         body { background: #222222; }
         @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes wave {
-            from { transform: scaleY(0.3); }
-            to { transform: scaleY(1); }
+          from { transform: scaleY(0.3); }
+          to { transform: scaleY(1); }
         }
         ::-webkit-scrollbar { display: none; }
-        `}</style>
+      `}</style>
+
       {/* ── Full viewport background ── */}
       <div style={{
-        minHeight: "100vh",
-        width: "100%",
-        backgroundColor: colors.bgDeep,
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
+        minHeight: "100vh", width: "100%", backgroundColor: colors.bgDeep,
+        display: "flex", alignItems: "flex-start", justifyContent: "center",
         fontFamily: "'Kanit', sans-serif",
       }}>
 
@@ -431,32 +346,21 @@ export default function HomeScreen({ setScreen }) {
 
           {/* ── Header ── */}
           <div style={{
-            padding: "32px 20px 0",
+            padding: "32px 20px 12px",
             backgroundColor: colors.bg,
-            position: "sticky",
-            top: 0,
-            zIndex: 10,
+            position: "sticky", top: 0, zIndex: 10,
             borderBottom: `1px solid ${colors.border}`,
-            width: "100%",
-            boxSizing: "border-box",
-            flexShrink: 0,
+            width: "100%", boxSizing: "border-box", flexShrink: 0,
           }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "16px",
-            }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{
                 fontSize: "20px", fontWeight: "700", color: colors.text,
                 fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.5px",
               }}>
                 ponytail
                 <span style={{
-                  display: "inline-block",
-                  width: "6px", height: "6px",
-                  borderRadius: "50%",
-                  backgroundColor: colors.teal,
+                  display: "inline-block", width: "6px", height: "6px",
+                  borderRadius: "50%", backgroundColor: colors.teal,
                   marginLeft: "4px", marginBottom: "6px",
                 }} />
               </div>
@@ -464,51 +368,75 @@ export default function HomeScreen({ setScreen }) {
                 <Avatar name={user?.username || "User"} size={34} />
               </button>
             </div>
+          </div>
 
-            {/* Top navigation tabs */}
-            <div style={{ display: "flex", gap: "4px", width: "100%" }}>
-              {["feed", "discover"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    flex: 1, padding: "10px",
-                    background: "none", border: "none", cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: activeTab === tab ? "700" : "400",
-                    color: activeTab === tab ? colors.teal : colors.muted,
-                    fontFamily: "'Kanit', sans-serif",
-                    textTransform: "capitalize", letterSpacing: "0.3px",
-                    borderBottom: `2px solid ${activeTab === tab ? colors.teal : "transparent"}`,
-                    transition: "all 0.2s ease",
-                    marginBottom: "-1px",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  {tab}
-                </button>
-              ))}
+          {/* ── Scrollable feed ── */}
+          <div style={{
+            flex: 1, overflowY: "auto", overflowX: "hidden",
+            paddingTop: "20px", width: "100%",
+            boxSizing: "border-box", minHeight: 0,
+          }}>
+            <div style={{ padding: "0 16px 20px", width: "100%", boxSizing: "border-box" }}>
+
+              {/* Greeting */}
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{
+                  fontSize: "22px", fontWeight: "700", color: colors.text,
+                  fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px",
+                }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  Hey {user?.username || "there"}
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M7 11.5V6a1.5 1.5 0 0 1 3 0v4.5" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
+                    <path d="M10 7.5V5a1.5 1.5 0 0 1 3 0v5" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
+                    <path d="M13 6.5V5a1.5 1.5 0 0 1 3 0v6" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
+                    <path d="M16 8.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6v-1a1.5 1.5 0 0 1 3 0" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                </div>
+                <div style={{ fontSize: "14px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginTop: "4px" }}>
+                  Here's what we think you'll love.
+                </div>
+              </div>
+
+              {/* Seed artist pills */}
+              <SeedArtistPills artists={user?.favorite_artists} />
+
+              {/* Feed */}
+              {feed.length === 0 ? (
+                <div style={{ textAlign: "center", color: colors.muted, fontFamily: "'Kanit', sans-serif", fontSize: "14px", paddingTop: "40px" }}>
+                  Building your feed...
+                </div>
+              ) : (
+                feed.map((track, i) => (
+                  <TrackCard
+                    key={track.id}
+                    track={track}
+                    index={i}
+                    isPlaying={playingId === track.id}
+                    onTogglePlay={handleTogglePlay}
+                  />
+                ))
+              )}
+
             </div>
           </div>
 
-          {/* ── Scrollable tab content ── */}
-          <div style={{
-            flex: 1,
-            overflowY: "auto",
-            overflowX: "hidden",
-            paddingTop: "20px",
-            width: "100%",
-            boxSizing: "border-box",
-          }}>
-            {activeTab === "feed" && <FeedTab user={user} />}
-            {activeTab === "discover" && <DiscoverTab />}
-          </div>
-
           {/* ── Mini Player ── */}
-  <MiniPlayer track={null} />
+          <MiniPlayer
+            track={currentTrack ? {
+              title: currentTrack.trackTitle,
+              artist: currentTrack.artist,
+              album: currentTrack.genre,
+              coverUrl: null,
+            } : null}
+          />
 
-  {/* ── Footer Nav ── */}
-  <FooterNav activeTab="home" onTabPress={(tab) => console.log('tab pressed:', tab)} />
+          {/* ── Footer Nav ── */}
+          <FooterNav
+            activeTab={activeNav}
+            onTabPress={(tab) => setActiveNav(tab)}
+          />
 
         </div>
       </div>
