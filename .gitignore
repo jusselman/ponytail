@@ -3,3 +3,8 @@ node_modules/
 *.log
 dist/
 .DS_Store
+
+# Dev seed assets — keep CSVs but exclude large binaries
+assets/dev_seed/mp3/
+assets/dev_seed/covers/
+

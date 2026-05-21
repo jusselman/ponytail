@@ -435,7 +435,10 @@ export default function HomeScreen({ setScreen }) {
           {/* ── Footer Nav ── */}
           <FooterNav
             activeTab={activeNav}
-            onTabPress={(tab) => setActiveNav(tab)}
+            onTabPress={(tab) => {
+              setActiveNav(tab);
+              if (tab === "search") setScreen("search");
+            }}
           />
 
         </div>
