@@ -99,4 +99,74 @@ router.get('/artists/search', async (req, res) => {
   }
 });
 
+
+// Search seed_tracks by artist or title
+router.get('/search', async (req, res) => {
+  const { q, type } = req.query;
+  if (!q || q.trim().length < 2) {
+    return res.status(400).json({ error: 'Query must be at least 2 characters.' });
+  }
+  try {
+    const search = `%${q.trim().toLowerCase()}%`;
+    let query, params;
+
+    if (type === 'artist') {
+      query = `
+        SELECT DISTINCT ON (artist) artist, genre
+        FROM seed_tracks
+        WHERE LOWER(artist) LIKE $1
+        ORDER BY artist
+        LIMIT 10
+      `;
+      params = [search];
+    } else if (type === 'track') {
+      query = `
+        SELECT title, artist, album, genre
+        FROM seed_tracks
+        WHERE LOWER(title) LIKE $1
+        ORDER BY title
+        LIMIT 10
+      `;
+      params = [search];
+    } else {
+      // Default: search both artists and tracks
+      query = `
+        (
+          SELECT DISTINCT ON (artist)
+            'artist' as type,
+            artist as name,
+            genre,
+            NULL as album,
+            NULL as artist_name
+          FROM seed_tracks
+          WHERE LOWER(artist) LIKE $1
+          ORDER BY artist
+          LIMIT 5
+        )
+        UNION ALL
+        (
+          SELECT
+            'track' as type,
+            title as name,
+            genre,
+            album,
+            artist as artist_name
+          FROM seed_tracks
+          WHERE LOWER(title) LIKE $1
+          ORDER BY title
+          LIMIT 5
+        )
+        LIMIT 10
+      `;
+      params = [search];
+    }
+
+    const result = await pool.query(query, params);
+    res.json({ results: result.rows });
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
+
 module.exports = router;

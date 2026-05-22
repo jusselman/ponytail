@@ -121,23 +121,25 @@ const StandardSearch = ({ loved, user }) => {
   const debounceRef = useRef(null);
 
   const searchArtists = async (q) => {
-    if (!q || q.length < 2) { setResults([]); return; }
-    setSearching(true);
-    try {
-      const res = await fetch(`http://localhost:5000/api/auth/artists/search?q=${encodeURIComponent(q)}`);
-      const data = await res.json();
-      setResults((data.artists || []).map(a => ({
-        type: "artist",
-        id: a.id,
-        name: a.name,
-        disambiguation: a.disambiguation || null,
-      })));
-    } catch (err) {
-      console.log('Search error:', err);
-    } finally {
-      setSearching(false);
-    }
-  };
+  if (!q || q.length < 2) { setResults([]); return; }
+  setSearching(true);
+  try {
+    const res = await fetch(`http://localhost:5000/api/auth/search?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    setResults((data.results || []).map(r => ({
+      type: r.type,
+      id: r.name,
+      name: r.name,
+      genre: r.genre,
+      artist: r.artist_name,
+      album: r.album,
+    })));
+  } catch (err) {
+    console.log('Search error:', err);
+  } finally {
+    setSearching(false);
+  }
+};
 
   const handleQueryChange = (e) => {
     const val = e.target.value;
@@ -205,14 +207,21 @@ const StandardSearch = ({ loved, user }) => {
                 <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {result.name}
                 </div>
-                {result.disambiguation && (
-                  <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-                    {result.disambiguation}
-                  </div>
-                )}
+                <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
+                  {result.type === "track"
+                    ? `${result.artist ? `by ${result.artist}` : ""}${result.album ? ` · ${result.album}` : ""}`
+                    : result.genre}
+                </div>
               </div>
-              <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-                Artist
+              <div style={{
+                fontSize: "10px", color: result.type === "track" ? colors.teal : colors.muted,
+                fontFamily: "'Kanit', sans-serif",
+                backgroundColor: result.type === "track" ? colors.tealGlow : "transparent",
+                border: `1px solid ${result.type === "track" ? colors.teal : colors.border}`,
+                padding: "2px 8px", borderRadius: "20px",
+                textTransform: "capitalize", flexShrink: 0,
+              }}>
+                {result.type}
               </div>
             </div>
           ))}

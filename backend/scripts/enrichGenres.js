@@ -1,5 +1,5 @@
 // enrichGenres.js
-// Reads raw_db.csv, looks up each unique artist on MusicBrainz,
+// Reads raw_db_utf8.csv, looks up each unique artist on MusicBrainz,
 // appends a Genre column, and writes enriched_db.csv.
 //
 // Usage: node scripts/enrichGenres.js
@@ -8,7 +8,6 @@
 const fs = require("fs");
 const path = require("path");
 const csv = require("csv-parser");
-const { createObjectCsvWriter } = require("csv-writer");
 const fetch = require("node-fetch");
 
 const INPUT_PATH = path.join(__dirname, "../assets/dev_seed/raw_db_utf8.csv");
@@ -87,16 +86,19 @@ async function main() {
   // Step 1: Read all rows
   await new Promise((resolve, reject) => {
     fs.createReadStream(INPUT_PATH)
-      .pipe(csv({ separator: ";" }))
-      .on("data", (row) => rows.push(row))
-      .on("end", resolve)
-      .on("error", reject);
+        .pipe(csv({ separator: ";", bom: true }))
+        .on("data", (row) => rows.push(row))
+        .on("end", resolve)
+        .on("error", reject);
   });
 
   console.log(`Read ${rows.length} rows.`);
 
   // Step 2: Extract unique artists
-  const uniqueArtists = [...new Set(rows.map((r) => r.Artist?.trim()).filter(Boolean))];
+  const uniqueArtists = [...new Set(rows.map((r) => {
+  const artistKey = Object.keys(r).find(k => k.replace(/^\ufeff/, '') === 'Artist') || 'Artist';
+  return r[artistKey]?.trim();
+}).filter(Boolean))];
   console.log(`\nFound ${uniqueArtists.length} unique artists. Looking up genres...\n`);
 
 // Step 3: Build genre map via MusicBrainz
@@ -112,43 +114,45 @@ for (let i = 0; i < toFetch.length; i++) {
 }
 
   // Step 4: Enrich rows
-  const enrichedRows = rows.map((row) => ({
-    Track: row.Track,
-    Title: row.Title,
-    Artist: row.Artist,
-    Album: row.Album,
+const enrichedRows = rows.map((row) => {
+  // Strip BOM from first key if present
+  const titleKey = Object.keys(row).find(k => k.replace(/^\ufeff/, '') === 'Title') || 'Title';
+  
+  return {
+    Track: row.Track || "",
+    Title: row[titleKey] || "",
+    Artist: row.Artist || "",
+    Album: row.Album || "",
     Genre: genreMap[row.Artist?.trim()] || "Unknown",
-    Year: row.Year,
-    Length: row.Length,
-    "Last Modified": row["Last Modified"],
-    Filename: row.Filename,
-    Cover: row.Cover,
-  }));
+    Year: row.Year || "",
+    Length: row.Length || "",
+    "Last Modified": row["Last Modified"] || "",
+    Filename: row.Filename || "",
+    Cover: row.Cover || "",
+  };
+});
 
-  // Step 5: Write enriched CSV
-  const csvWriter = createObjectCsvWriter({
-    path: OUTPUT_PATH,
-    header: [
-      { id: "Track", title: "Track" },
-      { id: "Title", title: "Title" },
-      { id: "Artist", title: "Artist" },
-      { id: "Album", title: "Album" },
-      { id: "Genre", title: "Genre" },
-      { id: "Year", title: "Year" },
-      { id: "Length", title: "Length" },
-      { id: "Last Modified", title: "Last Modified" },
-      { id: "Filename", title: "Filename" },
-      { id: "Cover", title: "Cover" },
-    ],
-  });
+  // Step 5: Write enriched CSV manually to avoid csv-writer quirks
+  const header = ["Track", "Title", "Artist", "Album", "Genre", "Year", "Length", "Last Modified", "Filename", "Cover"];
+  
+  const escapeField = (val) => {
+    if (val === null || val === undefined) return "";
+    const str = String(val);
+    // Wrap in quotes if contains semicolon, quote, or newline
+    if (str.includes(";") || str.includes('"') || str.includes("\n")) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
 
-  await csvWriter.writeRecords(enrichedRows);
+  const lines = [
+    header.join(";"),
+    ...enrichedRows.map(row =>
+      header.map(col => escapeField(row[col])).join(";")
+    )
+  ];
 
-  console.log("\n─────────────────────────────────────");
-  console.log("Genre enrichment complete.");
-  console.log(`Output written to: ${OUTPUT_PATH}`);
-  console.log(`Total rows: ${enrichedRows.length}`);
-  console.log(`Artists found: ${Object.values(genreMap).filter(g => g !== "Unknown").length}/${uniqueArtists.length}`);
+  fs.writeFileSync(OUTPUT_PATH, lines.join("\n"), "utf8");
 
   // Step 6: Save the generated genre map for reference / manual correction
   const mapOutputPath = path.join(__dirname, "./genreMap.js");
