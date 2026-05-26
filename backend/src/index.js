@@ -5,13 +5,16 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const passport = require('./config/passport');
 const authRoutes = require('./routes/authRoutes');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }, // allows frontend to load images/audio
+}));
 app.use(cors({
   origin: ['http://localhost:8081', 'http://localhost:19006'],
   credentials: true,
@@ -25,6 +28,10 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+// ── Static assets ──
+app.use('/covers', express.static(path.join(__dirname, '../assets/dev_seed/covers')));
+app.use('/audio', express.static(path.join(__dirname, '../assets/dev_seed/mp3')));
 
 // Routes
 app.use('/api/auth', authRoutes);
