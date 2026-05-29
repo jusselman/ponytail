@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { getMe } from '../services/authService';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
+import FullPlayer from '../components/FullPlayer';
+import { usePlayer } from '../context/PlayerContext';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const colors = {
@@ -440,6 +442,9 @@ export default function HomeScreen({ setScreen }) {
               if (tab === "search") setScreen("search");
             }}
           />
+
+          {/* ── Full Screen Player ── */}
+          <FullPlayer />
 
         </div>
       </div>

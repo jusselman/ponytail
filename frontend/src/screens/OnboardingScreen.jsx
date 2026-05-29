@@ -165,42 +165,26 @@ const PasswordStep = ({ password, setPassword, onNext, loading }) => {
   );
 };
 
-// ─── Step 3: Favorite Artists ─────────────────────────────────────────────────
+// ─── Step 3: Favorite Artists — now powered by local seed_tracks DB ───────────
 const FavoriteArtistsStep = ({ onNext, loading }) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selected, setSelected] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [focused, setFocused] = useState(false);
   const debounceRef = useRef(null);
 
   const searchArtists = async (q) => {
-    if (!q || q.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
+    if (!q || q.length < 2) { setSuggestions([]); return; }
     setSearching(true);
-
     try {
       const res = await fetch(
         `http://localhost:5000/api/auth/artists/search?q=${encodeURIComponent(q)}`
       );
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       const data = await res.json();
-      const artistsList = data.artists || data["artists"] || [];
-
-      setSuggestions(
-        artistsList.map((a) => ({
-          id: a.id,
-          name: a.name,
-          disambiguation: a.disambiguation || null,
-        }))
-      );
+      setSuggestions(data.artists || []);
     } catch (err) {
-      console.error("MusicBrainz connection error:", err.message);
-      // Optional: you could set a temporary non-intrusive message here if desired
+      console.log('Artist search error:', err);
       setSuggestions([]);
     } finally {
       setSearching(false);
@@ -215,8 +199,7 @@ const FavoriteArtistsStep = ({ onNext, loading }) => {
   };
 
   const handleSelect = (artist) => {
-    if (selected.length >= 3 || selected.some((a) => a.id === artist.id)) return;
-
+    if (selected.length >= 3 || selected.some(a => a.id === artist.id)) return;
     setSelected([...selected, artist]);
     setQuery("");
     setSuggestions([]);
@@ -225,17 +208,15 @@ const FavoriteArtistsStep = ({ onNext, loading }) => {
   const handleKeyDown = (e) => {
     if ((e.key === "Enter" || e.key === "Tab") && query.trim()) {
       e.preventDefault();
-      const manualArtist = {
+      // Allow manual entry if no suggestions match
+      const manual = {
         id: "manual-" + Date.now(),
         name: query.trim(),
-        disambiguation: null,
+        genre: null,
+        coverUrl: null,
       };
-      handleSelect(manualArtist);
+      handleSelect(manual);
     }
-  };
-
-  const removeArtist = (idToRemove) => {
-    setSelected(selected.filter((a) => a.id !== idToRemove));
   };
 
   return (
@@ -247,119 +228,111 @@ const FavoriteArtistsStep = ({ onNext, loading }) => {
       }}>
         Give us three of your favorite bands or artists:
       </div>
-
       <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginBottom: "24px" }}>
-        Type to search or enter any name and press Enter
+        Type to search, or press Enter to add any artist
       </div>
 
-      {/* Selected artists */}
+      {/* ── Selected tags ── */}
       {selected.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
-          {selected.map((artist) => (
-            <div
-              key={artist.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                backgroundColor: colors.tealGlow,
-                border: `1px solid ${colors.teal}`,
-                borderRadius: "6px",
-                padding: "6px 12px",
-              }}
-            >
-              <span style={{ fontSize: "13px", fontWeight: "600", color: colors.teal }}>
+          {selected.map(artist => (
+            <div key={artist.id} style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              backgroundColor: colors.tealGlow, border: `1px solid ${colors.teal}`,
+              borderRadius: "6px", padding: "6px 12px",
+            }}>
+              <span style={{ fontSize: "13px", fontWeight: "600", color: colors.teal, fontFamily: "'Kanit', sans-serif" }}>
                 {artist.name}
               </span>
+              {artist.genre && (
+                <span style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
+                  · {artist.genre}
+                </span>
+              )}
               <button
-                onClick={() => removeArtist(artist.id)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: colors.teal,
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  padding: "0 2px",
-                }}
-              >
-                ×
-              </button>
+                onClick={() => setSelected(selected.filter(a => a.id !== artist.id))}
+                style={{ background: "none", border: "none", color: colors.teal, cursor: "pointer", fontSize: "14px", padding: "0 2px", lineHeight: 1 }}
+              >×</button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Input + suggestions */}
+      {/* ── Search input ── */}
       {selected.length < 3 && (
         <div style={{ position: "relative" }}>
           <input
             style={{
-              width: "100%",
-              padding: "14px 16px",
-              borderRadius: "6px",
-              backgroundColor: colors.inputBg,
-              border: `1.5px solid #FFFFFF`,
-              color: colors.text,
-              fontSize: "15px",
-              outline: "none",
-              fontFamily: "'Kanit', sans-serif",
-              boxSizing: "border-box",
+              width: "100%", padding: "14px 16px", borderRadius: "6px",
+              backgroundColor: colors.inputBg, border: `1.5px solid #FFFFFF`,
+              color: colors.text, fontSize: "15px", outline: "none",
+              fontFamily: "'Kanit', sans-serif", boxSizing: "border-box",
+              boxShadow: focused ? `0 0 0 3px rgba(93,235,215,0.15)` : "none",
+              transition: "box-shadow 0.2s ease",
             }}
             placeholder={`Artist ${selected.length + 1} of 3...`}
             value={query}
             onChange={handleQueryChange}
             onKeyDown={handleKeyDown}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 150)}
           />
 
-          {/* Suggestions dropdown */}
-          {suggestions.length > 0 && (
+          {/* ── Suggestions dropdown ── */}
+          {suggestions.length > 0 && focused && (
             <div style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              right: 0,
-              backgroundColor: "#2c2c2c",
-              border: `1px solid rgba(255,255,255,0.15)`,
-              borderRadius: "6px",
-              marginTop: "4px",
-              zIndex: 100,
-              maxHeight: "240px",
-              overflowY: "auto",
+              position: "absolute", top: "100%", left: 0, right: 0,
+              backgroundColor: "#2c2c2c", border: `1px solid rgba(255,255,255,0.15)`,
+              borderRadius: "6px", marginTop: "4px", zIndex: 100, overflow: "hidden",
+              maxHeight: "220px", overflowY: "auto",
             }}>
               {suggestions.map((artist, i) => (
                 <div
                   key={artist.id}
                   onMouseDown={() => handleSelect(artist)}
                   style={{
-                    padding: "12px 16px",
-                    cursor: "pointer",
+                    padding: "12px 16px", cursor: "pointer",
                     borderBottom: i < suggestions.length - 1 ? `1px solid rgba(255,255,255,0.07)` : "none",
+                    transition: "background 0.15s ease",
+                    display: "flex", alignItems: "center", gap: "10px",
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#383838"}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = "#383838"}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
                 >
-                  <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text }}>
-                    {artist.name}
-                  </div>
-                  {artist.disambiguation && (
-                    <div style={{ fontSize: "11px", color: colors.muted, marginTop: "2px" }}>
-                      {artist.disambiguation}
+                  {/* Album art thumbnail */}
+                  {artist.coverUrl ? (
+                    <img
+                      src={artist.coverUrl}
+                      alt={artist.name}
+                      style={{ width: 32, height: 32, borderRadius: "4px", objectFit: "cover", flexShrink: 0 }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: 32, height: 32, borderRadius: "4px", flexShrink: 0,
+                      background: `linear-gradient(135deg, hsl(${artist.name.charCodeAt(0) * 37 % 360}, 50%, 35%), hsl(${(artist.name.charCodeAt(0) * 37 + 40) % 360}, 40%, 25%))`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "11px", fontWeight: "700", color: "#fff", fontFamily: "'Kanit', sans-serif",
+                    }}>
+                      {artist.name.slice(0, 2).toUpperCase()}
                     </div>
                   )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {artist.name}
+                    </div>
+                    {artist.genre && (
+                      <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
+                        {artist.genre}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
 
           {searching && (
-            <div style={{
-              position: "absolute",
-              right: "14px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              fontSize: "12px",
-              color: colors.muted,
-            }}>
+            <div style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
               searching...
             </div>
           )}
@@ -445,10 +418,24 @@ const IntroSlide = ({ onNext, onSwipeUp }) => {
 };
 
 // ─── Slide 5: Artist Background ───────────────────────────────────────────────
-// Background is now handled by root — this slide just renders content
 const ArtistSlide = ({ artist, onSwipeUp }) => {
+  const audioRef = useRef(null);
   const touchStartY = useRef(null);
   const mouseStartY = useRef(null);
+
+  // ── Auto-play dummy.mp3 when slide mounts ──
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.5;
+      audioRef.current.play().catch(() => console.log('Autoplay blocked — needs user interaction first'));
+    }
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+  }, []);
 
   const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
   const handleTouchEnd = (e) => {
@@ -469,6 +456,9 @@ const ArtistSlide = ({ artist, onSwipeUp }) => {
       onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
       onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}
     >
+      {/* ── Hidden audio ── */}
+      <audio ref={audioRef} src="http://localhost:5000/audio/dummy.mp3" loop />
+
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px" }}>
         <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "12px" }}>
           Based on your love of
@@ -476,7 +466,12 @@ const ArtistSlide = ({ artist, onSwipeUp }) => {
         <div style={{ fontSize: "32px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", textAlign: "center", letterSpacing: "-0.5px" }}>
           {artist?.name}
         </div>
-        <div style={{ fontSize: "14px", color: colors.teal, fontFamily: "'Kanit', sans-serif", marginTop: "8px" }}>
+        {artist?.genre && (
+          <div style={{ fontSize: "14px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "6px" }}>
+            {artist.genre}
+          </div>
+        )}
+        <div style={{ fontSize: "14px", color: colors.teal, fontFamily: "'Kanit', sans-serif", marginTop: "12px" }}>
           we've put together something special for you.
         </div>
       </div>
@@ -540,13 +535,9 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
         </p>
       </div>
 
-      {/* ── Red arrow + Pony icon bottom right ── */}
       <div style={{ position: "absolute", bottom: "0", left: "0", right: "0", height: "220px", pointerEvents: "none" }}>
         {arrowStyle && (
-          <svg
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }}
-            viewBox="0 0 311 220"
-          >
+          <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }} viewBox="0 0 311 220">
             <defs>
               <marker id="arrowheadPony" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
                 <polygon points="0 0, 10 3.5, 0 7" fill="#FF4444" />
@@ -554,14 +545,10 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
             </defs>
             <path
               d={`M ${arrowStyle.fromX} -80 C ${arrowStyle.fromX + 40} 40, 280 80, 270 148`}
-              stroke="#FF4444"
-              strokeWidth="2"
-              fill="none"
-              markerEnd="url(#arrowheadPony)"
+              stroke="#FF4444" strokeWidth="2" fill="none" markerEnd="url(#arrowheadPony)"
             />
           </svg>
         )}
-
         <div style={{ position: "absolute", bottom: "76px", right: "22px", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", animation: "chevronPulse 1.5s ease-in-out infinite", pointerEvents: "none" }}>
           {[0, 1].map(i => (
             <svg key={i} width="20" height="12" viewBox="0 0 24 14" fill="none" style={{ opacity: 1 - i * 0.35 }}>
@@ -569,7 +556,6 @@ const PonyModeSlide = ({ artist, onPonyPress }) => {
             </svg>
           ))}
         </div>
-
         <div
           onClick={onPonyPress}
           onMouseEnter={() => setHovered(true)}
@@ -617,92 +603,48 @@ const GoatModeSlide = ({ onGoatPress }) => {
       onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
       onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}
     >
-      {/* ── Text content ── */}
       <div style={{ padding: "0 4px 160px", display: "flex", flexDirection: "column", gap: "0px" }}>
-
-        <p style={{ fontSize: "16px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-          Introducing...
-        </p>
-
-        <h2 style={{ fontSize: "26px", fontWeight: "700", color: "#5DEBD7", fontFamily: "'Kanit', sans-serif", letterSpacing: "2px", margin: 0, textAlign: "center" }}>
-          GOAT MODE
-        </h2>
-
+        <p style={{ fontSize: "16px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>Introducing...</p>
+        <h2 style={{ fontSize: "26px", fontWeight: "700", color: "#5DEBD7", fontFamily: "'Kanit', sans-serif", letterSpacing: "2px", margin: 0, textAlign: "center" }}>GOAT MODE</h2>
         <div style={{ height: "16px" }} />
-
         <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, paddingLeft: "16px" }}>
-          ...Welcome to{" "}
-          <span style={{ color: "#5DEBD7", fontWeight: "600" }}>Goat Mode™</span>
-          , the first ever{" "}
-          <strong>hackable algorithm</strong>.
+          ...Welcome to <span style={{ color: "#5DEBD7", fontWeight: "600" }}>Goat Mode™</span>, the first ever <strong>hackable algorithm</strong>.
         </p>
-
         <div style={{ height: "16px" }} />
-
         <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, paddingLeft: "16px" }}>
           Think of it as a way to tweak the algorithm to better suit your vibe.
         </p>
-
         <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, paddingLeft: "16px" }}>
           This feature is complex. It's not for the average listener;
         </p>
-
         <div style={{ height: "16px" }} />
-
         <div style={{ display: "flex", flexDirection: "column", gap: "0px", textAlign: "center" }}>
-          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-            It's for the <span style={{ color: "#5DEBD7", fontWeight: "600" }}>music lovers</span>.
-          </p>
-          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-            It's for the <span style={{ color: gold, fontWeight: "600" }}>indie artists</span>.
-          </p>
-          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-            It's for the people looking for <span style={{ color: "#5DEBD7", fontWeight: "600" }}>new shit</span>.
-          </p>
-          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>
-            But especially,<br />
-            It's for <span style={{ color: gold, fontWeight: "600" }}>that guy</span> at the old record store.
-          </p>
+          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>It's for the <span style={{ color: "#5DEBD7", fontWeight: "600" }}>music lovers</span>.</p>
+          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>It's for the <span style={{ color: gold, fontWeight: "600" }}>indie artists</span>.</p>
+          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>It's for the people looking for <span style={{ color: "#5DEBD7", fontWeight: "600" }}>new shit</span>.</p>
+          <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0 }}>But especially,<br />It's for <span style={{ color: gold, fontWeight: "600" }}>that guy</span> at the old record store.</p>
         </div>
-
         <div style={{ height: "16px" }} />
-
         <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, textAlign: "center" }}>
           You know, the guy with the <span style={{ color: "#5DEBD7", fontWeight: "600" }}>ponytail</span>. Now you know.
         </p>
-
         <div style={{ height: "16px" }} />
-
         <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, textAlign: "center" }}>
           And maybe <span style={{ color: "#5DEBD7", fontWeight: "600" }}>ponytail</span> is for you.
         </p>
-
         <p style={{ fontSize: "15px", fontWeight: "400", color: "#ffffff", fontFamily: "'Kanit', sans-serif", lineHeight: 1.6, margin: 0, textAlign: "left" }}>
-          Click the arrow to discover<br />
-          how to <span style={{ color: gold, fontWeight: "600" }}>do music better</span>
+          Click the arrow to discover<br />how to <span style={{ color: gold, fontWeight: "600" }}>do music better</span>
         </p>
-
       </div>
 
-      {/* ── Red arrow + chevrons + GoatMode icon — bottom right ── */}
       <div style={{ position: "absolute", bottom: "0", left: "0", right: "0", height: "220px", pointerEvents: "none" }}>
-
-        <svg
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }}
-          viewBox="0 0 311 220"
-        >
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible", pointerEvents: "none" }} viewBox="0 0 311 220">
           <defs>
             <marker id="arrowheadGoat" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
               <polygon points="0 0, 10 3.5, 0 7" fill="#FF4444" />
             </marker>
           </defs>
-          <path
-            d="M 171 190 C 210 160, 265 120, 265 144"
-            stroke="#FF4444"
-            strokeWidth="2"
-            fill="none"
-            markerEnd="url(#arrowheadGoat)"
-          />
+          <path d="M 171 190 C 210 160, 265 120, 265 144" stroke="#FF4444" strokeWidth="2" fill="none" markerEnd="url(#arrowheadGoat)" />
         </svg>
 
         <div
@@ -760,7 +702,7 @@ export default function OnboardingScreen({ setScreen }) {
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ── Shared background state — persists across all full-height slides ──
+  // ── Shared background — cover art from local DB ──
   const [coverUrl, setCoverUrl] = useState(null);
   const [bgLoaded, setBgLoaded] = useState(false);
 
@@ -772,27 +714,9 @@ export default function OnboardingScreen({ setScreen }) {
       await updateProfile({ favorite_artists: selectedArtists });
       setArtists(selectedArtists);
 
-      // ── Fetch cover art for first artist upfront ──
-      if (selectedArtists[0]?.id) {
-        try {
-          const relRes = await fetch(
-            `https://musicbrainz.org/ws/2/release?artist=${selectedArtists[0].id}&limit=5&fmt=json`,
-            { headers: { 'User-Agent': 'Ponytail/1.0 (ponytailapp@example.com)' } }
-          );
-          const relData = await relRes.json();
-          const releases = relData.releases || [];
-          for (const release of releases) {
-            try {
-              const coverRes = await fetch(`https://coverartarchive.org/release/${release.id}/front`, { method: 'HEAD' });
-              if (coverRes.ok) {
-                setCoverUrl(`https://coverartarchive.org/release/${release.id}/front`);
-                break;
-              }
-            } catch { continue; }
-          }
-        } catch (err) {
-          console.log('Cover art fetch error:', err);
-        }
+      // ── Use cover art from first selected artist (from local DB) ──
+      if (selectedArtists[0]?.coverUrl) {
+        setCoverUrl(selectedArtists[0].coverUrl);
       }
 
       setStep("intro");
@@ -804,7 +728,7 @@ export default function OnboardingScreen({ setScreen }) {
     }
   };
 
-  // ── Gradient fallback based on first artist name ──
+  // ── Gradient fallback ──
   const hue = artists[0] ? artists[0].name.charCodeAt(0) * 37 % 360 : 200;
   const gradientBg = `linear-gradient(160deg, hsl(${hue}, 40%, 20%) 0%, hsl(${hue + 40}, 30%, 12%) 100%)`;
 
@@ -843,14 +767,12 @@ export default function OnboardingScreen({ setScreen }) {
           backgroundColor: colors.bg,
           borderRadius: "40px",
           boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05)",
-          display: "flex",
-          flexDirection: "column",
+          display: "flex", flexDirection: "column",
           padding: isFullHeightSlide ? "0" : "60px 32px 40px",
-          position: "relative",
-          overflow: "hidden",
+          position: "relative", overflow: "hidden",
         }}>
 
-          {/* ── Persistent background for all full-height slides ── */}
+          {/* ── Persistent background across all full-height slides ── */}
           {isFullHeightSlide && (
             <div style={{ position: "absolute", inset: 0, zIndex: 0, background: gradientBg }}>
               {coverUrl && (
@@ -874,7 +796,7 @@ export default function OnboardingScreen({ setScreen }) {
           {step === "password" && <PasswordStep password={password} setPassword={setPassword} onNext={() => setStep("artists")} loading={loading} />}
           {step === "artists" && <FavoriteArtistsStep onNext={handleFinishSignup} loading={loading} />}
 
-          {/* ── Full height slides — all sit above background via zIndex: 1 ── */}
+          {/* ── Full height slides ── */}
           {step === "intro" && (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "60px 32px 0", position: "relative", zIndex: 1 }}>
               <IntroSlide onNext={() => setScreen("home")} onSwipeUp={() => setStep("artist")} />
@@ -887,7 +809,7 @@ export default function OnboardingScreen({ setScreen }) {
                 <ArtistSlide artist={artists[0]} onSwipeUp={() => setStep("ponymode")} />
               </div>
               <div style={{ position: "relative", zIndex: 1 }}>
-                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
+                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: artists[0]?.genre || "", coverUrl: artists[0]?.coverUrl || null }} />
                 <FooterNav activeTab="home" onTabPress={() => {}} />
               </div>
             </>
@@ -899,7 +821,7 @@ export default function OnboardingScreen({ setScreen }) {
                 <PonyModeSlide artist={artists[0]} onPonyPress={() => setStep("goatmode")} />
               </div>
               <div style={{ position: "relative", zIndex: 1 }}>
-                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
+                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: artists[0]?.genre || "", coverUrl: artists[0]?.coverUrl || null }} />
                 <FooterNav activeTab="home" onTabPress={() => {}} />
               </div>
             </>
@@ -911,7 +833,7 @@ export default function OnboardingScreen({ setScreen }) {
                 <GoatModeSlide onGoatPress={() => setStep("placeholder")} />
               </div>
               <div style={{ position: "relative", zIndex: 1 }}>
-                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
+                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: artists[0]?.genre || "", coverUrl: artists[0]?.coverUrl || null }} />
                 <FooterNav activeTab="home" onTabPress={() => {}} />
               </div>
             </>
@@ -923,7 +845,7 @@ export default function OnboardingScreen({ setScreen }) {
                 <PlaceholderSlide setAppScreen={setScreen} />
               </div>
               <div style={{ position: "relative", zIndex: 1 }}>
-                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: "", coverUrl: null }} />
+                <MiniPlayer track={{ title: "Your collection is loading...", artist: artists[0]?.name || "", album: artists[0]?.genre || "", coverUrl: artists[0]?.coverUrl || null }} />
                 <FooterNav activeTab="home" onTabPress={() => {}} />
               </div>
             </>

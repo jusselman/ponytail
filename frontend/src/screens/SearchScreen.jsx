@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { getMe } from '../services/authService';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
+import { usePlayer } from '../context/PlayerContext';
+import FullPlayer from '../components/FullPlayer';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const colors = {
@@ -29,30 +31,37 @@ const MOCK_RECENT = [
 
 // ─── Mock genre chips ─────────────────────────────────────────────────────────
 const MOCK_GENRES = [
-  "Ambient", "Neo Soul", "Indie Folk", "Dream Pop",
-  "Lo-fi", "Jazz Fusion", "Shoegaze", "Post-Rock",
-  "Experimental", "R&B", "Electronic", "Alt Hip Hop",
-];
-
-// ─── Mock discovery pool for Tinder tab ──────────────────────────────────────
-const MOCK_DISCOVERY_POOL = [
-  { id: "d1", name: "Nola Voss", genre: "Ambient / Electronic", tags: ["Chill", "Atmospheric"], hue: 180 },
-  { id: "d2", name: "Cass Ember", genre: "Indie Folk", tags: ["Acoustic", "Storytelling"], hue: 30 },
-  { id: "d3", name: "Maren Hex", genre: "Dream Pop", tags: ["Ethereal", "Shoegaze"], hue: 270 },
-  { id: "d4", name: "Theo Callum", genre: "Lo-fi Hip Hop", tags: ["Beats", "Mellow"], hue: 60 },
-  { id: "d5", name: "Isla Pryor", genre: "Shoegaze", tags: ["Layered", "Cinematic"], hue: 200 },
-  { id: "d6", name: "Ryn Holt", genre: "Jazz Fusion", tags: ["Improvisational", "Complex"], hue: 140 },
-  { id: "d7", name: "Pave Lune", genre: "Neo Soul", tags: ["Soulful", "Groovy"], hue: 320 },
-  { id: "d8", name: "Ellory Sun", genre: "Experimental", tags: ["Avant-garde", "Textural"], hue: 90 },
+  "Jazz", "Classical", "Progressive Rock", "Rock", "Soul",
+  "Folk", "Electronic", "Jazz Fusion", "Surf Rock", "New Age",
+  "Instrumental Hip Hop", "Post-bop",
 ];
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
-const Avatar = ({ name, size = 42, hue }) => {
+const Avatar = ({ name, size = 42, hue, coverUrl }) => {
+  const [imgError, setImgError] = useState(false);
+   console.log('Avatar props:', { name, coverUrl, imgError });
   const initials = name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
   const h = hue ?? (name.charCodeAt(0) * 37 % 360);
+
+  if (coverUrl && !imgError) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: "8px",
+        overflow: "hidden", flexShrink: 0,
+      }}>
+        <img
+          src={coverUrl}
+          alt={name}
+          onError={() => setImgError(true)}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div style={{
-      width: size, height: size, borderRadius: "50%",
+      width: size, height: size, borderRadius: "8px",
       background: `linear-gradient(135deg, hsl(${h}, 60%, 45%), hsl(${h + 40}, 70%, 35%))`,
       display: "flex", alignItems: "center", justifyContent: "center",
       fontSize: size * 0.35, fontWeight: "700", color: "#fff",
@@ -113,27 +122,34 @@ const XIcon = ({ size = 28, color = "#ff4444" }) => (
 );
 
 // ─── Standard Search Tab ──────────────────────────────────────────────────────
-const StandardSearch = ({ loved, user }) => {
+const StandardSearch = ({ loved }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [focused, setFocused] = useState(false);
   const debounceRef = useRef(null);
+  const { playTrack } = usePlayer();
 
-  const searchArtists = async (q) => {
+ const searchTracks = async (q) => {
   if (!q || q.length < 2) { setResults([]); return; }
   setSearching(true);
   try {
     const res = await fetch(`http://localhost:5000/api/auth/search?q=${encodeURIComponent(q)}`);
     const data = await res.json();
-    setResults((data.results || []).map(r => ({
+    console.log('Raw API response:', data);
+    const mapped = (data.results || []).map(r => ({
       type: r.type,
       id: r.name,
       name: r.name,
       genre: r.genre,
       artist: r.artist_name,
       album: r.album,
-    })));
+      coverUrl: r.cover
+        ? `http://localhost:5000/covers/${encodeURIComponent(r.cover.split('/covers/')[1])}`
+        : null,
+    }));
+    console.log('Mapped results:', mapped);
+    setResults(mapped);
   } catch (err) {
     console.log('Search error:', err);
   } finally {
@@ -145,7 +161,7 @@ const StandardSearch = ({ loved, user }) => {
     const val = e.target.value;
     setQuery(val);
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchArtists(val), 350);
+    debounceRef.current = setTimeout(() => searchTracks(val), 350);
   };
 
   const showResults = query.length >= 2;
@@ -197,12 +213,40 @@ const StandardSearch = ({ loved, user }) => {
             Results
           </div>
           {results.map((result, i) => (
-            <div key={i} style={{
-              display: "flex", alignItems: "center", gap: "12px",
-              padding: "10px 0",
-              borderBottom: `1px solid ${colors.border}`,
-            }}>
-              <Avatar name={result.name} size={38} />
+            <div
+              key={i}
+              onClick={() => {
+                if (result.type === "track") {
+                  const trackQueue = results
+                    .filter(r => r.type === "track")
+                    .map(r => ({
+                      title: r.name,
+                      artist: r.artist,
+                      album: r.album,
+                      genre: r.genre,
+                      coverUrl: r.coverUrl,
+                      audioUrl: "http://localhost:5000/audio/dummy.mp3",
+                    }));
+                  const startIndex = results
+                    .filter(r => r.type === "track")
+                    .findIndex(r => r.name === result.name);
+                  playTrack({
+                    title: result.name,
+                    artist: result.artist,
+                    album: result.album,
+                    genre: result.genre,
+                    coverUrl: result.coverUrl,
+                    audioUrl: "http://localhost:5000/audio/dummy.mp3",
+                  }, trackQueue, startIndex);
+                }
+              }}
+              style={{
+                display: "flex", alignItems: "center", gap: "12px",
+                padding: "10px 0", borderBottom: `1px solid ${colors.border}`,
+                cursor: result.type === "track" ? "pointer" : "default",
+              }}
+            >
+              <Avatar name={result.name} size={38} coverUrl={result.coverUrl} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {result.name}
@@ -214,7 +258,8 @@ const StandardSearch = ({ loved, user }) => {
                 </div>
               </div>
               <div style={{
-                fontSize: "10px", color: result.type === "track" ? colors.teal : colors.muted,
+                fontSize: "10px",
+                color: result.type === "track" ? colors.teal : colors.muted,
                 fontFamily: "'Kanit', sans-serif",
                 backgroundColor: result.type === "track" ? colors.tealGlow : "transparent",
                 border: `1px solid ${result.type === "track" ? colors.teal : colors.border}`,
@@ -244,16 +289,16 @@ const StandardSearch = ({ loved, user }) => {
                 Loved
               </div>
               <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px" }}>
-                {loved.map((artist, i) => (
+                {loved.map((track, i) => (
                   <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                     <div style={{ position: "relative" }}>
-                      <Avatar name={artist.name} size={52} hue={artist.hue} />
+                      <Avatar name={track.artist} size={52} coverUrl={track.coverUrl} />
                       <div style={{ position: "absolute", bottom: -2, right: -2, backgroundColor: colors.teal, borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <HeartIcon size={10} color="#1a1a1a" filled />
                       </div>
                     </div>
                     <div style={{ fontSize: "10px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", textAlign: "center", maxWidth: "52px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {artist.name}
+                      {track.artist}
                     </div>
                   </div>
                 ))}
@@ -269,16 +314,13 @@ const StandardSearch = ({ loved, user }) => {
             {MOCK_RECENT.map((item, i) => (
               <div key={i} style={{
                 display: "flex", alignItems: "center", gap: "12px",
-                padding: "9px 0", borderBottom: `1px solid ${colors.border}`,
-                cursor: "pointer",
+                padding: "9px 0", borderBottom: `1px solid ${colors.border}`, cursor: "pointer",
               }}>
                 <div style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: colors.bgCard, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {item.type === "artist" ? <ClockIcon /> : <MusicNoteIcon />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "13px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-                    {item.name}
-                  </div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>{item.name}</div>
                   <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
                     {item.type === "artist" ? item.genre : `by ${item.artist}`}
                   </div>
@@ -305,8 +347,7 @@ const StandardSearch = ({ loved, user }) => {
                     border: `1px solid hsl(${hue}, 40%, 35%)`,
                     fontSize: "12px", fontWeight: "500",
                     color: colors.text, fontFamily: "'Kanit', sans-serif",
-                    cursor: "pointer",
-                    transition: "opacity 0.2s ease",
+                    cursor: "pointer", transition: "opacity 0.2s ease",
                   }}
                     onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
                     onMouseLeave={e => e.currentTarget.style.opacity = "1"}
@@ -323,19 +364,33 @@ const StandardSearch = ({ loved, user }) => {
   );
 };
 
-// ─── Discovery Card (Tinder style) ───────────────────────────────────────────
-const DiscoveryCard = ({ artist, onLike, onSkip }) => {
+// ─── Discovery Card (Tinder style) ────────────────────────────────────────────
+const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = false }) => {
   const [dragX, setDragX] = useState(0);
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const startX = useRef(null);
   const startY = useRef(null);
-  const cardRef = useRef(null);
+  const audioRef = useRef(null);
 
   const SWIPE_THRESHOLD = 80;
   const rotation = dragX * 0.08;
   const likeOpacity = Math.max(0, Math.min(1, dragX / SWIPE_THRESHOLD));
   const skipOpacity = Math.max(0, Math.min(1, -dragX / SWIPE_THRESHOLD));
+
+  // ── Auto-play audio when card mounts ──
+  useEffect(() => {
+    if (inactive || !audioRef.current) return;
+    audioRef.current.volume = 0.6;
+    audioRef.current.play().catch(() => console.log('Autoplay blocked'));
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+  }, [inactive]);
 
   // ── Mouse drag ──
   const handleMouseDown = (e) => {
@@ -349,12 +404,19 @@ const DiscoveryCard = ({ artist, onLike, onSkip }) => {
     const handleMouseMove = (e) => {
       setDragX(e.clientX - startX.current);
       setDragY(e.clientY - startY.current);
+      onDrag && onDrag(e.clientX - startX.current);
     };
     const handleMouseUp = () => {
       setIsDragging(false);
-      if (dragX > SWIPE_THRESHOLD) onLike();
-      else if (dragX < -SWIPE_THRESHOLD) onSkip();
-      else { setDragX(0); setDragY(0); }
+      if (dragX > SWIPE_THRESHOLD) {
+        onLike();
+      } else if (dragX < -SWIPE_THRESHOLD) {
+        onSkip();
+      } else {
+        setDragX(0);
+        setDragY(0);
+        onDrag && onDrag(0);
+      }
     };
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
@@ -372,187 +434,261 @@ const DiscoveryCard = ({ artist, onLike, onSkip }) => {
   const handleTouchMove = (e) => {
     setDragX(e.touches[0].clientX - startX.current);
     setDragY(e.touches[0].clientY - startY.current);
+    onDrag && onDrag(e.touches[0].clientX - startX.current);
   };
   const handleTouchEnd = () => {
     if (dragX > SWIPE_THRESHOLD) onLike();
     else if (dragX < -SWIPE_THRESHOLD) onSkip();
     else { setDragX(0); setDragY(0); }
+    onDrag && onDrag(0);
   };
 
-  const hue = artist.hue;
+  const hue = track.artist ? track.artist.charCodeAt(0) * 37 % 360 : 200;
 
   return (
     <div
-      ref={cardRef}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
-        width: "100%",
-        height: "100%",
-        borderRadius: "24px",
-        overflow: "hidden",
-        position: "absolute",
-        top: 0, left: 0,
-        background: `linear-gradient(160deg, hsl(${hue}, 50%, 25%) 0%, hsl(${hue + 40}, 40%, 15%) 100%)`,
+        width: "100%", height: "100%",
+        borderRadius: "24px", overflow: "hidden",
+        position: "absolute", top: 0, left: 0,
         cursor: isDragging ? "grabbing" : "grab",
         transform: `translateX(${dragX}px) translateY(${dragY * 0.3}px) rotate(${rotation}deg)`,
         transition: isDragging ? "none" : "transform 0.3s ease",
         userSelect: "none",
         boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+        pointerEvents: inactive ? "none" : "all", 
       }}
     >
+      {/* ── Hidden audio element ── */}
+      <audio ref={audioRef} src={track.audioUrl} loop />
+
+      {/* ── Background — album art or gradient ── */}
+      <div style={{ position: "absolute", inset: 0, background: `linear-gradient(160deg, hsl(${hue}, 50%, 25%) 0%, hsl(${hue + 40}, 40%, 15%) 100%)` }}>
+        {track.coverUrl && (
+          <img
+            src={track.coverUrl}
+            alt={track.album}
+            onLoad={() => {}} // no-op, loading tracked by parent
+            style={{
+              width: "100%", height: "100%", objectFit: "cover",
+              opacity: isLoaded ? 0.5 : 0,
+              transition: "opacity 0.3s ease",
+            }}
+          />
+        )}
+        {/* Dark overlay for readability */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.92) 100%)" }} />
+      </div>
+
       {/* ── Like / Skip indicators ── */}
       <div style={{
         position: "absolute", top: "32px", left: "24px", zIndex: 10,
-        opacity: skipOpacity,
-        border: "3px solid #ff4444", borderRadius: "8px",
-        padding: "4px 12px",
+        opacity: skipOpacity, border: "3px solid #ff4444", borderRadius: "8px", padding: "4px 12px",
         transform: "rotate(-15deg)",
       }}>
         <span style={{ fontSize: "22px", fontWeight: "800", color: "#ff4444", fontFamily: "'Kanit', sans-serif", letterSpacing: "2px" }}>SKIP</span>
       </div>
       <div style={{
         position: "absolute", top: "32px", right: "24px", zIndex: 10,
-        opacity: likeOpacity,
-        border: `3px solid ${colors.teal}`, borderRadius: "8px",
-        padding: "4px 12px",
+        opacity: likeOpacity, border: `3px solid ${colors.teal}`, borderRadius: "8px", padding: "4px 12px",
         transform: "rotate(15deg)",
       }}>
         <span style={{ fontSize: "22px", fontWeight: "800", color: colors.teal, fontFamily: "'Kanit', sans-serif", letterSpacing: "2px" }}>LOVE</span>
       </div>
 
-      {/* ── Artist avatar — large centered ── */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "60%", paddingTop: "20px" }}>
-        <div style={{
-          width: 120, height: 120, borderRadius: "50%",
-          background: `linear-gradient(135deg, hsl(${hue}, 60%, 50%), hsl(${hue + 40}, 70%, 40%))`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 48, fontWeight: "700", color: "#fff",
-          fontFamily: "'Kanit', sans-serif",
-          boxShadow: `0 0 40px rgba(${hue}, 100, 150, 0.4)`,
-          border: "3px solid rgba(255,255,255,0.15)",
-        }}>
-          {artist.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)}
-        </div>
-      </div>
-
-      {/* ── Artist info ── */}
+      {/* ── Track info ── */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)",
-        padding: "40px 24px 24px",
+        padding: "24px 24px 24px",
+        zIndex: 1,
       }}>
-        <div style={{ fontSize: "26px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.5px", marginBottom: "6px" }}>
-          {artist.name}
+        {/* Album art thumbnail */}
+        {track.coverUrl && (
+          <div style={{
+            width: 56, height: 56, borderRadius: "10px", overflow: "hidden",
+            marginBottom: "14px",
+            border: "2px solid rgba(255,255,255,0.2)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+          }}>
+            <img src={track.coverUrl} alt={track.album} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+        )}
+
+        <div style={{ fontSize: "22px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px", marginBottom: "4px", lineHeight: 1.2 }}>
+          {track.title}
         </div>
-        <div style={{ fontSize: "14px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginBottom: "10px" }}>
-          {artist.genre}
+        <div style={{ fontSize: "15px", color: colors.teal, fontFamily: "'Kanit', sans-serif", fontWeight: "600", marginBottom: "4px" }}>
+          {track.artist}
+        </div>
+        <div style={{ fontSize: "13px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginBottom: "10px" }}>
+          {track.album}
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-          {artist.tags.map((tag, i) => (
-            <div key={i} style={{
-              fontSize: "11px", fontWeight: "600",
-              color: colors.teal, backgroundColor: colors.tealGlow,
-              border: `1px solid ${colors.teal}`,
-              borderRadius: "20px", padding: "3px 10px",
-              fontFamily: "'Kanit', sans-serif",
+          {track.genre && (
+            <div style={{
+              fontSize: "11px", fontWeight: "600", color: colors.teal,
+              backgroundColor: colors.tealGlow, border: `1px solid ${colors.teal}`,
+              borderRadius: "20px", padding: "3px 10px", fontFamily: "'Kanit', sans-serif",
             }}>
-              {tag}
+              {track.genre}
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-// ─── Discovery Tab (Tinder style) ─────────────────────────────────────────────
+// ─── Discovery Tab ────────────────────────────────────────────────────────────
 const DiscoverySearch = ({ onLove }) => {
-  const [pool, setPool] = useState([...MOCK_DISCOVERY_POOL]);
+  const [pool, setPool] = useState([]);
   const [current, setCurrent] = useState(0);
-  const [animating, setAnimating] = useState(null); // "like" | "skip" | null
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [loadedImages, setLoadedImages] = useState({}); 
+  const [dragX, setDragX] = useState(0);
+
+  // ── Preload next card's image and track loaded state ──
+  useEffect(() => {
+    const preload = (track) => {
+      if (!track?.coverUrl) return;
+      if (loadedImages[track.coverUrl]) return; // already loaded
+      const img = new Image();
+      img.onload = () => {
+        setLoadedImages(prev => ({ ...prev, [track.coverUrl]: true }));
+      };
+      img.src = track.coverUrl;
+    };
+    preload(pool[current]);
+    preload(pool[current + 1]);
+  }, [current, pool]);
+
+  // ── Fetch random tracks from backend ──
+  useEffect(() => {
+    const fetchTracks = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/tracks/random?limit=15');
+        const data = await res.json();
+        setPool(data.tracks || []);
+      } catch (err) {
+        console.log('Failed to fetch tracks:', err);
+        setError('Could not load tracks. Make sure the backend is running.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTracks();
+  }, []);
 
   const handleLike = () => {
     if (current >= pool.length) return;
     onLove(pool[current]);
-    setAnimating("like");
-    setTimeout(() => {
-      setCurrent(prev => prev + 1);
-      setAnimating(null);
-    }, 300);
+    setCurrent(prev => prev + 1);
+    setDragX(0); 
   };
 
   const handleSkip = () => {
     if (current >= pool.length) return;
-    setAnimating("skip");
-    setTimeout(() => {
-      setCurrent(prev => prev + 1);
-      setAnimating(null);
-    }, 300);
+    setCurrent(prev => prev + 1);
+    setDragX(0);
   };
 
   const remaining = pool.length - current;
-  const artist = pool[current];
-  const nextArtist = pool[current + 1];
+  const track = pool[current];
+  const nextTrack = pool[current + 1];
+    const peekScale = 0.96 + (Math.min(Math.abs(dragX), 80) / 80) * 0.04;
+
+  if (loading) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+        <div style={{ fontSize: "14px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
+          Loading tracks...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+        <div style={{ fontSize: "14px", color: "#ff6b6b", fontFamily: "'Kanit', sans-serif", textAlign: "center" }}>
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "0 16px 16px", boxSizing: "border-box" }}>
 
-      {/* ── Card stack area ── */}
-      <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
-        {remaining === 0 ? (
-          <div style={{
-            width: "100%", height: "100%", borderRadius: "24px",
-            backgroundColor: colors.bgCard,
-            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            gap: "16px",
-          }}>
-            <div style={{ fontSize: "32px" }}>
-              <HeartIcon size={48} color={colors.teal} filled />
-            </div>
-            <div style={{ fontSize: "18px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-              You've seen everyone!
-            </div>
-            <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center", paddingHorizontal: 20 }}>
-              Check the Loved tab to revisit artists you liked.
-            </div>
-            <button
-              onClick={() => { setPool([...MOCK_DISCOVERY_POOL]); setCurrent(0); }}
-              style={{
-                marginTop: "8px", padding: "10px 24px", borderRadius: "50px",
-                backgroundColor: colors.teal, border: "none",
-                color: "#1a1a1a", fontSize: "14px", fontWeight: "600",
-                cursor: "pointer", fontFamily: "'Kanit', sans-serif",
-              }}
-            >
-              Start over
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Next card (peek behind) */}
-            {nextArtist && (
-              <div style={{
-                position: "absolute", top: "8px", left: "8px", right: "8px", bottom: 0,
-                borderRadius: "24px",
-                background: `linear-gradient(160deg, hsl(${nextArtist.hue}, 50%, 25%) 0%, hsl(${nextArtist.hue + 40}, 40%, 15%) 100%)`,
-                transform: "scale(0.96)",
-                zIndex: 0,
-              }} />
-            )}
-
-            {/* Current card */}
-            <DiscoveryCard
-              key={current}
-              artist={artist}
-              onLike={handleLike}
-              onSkip={handleSkip}
-            />
-          </>
-        )}
+      {/* Card stack — render current and next simultaneously */}
+<div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+  {remaining === 0 ? (
+    <div style={{
+      width: "100%", height: "100%", borderRadius: "24px",
+      backgroundColor: colors.bgCard,
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px",
+    }}>
+      <HeartIcon size={48} color={colors.teal} filled />
+      <div style={{ fontSize: "18px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+        You've heard everything!
       </div>
+      <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center" }}>
+        Check the Loved tab to revisit tracks you liked.
+      </div>
+      <button
+        onClick={() => { setCurrent(0); setDragX(0); }}
+        style={{
+          marginTop: "8px", padding: "10px 24px", borderRadius: "50px",
+          backgroundColor: colors.teal, border: "none",
+          color: "#1a1a1a", fontSize: "14px", fontWeight: "600",
+          cursor: "pointer", fontFamily: "'Kanit', sans-serif",
+        }}
+      >
+        Start over
+      </button>
+    </div>
+  ) : (
+    <>
+      {/* Next card — always a full DiscoveryCard, rendered behind */}
+      {nextTrack && (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 0,
+          transform: `scale(${peekScale})`,
+          transition: dragX === 0 ? "transform 0.3s ease" : "none",
+          transformOrigin: "center bottom",
+        }}>
+          <DiscoveryCard
+            key={`next-${current + 1}`}
+            track={nextTrack}
+            isLoaded={!!loadedImages[nextTrack.coverUrl]}
+            onLike={() => {}}
+            onSkip={() => {}}
+            onDrag={() => {}}
+            inactive
+          />
+        </div>
+      )}
+
+      {/* Current card — on top, fully interactive */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
+        <DiscoveryCard
+          key={`card-${current}`}
+          track={track}
+          isLoaded={!!loadedImages[track.coverUrl]}
+          onLike={handleLike}
+          onSkip={handleSkip}
+          onDrag={setDragX}
+        />
+      </div>
+    </>
+  )}
+</div>
 
       {/* ── Action buttons ── */}
       {remaining > 0 && (
@@ -560,14 +696,11 @@ const DiscoverySearch = ({ onLove }) => {
           display: "flex", justifyContent: "center", alignItems: "center",
           gap: "32px", paddingTop: "16px", flexShrink: 0,
         }}>
-          {/* Skip button */}
           <button
             onClick={handleSkip}
             style={{
-              width: 56, height: 56, borderRadius: "50%",
-              backgroundColor: colors.bgCard,
-              border: "2px solid #ff4444",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 56, height: 56, borderRadius: "50%", backgroundColor: colors.bgCard,
+              border: "2px solid #ff4444", display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", transition: "all 0.2s ease",
             }}
             onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(255,68,68,0.1)"}
@@ -576,7 +709,6 @@ const DiscoverySearch = ({ onLove }) => {
             <XIcon size={24} color="#ff4444" />
           </button>
 
-          {/* Remaining count */}
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "18px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
               {remaining}
@@ -586,14 +718,11 @@ const DiscoverySearch = ({ onLove }) => {
             </div>
           </div>
 
-          {/* Like button */}
           <button
             onClick={handleLike}
             style={{
-              width: 56, height: 56, borderRadius: "50%",
-              backgroundColor: colors.bgCard,
-              border: `2px solid ${colors.teal}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 56, height: 56, borderRadius: "50%", backgroundColor: colors.bgCard,
+              border: `2px solid ${colors.teal}`, display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", transition: "all 0.2s ease",
             }}
             onMouseEnter={e => e.currentTarget.style.backgroundColor = colors.tealGlow}
@@ -626,10 +755,11 @@ export default function SearchScreen({ setScreen }) {
     loadUser();
   }, []);
 
-  const handleLove = (artist) => {
+  const handleLove = (track) => {
     setLoved(prev => {
-      if (prev.find(a => a.id === artist.id)) return prev;
-      return [...prev, artist];
+      const key = `${track.title}|${track.artist}`;
+      if (prev.find(t => `${t.title}|${t.artist}` === key)) return prev;
+      return [...prev, track];
     });
   };
 
@@ -653,8 +783,7 @@ export default function SearchScreen({ setScreen }) {
       }}>
         <div style={{
           width: "375px", height: "750px",
-          backgroundColor: colors.bg,
-          borderRadius: "40px",
+          backgroundColor: colors.bg, borderRadius: "40px",
           boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05)",
           position: "relative", overflow: "hidden",
           marginTop: "40px", marginBottom: "40px",
@@ -663,16 +792,13 @@ export default function SearchScreen({ setScreen }) {
 
           {/* ── Header ── */}
           <div style={{
-            padding: "32px 20px 0",
-            backgroundColor: colors.bg,
+            padding: "32px 20px 0", backgroundColor: colors.bg,
             borderBottom: `1px solid ${colors.border}`,
             width: "100%", boxSizing: "border-box", flexShrink: 0,
           }}>
             <div style={{ fontSize: "20px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.5px", marginBottom: "16px" }}>
               Search
             </div>
-
-            {/* ── Inner tabs ── */}
             <div style={{ display: "flex", gap: "4px", width: "100%" }}>
               {[
                 { key: "search", label: "Artists & Tracks" },
@@ -682,16 +808,13 @@ export default function SearchScreen({ setScreen }) {
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   style={{
-                    flex: 1, padding: "10px",
-                    background: "none", border: "none", cursor: "pointer",
+                    flex: 1, padding: "10px", background: "none", border: "none", cursor: "pointer",
                     fontSize: "13px",
                     fontWeight: activeTab === tab.key ? "700" : "400",
                     color: activeTab === tab.key ? colors.teal : colors.muted,
                     fontFamily: "'Kanit', sans-serif",
                     borderBottom: `2px solid ${activeTab === tab.key ? colors.teal : "transparent"}`,
-                    transition: "all 0.2s ease",
-                    marginBottom: "-1px",
-                    boxSizing: "border-box",
+                    transition: "all 0.2s ease", marginBottom: "-1px", boxSizing: "border-box",
                   }}
                 >
                   {tab.label}
@@ -702,20 +825,18 @@ export default function SearchScreen({ setScreen }) {
 
           {/* ── Tab content ── */}
           <div style={{
-            flex: 1, overflowY: activeTab === "search" ? "auto" : "hidden",
+            flex: 1,
+            overflowY: activeTab === "search" ? "auto" : "hidden",
             overflowX: "hidden", paddingTop: "16px",
             width: "100%", boxSizing: "border-box", minHeight: 0,
           }}>
-            {activeTab === "search" && (
-              <StandardSearch loved={loved} user={user} />
-            )}
-            {activeTab === "discovery" && (
-              <DiscoverySearch onLove={handleLove} />
-            )}
+            {activeTab === "search" && <StandardSearch loved={loved} user={user} />}
+            {activeTab === "discovery" && <DiscoverySearch onLove={handleLove} />}
           </div>
 
           {/* ── Mini Player ── */}
-          <MiniPlayer track={null} />
+          <MiniPlayer           
+          />
 
           {/* ── Footer Nav ── */}
           <FooterNav
@@ -725,7 +846,8 @@ export default function SearchScreen({ setScreen }) {
               if (tab === "home") setScreen("home");
             }}
           />
-
+          {/* ── Full Screen Player ── */}
+          <FullPlayer />
         </div>
       </div>
     </>
