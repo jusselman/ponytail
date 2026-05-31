@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { getMe } from '../services/authService';
+import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 import { usePlayer } from '../context/PlayerContext';
@@ -70,6 +71,7 @@ const Avatar = ({ name, size = 42, hue, coverUrl }) => {
     </div>
   );
 };
+
 
 // ─── Search Icon ──────────────────────────────────────────────────────────────
 const SearchIcon = ({ color = "#666" }) => (
@@ -814,43 +816,54 @@ export default function SearchScreen({ setScreen }) {
         }}>
 
           {/* ── Header ── */}
-          <div style={{
-            padding: "32px 20px 0", backgroundColor: colors.bg,
-            borderBottom: `1px solid ${colors.border}`,
-            width: "100%", boxSizing: "border-box", flexShrink: 0,
-          }}>
-            <div style={{ fontSize: "20px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.5px", marginBottom: "16px" }}>
-              Search
-            </div>
-            <div style={{ display: "flex", gap: "4px", width: "100%" }}>
-              {[
-                { key: "search", label: "Artists & Tracks" },
-                { key: "discovery", label: "Discover" },
-              ].map(tab => (
-                <button
-  key={tab.key}
-  onClick={() => {
-    if (tab.key === "discovery" && isPlaying) {
-      togglePlay();
-    }
-    setActiveTab(tab.key);
-  }}
-  style={{
-    flex: 1, padding: "10px", background: "none", border: "none", cursor: "pointer",
-    fontSize: "13px",
-    fontWeight: activeTab === tab.key ? "700" : "400",
-    color: activeTab === tab.key ? colors.teal : colors.muted,
-    fontFamily: "'Kanit', sans-serif",
-    borderBottom: `2px solid ${activeTab === tab.key ? colors.teal : "transparent"}`,
-    transition: "all 0.2s ease", marginBottom: "-1px", boxSizing: "border-box",
-  }}
->
-  {tab.label}
-</button>
-              ))}
-            </div>
-          </div>
-
+<div style={{
+  padding: "32px 20px 0",
+  backgroundColor: colors.bg,
+  position: "sticky", top: 0, zIndex: 10,
+  borderBottom: `1px solid ${colors.border}`,
+  width: "100%", boxSizing: "border-box", flexShrink: 0,
+}}>
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+    <div style={{ fontSize: "20px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.5px" }}>
+      ponytail
+      <span style={{
+        display: "inline-block", width: "6px", height: "6px",
+        borderRadius: "50%", backgroundColor: colors.teal,
+        marginLeft: "4px", marginBottom: "6px",
+      }} />
+    </div>
+    <button style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+      <div style={{ borderRadius: "50%", overflow: "hidden", width: 34, height: 34 }}>
+        <Avatar name={user?.username || "User"} size={34} />
+      </div>
+  </button>
+  </div>
+  <div style={{ display: "flex", gap: "4px", width: "100%" }}>
+    {[
+      { key: "search", label: "Artists & Tracks" },
+      { key: "discovery", label: "Discover" },
+    ].map(tab => (
+      <button
+        key={tab.key}
+        onClick={() => {
+          if (tab.key === "discovery" && isPlaying) togglePlay();
+          setActiveTab(tab.key);
+        }}
+        style={{
+          flex: 1, padding: "10px", background: "none", border: "none", cursor: "pointer",
+          fontSize: "13px",
+          fontWeight: activeTab === tab.key ? "700" : "400",
+          color: activeTab === tab.key ? colors.teal : colors.muted,
+          fontFamily: "'Kanit', sans-serif",
+          borderBottom: `2px solid ${activeTab === tab.key ? colors.teal : "transparent"}`,
+          transition: "all 0.2s ease", marginBottom: "-1px", boxSizing: "border-box",
+        }}
+      >
+        {tab.label}
+      </button>
+    ))}
+  </div>
+</div>
           {/* ── Tab content ── */}
           <div style={{
             flex: 1,
@@ -872,6 +885,8 @@ export default function SearchScreen({ setScreen }) {
                 setActiveNav(tab);
                 if (tab === "home") setScreen("home");
                 if (tab === "mymusic") setScreen("mymusic");
+                if (tab === "radio") setScreen("radio");
+                if (tab === "bulletin") setScreen("bulletin");
               }}
           />
           {/* ── Full Screen Player ── */}

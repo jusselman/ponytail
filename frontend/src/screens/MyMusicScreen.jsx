@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getMe } from '../services/authService';
+import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 import FullPlayer from '../components/FullPlayer';
@@ -126,12 +127,13 @@ const AlbumCard = ({ track, onPlay, size = 120, currentTrack, isPlaying }) => {
 };
 
 // ─── Section Header ───────────────────────────────────────────────────────────
-const SectionHeader = ({ title, subtitle }) => (
-  <div style={{ marginBottom: "14px" }}>
-    <div style={{
-      fontSize: "16px", fontWeight: "700", color: colors.text,
-      fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.2px",
-    }}>
+const SectionHeader = ({ title, subtitle, index = 0 }) => (
+  <div style={{
+    marginBottom: "14px",
+    animation: `fadeSlideUp 0.4s ease ${index * 0.1}s forwards`,
+    opacity: 0,
+  }}>
+    <div style={{ fontSize: "16px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.2px" }}>
       {title}
     </div>
     {subtitle && (
@@ -143,13 +145,15 @@ const SectionHeader = ({ title, subtitle }) => (
 );
 
 // ─── Horizontal Scroll Row ────────────────────────────────────────────────────
-const ScrollRow = ({ tracks, onPlay, emptyMessage, currentTrack, isPlaying }) => {
+const ScrollRow = ({ tracks, onPlay, emptyMessage, currentTrack, isPlaying, index = 0 }) => {
   if (!tracks || tracks.length === 0) {
     return (
       <div style={{
         height: "120px", display: "flex", alignItems: "center", justifyContent: "center",
         backgroundColor: colors.bgCard, borderRadius: "12px",
         marginBottom: "28px",
+        animation: `fadeSlideUp 0.4s ease ${index * 0.1 + 0.05}s forwards`,
+        opacity: 0,
       }}>
         <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center", padding: "0 20px" }}>
           {emptyMessage}
@@ -296,8 +300,12 @@ useEffect(() => {
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
         body { background: #222222; }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         ::-webkit-scrollbar { display: none; }
-      `}</style>
+    `}</style>
 
       <div style={{
         minHeight: "100vh", width: "100%", backgroundColor: colors.bgDeep,
@@ -314,21 +322,20 @@ useEffect(() => {
         }}>
 
           {/* ── Header ── */}
-          <div style={{
-            padding: "32px 20px 16px",
-            backgroundColor: colors.bg,
-            borderBottom: `1px solid ${colors.border}`,
-            width: "100%", boxSizing: "border-box", flexShrink: 0,
-          }}>
-            <div style={{ fontSize: "20px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.5px" }}>
-              My Music
-            </div>
-            {user && (
-              <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
-                {user.username}
-              </div>
-            )}
-          </div>
+        <AppHeader user={user} />
+        <div style={{
+        padding: "8px 20px 16px",
+        backgroundColor: colors.bg,
+        borderBottom: `1px solid ${colors.border}`,
+        flexShrink: 0,
+        }}>
+        <div style={{ fontSize: "16px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+            My Music
+        </div>
+        <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px", minHeight: "18px" }}>
+            {user?.username || ""}
+        </div>
+        </div>
 
           {/* ── Scrollable content ── */}
           <div style={{
@@ -348,6 +355,7 @@ useEffect(() => {
                 emptyMessage="Tracks you play will appear here"
                 currentTrack={currentTrack}
                 isPlaying={isPlaying}
+                index={0} 
             />
 
             {/* ── Suggested For You ── */}
@@ -356,21 +364,29 @@ useEffect(() => {
               subtitle={playHistory.length > 0 ? "Based on your listening" : "Explore something new"}
             />
             <ScrollRow
-              tracks={loadingSuggested ? [] : suggested}
-              onPlay={handlePlay}
-              emptyMessage={loadingSuggested ? "Loading..." : "No suggestions yet"}
+                tracks={loadingSuggested ? [] : suggested}
+                onPlay={handlePlay}
+                emptyMessage={loadingSuggested ? "Loading..." : "No suggestions yet"}
+                currentTrack={currentTrack}
+                isPlaying={isPlaying}
+                index={1} 
             />
 
             {/* ── Purchased ── */}
             <SectionHeader title="Purchased" subtitle="Music you own" />
-            <PurchasedSection />
+            <PurchasedSection 
+                index={2}
+            />
 
             {/* ── New Releases ── */}
             <SectionHeader title="New Releases" subtitle="Recently added to Ponytail" />
             <ScrollRow
-              tracks={loadingNew ? [] : newReleases}
-              onPlay={handlePlay}
-              emptyMessage={loadingNew ? "Loading..." : "Nothing new yet"}
+                tracks={loadingNew ? [] : newReleases}
+                onPlay={handlePlay}
+                emptyMessage={loadingNew ? "Loading..." : "Nothing new yet"}
+                currentTrack={currentTrack}
+                isPlaying={isPlaying}
+                index={3} 
             />
 
             {/* Bottom padding */}
@@ -388,6 +404,7 @@ useEffect(() => {
               setActiveNav(tab);
               if (tab === "home") setScreen("home");
               if (tab === "search") setScreen("search");
+              if (tab === "radio") setScreen("radio");
             }}
           />
 

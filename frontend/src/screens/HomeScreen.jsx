@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getMe } from '../services/authService';
+import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 import FullPlayer from '../components/FullPlayer';
@@ -347,30 +348,7 @@ export default function HomeScreen({ setScreen }) {
         }}>
 
           {/* ── Header ── */}
-          <div style={{
-            padding: "32px 20px 12px",
-            backgroundColor: colors.bg,
-            position: "sticky", top: 0, zIndex: 10,
-            borderBottom: `1px solid ${colors.border}`,
-            width: "100%", boxSizing: "border-box", flexShrink: 0,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{
-                fontSize: "20px", fontWeight: "700", color: colors.text,
-                fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.5px",
-              }}>
-                ponytail
-                <span style={{
-                  display: "inline-block", width: "6px", height: "6px",
-                  borderRadius: "50%", backgroundColor: colors.teal,
-                  marginLeft: "4px", marginBottom: "6px",
-                }} />
-              </div>
-              <button style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                <Avatar name={user?.username || "User"} size={34} />
-              </button>
-            </div>
-          </div>
+          <AppHeader user={user} />
 
           {/* ── Scrollable feed ── */}
           <div style={{
@@ -441,6 +419,8 @@ export default function HomeScreen({ setScreen }) {
               setActiveNav(tab);
               if (tab === "search") setScreen("search");
               if (tab === "mymusic") setScreen("mymusic");
+              if (tab === "radio") setScreen("radio");
+              if (tab === "bulletin") setScreen("bulletin");
             }}
           />
 
