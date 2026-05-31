@@ -186,4 +186,67 @@ router.get('/artists/search', async (req, res) => {
   }
 });
 
+// New releases — most recently seeded tracks
+router.get('/tracks/new-releases', async (req, res) => {
+  const { limit = 10 } = req.query;
+  try {
+    const result = await pool.query(
+      `SELECT title, artist, album, genre, cover, filename
+       FROM seed_tracks
+       ORDER BY created_at DESC
+       LIMIT $1`,
+      [parseInt(limit)]
+    );
+    const tracks = result.rows.map(track => ({
+      ...track,
+      coverUrl: track.cover
+        ? `http://localhost:5000/covers/${track.cover.split('/covers/')[1]}`
+        : null,
+      audioUrl: `http://localhost:5000/audio/dummy.mp3`,
+    }));
+    res.json({ tracks });
+  } catch (err) {
+    console.error('New releases error:', err);
+    res.status(500).json({ error: 'Failed to fetch new releases' });
+  }
+});
+
+// Suggested tracks by genre
+router.get('/tracks/suggested', async (req, res) => {
+  const { genres, limit = 10 } = req.query;
+  try {
+    let result;
+    if (genres) {
+      const genreList = genres.split(',').map(g => g.trim());
+      result = await pool.query(
+        `SELECT title, artist, album, genre, cover, filename
+         FROM seed_tracks
+         WHERE genre = ANY($1)
+         ORDER BY RANDOM()
+         LIMIT $2`,
+        [genreList, parseInt(limit)]
+      );
+    } else {
+      result = await pool.query(
+        `SELECT title, artist, album, genre, cover, filename
+         FROM seed_tracks
+         ORDER BY RANDOM()
+         LIMIT $1`,
+        [parseInt(limit)]
+      );
+    }
+    const tracks = result.rows.map(track => ({
+      ...track,
+      coverUrl: track.cover
+        ? `http://localhost:5000/covers/${track.cover.split('/covers/')[1]}`
+        : null,
+      audioUrl: `http://localhost:5000/audio/dummy.mp3`,
+    }));
+    res.json({ tracks });
+  } catch (err) {
+    console.error('Suggested tracks error:', err);
+    res.status(500).json({ error: 'Failed to fetch suggested tracks' });
+  }
+});
+
 module.exports = router;

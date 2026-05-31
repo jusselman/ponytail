@@ -39,7 +39,6 @@ const MOCK_GENRES = [
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 const Avatar = ({ name, size = 42, hue, coverUrl }) => {
   const [imgError, setImgError] = useState(false);
-   console.log('Avatar props:', { name, coverUrl, imgError });
   const initials = name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
   const h = hue ?? (name.charCodeAt(0) * 37 % 360);
 
@@ -129,6 +128,7 @@ const StandardSearch = ({ loved }) => {
   const [focused, setFocused] = useState(false);
   const debounceRef = useRef(null);
   const { playTrack } = usePlayer();
+  
 
  const searchTracks = async (q) => {
   if (!q || q.length < 2) { setResults([]); return; }
@@ -280,87 +280,109 @@ const StandardSearch = ({ loved }) => {
       )}
 
       {/* ── Empty state ── */}
-      {showEmpty && (
-        <>
-          {/* Loved Artists */}
-          {loved.length > 0 && (
-            <div style={{ marginBottom: "24px" }}>
-              <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-                Loved
+{showEmpty && (
+  <>
+    {/* Loved Artists */}
+    {loved.length > 0 && (
+      <div style={{ marginBottom: "24px" }}>
+        <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+          Loved
+        </div>
+        <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px" }}>
+          {loved.map((track, i) => (
+            <div
+              key={i}
+              onClick={() => playTrack(
+                {
+                  title: track.title,
+                  artist: track.artist,
+                  album: track.album,
+                  genre: track.genre,
+                  coverUrl: track.coverUrl,
+                  audioUrl: track.audioUrl || "http://localhost:5000/audio/dummy.mp3",
+                },
+                loved.map(t => ({
+                  title: t.title,
+                  artist: t.artist,
+                  album: t.album,
+                  genre: t.genre,
+                  coverUrl: t.coverUrl,
+                  audioUrl: t.audioUrl || "http://localhost:5000/audio/dummy.mp3",
+                })),
+                i
+              )}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flexShrink: 0, cursor: "pointer" }}
+            >
+              <div style={{ position: "relative" }}>
+                <Avatar name={track.artist} size={52} coverUrl={track.coverUrl} />
+                <div style={{ position: "absolute", bottom: -2, right: -2, backgroundColor: colors.teal, borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <HeartIcon size={10} color="#1a1a1a" filled />
+                </div>
               </div>
-              <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px" }}>
-                {loved.map((track, i) => (
-                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                    <div style={{ position: "relative" }}>
-                      <Avatar name={track.artist} size={52} coverUrl={track.coverUrl} />
-                      <div style={{ position: "absolute", bottom: -2, right: -2, backgroundColor: colors.teal, borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <HeartIcon size={10} color="#1a1a1a" filled />
-                      </div>
-                    </div>
-                    <div style={{ fontSize: "10px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", textAlign: "center", maxWidth: "52px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {track.artist}
-                    </div>
-                  </div>
-                ))}
+              <div style={{ fontSize: "10px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", textAlign: "center", maxWidth: "52px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {track.artist}
               </div>
             </div>
-          )}
+          ))}
+        </div>
+      </div>
+    )}
 
-          {/* Recent searches */}
-          <div style={{ marginBottom: "24px" }}>
-            <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-              Recent
-            </div>
-            {MOCK_RECENT.map((item, i) => (
-              <div key={i} style={{
-                display: "flex", alignItems: "center", gap: "12px",
-                padding: "9px 0", borderBottom: `1px solid ${colors.border}`, cursor: "pointer",
-              }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: colors.bgCard, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {item.type === "artist" ? <ClockIcon /> : <MusicNoteIcon />}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "13px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>{item.name}</div>
-                  <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-                    {item.type === "artist" ? item.genre : `by ${item.artist}`}
-                  </div>
-                </div>
-                <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textTransform: "capitalize" }}>
-                  {item.type}
-                </div>
-              </div>
-            ))}
+   {/* Recent searches */}
+    <div style={{ marginBottom: "24px" }}>
+      <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+        Recent
+      </div>
+      {MOCK_RECENT.map((item, i) => (
+        <div key={i} style={{
+          display: "flex", alignItems: "center", gap: "12px",
+          padding: "9px 0", borderBottom: `1px solid ${colors.border}`, cursor: "pointer",
+        }}>
+          <div style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: colors.bgCard, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            {item.type === "artist" ? <ClockIcon /> : <MusicNoteIcon />}
           </div>
-
-          {/* Genre chips */}
-          <div>
-            <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-              Browse by Genre
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {MOCK_GENRES.map((genre, i) => {
-                const hue = (i * 37 + 160) % 360;
-                return (
-                  <div key={i} style={{
-                    padding: "6px 14px", borderRadius: "20px",
-                    background: `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
-                    border: `1px solid hsl(${hue}, 40%, 35%)`,
-                    fontSize: "12px", fontWeight: "500",
-                    color: colors.text, fontFamily: "'Kanit', sans-serif",
-                    cursor: "pointer", transition: "opacity 0.2s ease",
-                  }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
-                    onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-                  >
-                    {genre}
-                  </div>
-                );
-              })}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>{item.name}</div>
+            <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
+              {item.type === "artist" ? item.genre : `by ${item.artist}`}
             </div>
           </div>
-        </>
-      )}
+          <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textTransform: "capitalize" }}>
+            {item.type}
+          </div>
+        </div>
+      ))}
     </div>
+
+    {/* Genre chips */}
+    <div>
+      <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+        Browse by Genre
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        {MOCK_GENRES.map((genre, i) => {
+          const hue = (i * 37 + 160) % 360;
+          return (
+            <div key={i} style={{
+              padding: "6px 14px", borderRadius: "20px",
+              background: `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+              border: `1px solid hsl(${hue}, 40%, 35%)`,
+              fontSize: "12px", fontWeight: "500",
+              color: colors.text, fontFamily: "'Kanit', sans-serif",
+              cursor: "pointer", transition: "opacity 0.2s ease",
+            }}
+              onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
+              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+            >
+              {genre}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </>
+)}
+</div>
   );
 };
 
@@ -742,6 +764,7 @@ export default function SearchScreen({ setScreen }) {
   const [loved, setLoved] = useState([]);
   const [user, setUser] = useState(null);
   const [activeNav, setActiveNav] = useState("search");
+  const { isPlayerOpen, isPlaying, togglePlay } = usePlayer();
 
   useEffect(() => {
     const loadUser = async () => {
@@ -805,20 +828,25 @@ export default function SearchScreen({ setScreen }) {
                 { key: "discovery", label: "Discover" },
               ].map(tab => (
                 <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  style={{
-                    flex: 1, padding: "10px", background: "none", border: "none", cursor: "pointer",
-                    fontSize: "13px",
-                    fontWeight: activeTab === tab.key ? "700" : "400",
-                    color: activeTab === tab.key ? colors.teal : colors.muted,
-                    fontFamily: "'Kanit', sans-serif",
-                    borderBottom: `2px solid ${activeTab === tab.key ? colors.teal : "transparent"}`,
-                    transition: "all 0.2s ease", marginBottom: "-1px", boxSizing: "border-box",
-                  }}
-                >
-                  {tab.label}
-                </button>
+  key={tab.key}
+  onClick={() => {
+    if (tab.key === "discovery" && isPlaying) {
+      togglePlay();
+    }
+    setActiveTab(tab.key);
+  }}
+  style={{
+    flex: 1, padding: "10px", background: "none", border: "none", cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: activeTab === tab.key ? "700" : "400",
+    color: activeTab === tab.key ? colors.teal : colors.muted,
+    fontFamily: "'Kanit', sans-serif",
+    borderBottom: `2px solid ${activeTab === tab.key ? colors.teal : "transparent"}`,
+    transition: "all 0.2s ease", marginBottom: "-1px", boxSizing: "border-box",
+  }}
+>
+  {tab.label}
+</button>
               ))}
             </div>
           </div>
@@ -835,16 +863,16 @@ export default function SearchScreen({ setScreen }) {
           </div>
 
           {/* ── Mini Player ── */}
-          <MiniPlayer           
-          />
+          {activeTab !== "discovery" && <MiniPlayer />}
 
           {/* ── Footer Nav ── */}
           <FooterNav
-            activeTab={activeNav}
-            onTabPress={(tab) => {
-              setActiveNav(tab);
-              if (tab === "home") setScreen("home");
-            }}
+              activeTab={activeNav}
+              onTabPress={(tab) => {
+                setActiveNav(tab);
+                if (tab === "home") setScreen("home");
+                if (tab === "mymusic") setScreen("mymusic");
+              }}
           />
           {/* ── Full Screen Player ── */}
           <FullPlayer />

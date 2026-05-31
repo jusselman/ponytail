@@ -35,27 +35,15 @@ const NextIcon = () => (
 
 // ─── Full Player Screen ───────────────────────────────────────────────────────
 export default function FullPlayer() {
-  const {
-    currentTrack,
-    isPlaying,
-    isPlayerOpen,
-    togglePlay,
-    nextTrack,
-    prevTrack,
-    closePlayer,
-  } = usePlayer();
+  const { currentTrack, isPlaying, isPlayerOpen, togglePlay, nextTrack, prevTrack, closePlayer, progress, currentTime, duration, seekTo } = usePlayer();
 
-  const audioRef = useRef(null);
-
-  // ── Handle audio playback ──
-  useEffect(() => {
-    if (!audioRef.current || !currentTrack) return;
-    if (isPlaying) {
-      audioRef.current.play().catch(() => console.log('Autoplay blocked'));
-    } else {
-      audioRef.current.pause();
-    }
-  }, [isPlaying, currentTrack]);
+  // Progress bar click handler:
+  const handleProgressClick = (e) => {
+    const bar = e.currentTarget;
+    const rect = bar.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    seekTo(Math.max(0, Math.min(1, ratio)));
+  };
 
   if (!currentTrack) return null;
 
@@ -170,18 +158,21 @@ export default function FullPlayer() {
         </div>
 
         {/* ── Progress bar ── */}
-        <div style={{ marginBottom: "32px" }}>
-          <div style={{ height: "3px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "2px", marginBottom: "8px" }}>
-            <div style={{ width: "35%", height: "100%", backgroundColor: colors.teal, borderRadius: "2px" }} />
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>1:12</span>
+        <div
+            onClick={handleProgressClick}
+            style={{ height: "3px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "2px", marginBottom: "8px", cursor: "pointer" }}
+            >
+            <div style={{ width: `${progress * 100}%`, height: "100%", backgroundColor: colors.teal, borderRadius: "2px", transition: "width 0.5s linear" }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-              {currentTrack.length_seconds
-                ? `${Math.floor(currentTrack.length_seconds / 60)}:${String(currentTrack.length_seconds % 60).padStart(2, '0')}`
+                {Math.floor(currentTime / 60)}:{String(Math.floor(currentTime % 60)).padStart(2, '0')}
+            </span>
+            <span style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
+                {duration > 0
+                ? `${Math.floor(duration / 60)}:${String(Math.floor(duration % 60)).padStart(2, '0')}`
                 : '3:30'}
             </span>
-          </div>
         </div>
 
         {/* ── Controls ── */}
@@ -232,17 +223,8 @@ export default function FullPlayer() {
             <NextIcon />
           </button>
         </div>
-
       </div>
-
-      {/* ── Hidden audio ── */}
-      <audio
-        ref={audioRef}
-        src={currentTrack.audioUrl || "http://localhost:5000/audio/dummy.mp3"}
-        loop
-      />
-
     </div>
   </>
-);
+ );
 }

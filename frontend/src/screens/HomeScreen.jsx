@@ -440,6 +440,7 @@ export default function HomeScreen({ setScreen }) {
             onTabPress={(tab) => {
               setActiveNav(tab);
               if (tab === "search") setScreen("search");
+              if (tab === "mymusic") setScreen("mymusic");
             }}
           />
 
