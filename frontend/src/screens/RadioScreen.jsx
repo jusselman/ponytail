@@ -4,6 +4,7 @@ import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 import FullPlayer from '../components/FullPlayer';
+import ProfilePanel from '../components/ProfilePanel';
 import { usePlayer } from '../context/PlayerContext';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
@@ -461,6 +462,9 @@ export default function RadioScreen({ setScreen }) {
 
           {/* ── Full Player ── */}
           <FullPlayer />
+
+          {/* ── Profile Panel ── */}
+          <ProfilePanel />
 
         </div>
       </div>

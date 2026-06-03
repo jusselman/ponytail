@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useUI } from '../context/UIContext';
 
 const colors = {
   bg: "#222222",
@@ -24,28 +25,35 @@ const Avatar = ({ name, size = 34 }) => {
 };
 
 export default function AppHeader({ user }) {
+  const { openProfile } = useUI();
+
   return (
     <div style={{
       padding: "32px 20px 12px",
-      backgroundColor: colors.bg,
+      backgroundColor: "#222222",
       position: "sticky", top: 0, zIndex: 10,
-      borderBottom: `1px solid ${colors.border}`,
+      borderBottom: "1px solid rgba(255,255,255,0.07)",
       width: "100%", boxSizing: "border-box", flexShrink: 0,
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{
-          fontSize: "20px", fontWeight: "700", color: colors.text,
+          fontSize: "20px", fontWeight: "700", color: "#ffffff",
           fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.5px",
         }}>
           ponytail
           <span style={{
             display: "inline-block", width: "6px", height: "6px",
-            borderRadius: "50%", backgroundColor: colors.teal,
+            borderRadius: "50%", backgroundColor: "#5DEBD7",
             marginLeft: "4px", marginBottom: "6px",
           }} />
         </div>
-        <button style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-          <Avatar name={user?.username || "User"} size={34} />
+        <button
+          onClick={openProfile}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+        >
+          <div style={{ borderRadius: "50%", overflow: "hidden", width: 34, height: 34 }}>
+            <Avatar name={user?.username || "User"} size={34} />
+          </div>
         </button>
       </div>
     </div>

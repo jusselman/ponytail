@@ -4,6 +4,7 @@ import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 import { usePlayer } from '../context/PlayerContext';
+import ProfilePanel from '../components/ProfilePanel';
 import FullPlayer from '../components/FullPlayer';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
@@ -891,6 +892,10 @@ export default function SearchScreen({ setScreen }) {
           />
           {/* ── Full Screen Player ── */}
           <FullPlayer />
+
+          {/* ── Profile Panel ── */}
+          <ProfilePanel />
+          
         </div>
       </div>
     </>

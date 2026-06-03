@@ -7,12 +7,14 @@ import { PlayerProvider } from './src/context/PlayerContext';
 import MyMusicScreen from './src/screens/MyMusicScreen';
 import RadioScreen from './src/screens/RadioScreen';
 import BulletinScreen from './src/screens/BulletinScreen';
+import { UIProvider } from './src/context/UIContext';
 
 export default function App() {
   const [screen, setScreen] = useState("login");
 
-  return (
-    <PlayerProvider>
+return (
+  <PlayerProvider>
+    <UIProvider>
       {screen === "login" && <AuthScreen setScreen={setScreen} />}
       {screen === "onboarding" && <OnboardingScreen setScreen={setScreen} />}
       {screen === "search" && <SearchScreen setScreen={setScreen} />}
@@ -20,6 +22,7 @@ export default function App() {
       {screen === "mymusic" && <MyMusicScreen setScreen={setScreen} />}
       {screen === "radio" && <RadioScreen setScreen={setScreen} />}
       {screen === "bulletin" && <BulletinScreen setScreen={setScreen} />}
-    </PlayerProvider>
-  );
+    </UIProvider>
+  </PlayerProvider>
+);
 }
