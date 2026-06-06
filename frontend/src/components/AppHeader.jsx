@@ -24,8 +24,8 @@ const Avatar = ({ name, size = 34 }) => {
   );
 };
 
-export default function AppHeader({ user }) {
-  const { openProfile } = useUI();
+export default function AppHeader() {
+  const { openProfile, profileImage, user } = useUI();
 
   return (
     <div style={{
@@ -51,9 +51,15 @@ export default function AppHeader({ user }) {
           onClick={openProfile}
           style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
         >
-          <div style={{ borderRadius: "50%", overflow: "hidden", width: 34, height: 34 }}>
-            <Avatar name={user?.username || "User"} size={34} />
-          </div>
+          {profileImage ? (
+            <div style={{ width: 34, height: 34, borderRadius: "50%", overflow: "hidden" }}>
+              <img src={profileImage} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+          ) : (
+            <div style={{ borderRadius: "50%", overflow: "hidden", width: 34, height: 34 }}>
+              <Avatar name={user?.username || "User"} size={34} />
+            </div>
+          )}
         </button>
       </div>
     </div>

@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getMe } from '../services/authService';
 import { useUI } from '../context/UIContext';
 import SettingsPanel from './SettingsPanel';
+
 
 const colors = {
   bg: "#222222",
@@ -127,20 +128,52 @@ const MOCK_PLAYLISTS = [
 
 // ─── Profile Panel ────────────────────────────────────────────────────────────
 export default function ProfilePanel() {
-  const { isProfileOpen, closeProfile, openSettings } = useUI();
-  const [user, setUser] = useState(null);
+  const { isProfileOpen, closeProfile, openSettings, profileImage, setProfileImage, user, setUser } = useUI();
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const me = await getMe();
-        setUser(me);
-      } catch (err) {
-        console.log('Could not load user:', err);
+ useEffect(() => {
+  const loadUser = async () => {
+    try {
+      const me = await getMe();
+      setUser(me);
+      if (me?.profile_picture) {
+        setProfileImage(me.profile_picture);
       }
-    };
-    loadUser();
-  }, []);
+    } catch (err) {
+      console.log('Could not load user:', err);
+    }
+  };
+  loadUser();
+}, []);
+
+const fileInputRef = useRef(null);
+
+const handleImageChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Show preview immediately while uploading
+  const previewUrl = URL.createObjectURL(file);
+  setProfileImage(previewUrl);
+
+  try {
+    const token = await import('../services/authService').then(m => m.getToken());
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const res = await fetch('http://localhost:5000/api/auth/upload-avatar', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (data.avatarUrl) {
+      setProfileImage(data.avatarUrl); // replace preview with permanent URL
+    }
+  } catch (err) {
+    console.log('Avatar upload error:', err);
+  }
+};
 
   return (
     <>
@@ -190,20 +223,34 @@ export default function ProfilePanel() {
           {/* ── Profile picture + info ── */}
           <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "24px" }}>
 
-            {/* Avatar with camera overlay */}
-            <div style={{ position: "relative", flexShrink: 0 }}>
-              <Avatar name={user?.username || "User"} size={80} />
-              <div style={{
-                position: "absolute", bottom: 0, right: 0,
-                width: 28, height: 28, borderRadius: "50%",
-                backgroundColor: colors.bg,
-                border: `2px solid ${colors.bg}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-                backgroundColor: colors.bgCard,
-              }}>
-                <CameraIcon />
-              </div>
+           {/* Avatar with camera overlay */}
+            <div
+                style={{ position: "relative", flexShrink: 0, cursor: "pointer" }}
+                onClick={() => fileInputRef.current?.click()}
+                >
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ display: "none" }}
+                />
+                {profileImage ? (
+                    <div style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden" }}>
+                    <img src={profileImage} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                ) : (
+                    <Avatar name={user?.username || "User"} size={80} />
+                )}
+                <div style={{
+                    position: "absolute", bottom: 0, right: 0,
+                    width: 28, height: 28, borderRadius: "50%",
+                    backgroundColor: colors.bgCard,
+                    border: `2px solid ${colors.bg}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                    <CameraIcon />
+                </div>
             </div>
 
             {/* Name + stats */}

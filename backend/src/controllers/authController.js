@@ -75,7 +75,7 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, email, username, display_name, avatar_url, is_artist, created_at FROM users WHERE id = $1',
+      'SELECT id, email, username, display_name, favorite_artists, profile_picture FROM users WHERE id = $1',
       [req.user.id]
     );
     res.json(result.rows[0]);

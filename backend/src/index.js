@@ -11,9 +11,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// ── Middleware ──
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }, // allows frontend to load images/audio
+  crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 app.use(cors({
   origin: ['http://localhost:8081', 'http://localhost:19006'],
@@ -30,13 +30,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ── Static assets ──
+app.use('/uploads', express.static(path.join(__dirname, '../assets/uploads')));
 app.use('/covers', express.static(path.join(__dirname, '../assets/dev_seed/covers')));
 app.use('/audio', express.static(path.join(__dirname, '../assets/dev_seed/mp3')));
 
-// Routes
+// ── Routes ──
 app.use('/api/auth', authRoutes);
 
-// Health check
+// ── Health check ──
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Ponytail API is running' });
 });

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { getMe } from '../services/authService';
+import { useUI } from '../context/UIContext';
 import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
@@ -767,6 +768,7 @@ export default function SearchScreen({ setScreen }) {
   const [loved, setLoved] = useState([]);
   const [user, setUser] = useState(null);
   const [activeNav, setActiveNav] = useState("search");
+  const { openProfile, profileImage } = useUI();
   const { isPlayerOpen, isPlaying, togglePlay } = usePlayer();
 
   useEffect(() => {
@@ -833,11 +835,18 @@ export default function SearchScreen({ setScreen }) {
         marginLeft: "4px", marginBottom: "6px",
       }} />
     </div>
-    <button style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+    <button
+      onClick={openProfile}
+      style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+    >
       <div style={{ borderRadius: "50%", overflow: "hidden", width: 34, height: 34 }}>
-        <Avatar name={user?.username || "User"} size={34} />
+        {profileImage ? (
+          <img src={profileImage} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <Avatar name={user?.username || "User"} size={34} />
+        )}
       </div>
-  </button>
+    </button>
   </div>
   <div style={{ display: "flex", gap: "4px", width: "100%" }}>
     {[

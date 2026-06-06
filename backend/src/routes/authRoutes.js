@@ -5,6 +5,49 @@ const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const { register, login, getMe } = require('../controllers/authController');
 const { requireAuth } = require('../middleware/authMiddleware');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// ── Ensure uploads directory exists ──
+const uploadDir = path.join(__dirname, '../../assets/uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// ── Multer config ──
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `avatar-${req.user.id}-${Date.now()}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'));
+  },
+});
+
+// Upload profile picture
+router.post('/upload-avatar', requireAuth, upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const avatarUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    await pool.query(
+      'UPDATE users SET profile_picture = $1 WHERE id = $2',
+      [avatarUrl, req.user.id]
+    );
+    res.json({ avatarUrl });
+  } catch (err) {
+    console.error('Avatar upload error:', err);
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
 
 // Email/password registration
 router.post('/register', register);
