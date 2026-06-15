@@ -99,36 +99,54 @@ router.put('/update-profile', async (req, res) => {
   }
 });
 
-// Search seed_tracks by artist or title
 router.get('/search', async (req, res) => {
   const { q, type } = req.query;
   if (!q || q.trim().length < 2) {
     return res.status(400).json({ error: 'Query must be at least 2 characters.' });
   }
+
   try {
-    const search = `%${q.trim().toLowerCase()}%`;
+    // ── Normalize query — strip punctuation, collapse spaces, lowercase ──
+    const normalized = q.trim().toLowerCase()
+      .replace(/['']/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // ── Also strip leading "the " for better matching ──
+    const stripped = normalized.startsWith('the ')
+      ? normalized.slice(4).trim()
+      : normalized;
+
+    const SIMILARITY_THRESHOLD = 0.15;
+
     let query, params;
 
     if (type === 'artist') {
       query = `
         SELECT DISTINCT ON (artist) artist, genre
         FROM seed_tracks
-        WHERE LOWER(artist) LIKE $1
-        ORDER BY artist
+        WHERE
+          similarity(LOWER(artist), $1) > $3
+          OR similarity(LOWER(artist), $2) > $3
+          OR LOWER(artist) LIKE '%' || $2 || '%'
+        ORDER BY artist, GREATEST(similarity(LOWER(artist), $1), similarity(LOWER(artist), $2)) DESC
         LIMIT 10
       `;
-      params = [search];
+      params = [normalized, stripped, SIMILARITY_THRESHOLD];
     } else if (type === 'track') {
       query = `
         SELECT title, artist, album, genre
         FROM seed_tracks
-        WHERE LOWER(title) LIKE $1
-        ORDER BY title
+        WHERE
+          similarity(LOWER(title), $1) > $3
+          OR similarity(LOWER(title), $2) > $3
+          OR LOWER(title) LIKE '%' || $2 || '%'
+        ORDER BY GREATEST(similarity(LOWER(title), $1), similarity(LOWER(title), $2)) DESC
         LIMIT 10
       `;
-      params = [search];
+      params = [normalized, stripped, SIMILARITY_THRESHOLD];
     } else {
-      // Default: search both artists and tracks
       query = `
         (
           SELECT DISTINCT ON (artist)
@@ -137,10 +155,17 @@ router.get('/search', async (req, res) => {
             genre,
             NULL as album,
             NULL as artist_name,
-            cover
+            cover,
+            GREATEST(
+              similarity(LOWER(artist), $1),
+              similarity(LOWER(artist), $2)
+            ) as score
           FROM seed_tracks
-          WHERE LOWER(artist) LIKE $1
-          ORDER BY artist
+          WHERE
+            similarity(LOWER(artist), $1) > $3
+            OR similarity(LOWER(artist), $2) > $3
+            OR LOWER(artist) LIKE '%' || $2 || '%'
+          ORDER BY artist, score DESC
           LIMIT 5
         )
         UNION ALL
@@ -151,15 +176,23 @@ router.get('/search', async (req, res) => {
             genre,
             album,
             artist as artist_name,
-            cover
+            cover,
+            GREATEST(
+              similarity(LOWER(title), $1),
+              similarity(LOWER(title), $2)
+            ) as score
           FROM seed_tracks
-          WHERE LOWER(title) LIKE $1
-          ORDER BY title
+          WHERE
+            similarity(LOWER(title), $1) > $3
+            OR similarity(LOWER(title), $2) > $3
+            OR LOWER(title) LIKE '%' || $2 || '%'
+          ORDER BY score DESC
           LIMIT 5
         )
+        ORDER BY score DESC
         LIMIT 10
       `;
-      params = [search];
+      params = [normalized, stripped, SIMILARITY_THRESHOLD];
     }
 
     const result = await pool.query(query, params);
