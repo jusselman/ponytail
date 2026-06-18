@@ -8,3 +8,6 @@ dist/
 assets/dev_seed/mp3/
 assets/dev_seed/covers/
 
+backend/assets/dev_seed/mp3/
+backend/assets/dev_seed/covers/
+backend/assets/uploads/

@@ -33,6 +33,27 @@ const upload = multer({
   },
 });
 
+// ── Build full coverUrl and audioUrl from raw DB paths ──
+const buildTrackUrls = (track) => {
+  const bareFilename = track.filename
+    ? track.filename.replace(/^bin\/mp3\//, '')
+    : null;
+
+  const audioPath = bareFilename
+    ? `${track.artist}/${track.album}/${bareFilename}`
+    : null;
+
+  return {
+    ...track,
+    coverUrl: track.cover
+      ? `http://localhost:5000/covers/${encodeURIComponent(track.cover.replace(/^\/?bin\/covers\//, ''))}`
+      : null,
+    audioUrl: audioPath
+      ? `http://localhost:5000/audio/${audioPath.split('/').map(encodeURIComponent).join('/')}`
+      : `http://localhost:5000/audio/dummy.mp3`,
+  };
+};
+
 // Upload profile picture
 router.post('/upload-avatar', requireAuth, upload.single('avatar'), async (req, res) => {
   try {
@@ -99,6 +120,7 @@ router.put('/update-profile', async (req, res) => {
   }
 });
 
+// Search seed_tracks by artist or title
 router.get('/search', async (req, res) => {
   const { q, type } = req.query;
   if (!q || q.trim().length < 2) {
@@ -214,14 +236,7 @@ router.get('/tracks/random', async (req, res) => {
        LIMIT $1`,
       [parseInt(limit)]
     );
-    // Build full URLs for cover and audio
-    const tracks = result.rows.map(track => ({
-      ...track,
-      coverUrl: track.cover
-        ? `http://localhost:5000/covers/${track.cover.split('/covers/')[1]}`
-        : null,
-      audioUrl: `http://localhost:5000/audio/dummy.mp3`,
-    }));
+    const tracks = result.rows.map(buildTrackUrls);
     res.json({ tracks });
   } catch (err) {
     console.error('Random tracks error:', err);
@@ -252,7 +267,7 @@ router.get('/artists/search', async (req, res) => {
       name: r.name,
       genre: r.genre,
       coverUrl: r.cover
-        ? `http://localhost:5000/covers/${r.cover.split('/covers/')[1]}`
+        ? `http://localhost:5000/covers/${encodeURIComponent(r.cover.replace(/^\/?bin\/covers\//, ''))}`
         : null,
     }));
     res.json({ artists });
@@ -273,13 +288,7 @@ router.get('/tracks/new-releases', async (req, res) => {
        LIMIT $1`,
       [parseInt(limit)]
     );
-    const tracks = result.rows.map(track => ({
-      ...track,
-      coverUrl: track.cover
-        ? `http://localhost:5000/covers/${track.cover.split('/covers/')[1]}`
-        : null,
-      audioUrl: `http://localhost:5000/audio/dummy.mp3`,
-    }));
+    const tracks = result.rows.map(buildTrackUrls);
     res.json({ tracks });
   } catch (err) {
     console.error('New releases error:', err);
@@ -311,13 +320,7 @@ router.get('/tracks/suggested', async (req, res) => {
         [parseInt(limit)]
       );
     }
-    const tracks = result.rows.map(track => ({
-      ...track,
-      coverUrl: track.cover
-        ? `http://localhost:5000/covers/${track.cover.split('/covers/')[1]}`
-        : null,
-      audioUrl: `http://localhost:5000/audio/dummy.mp3`,
-    }));
+    const tracks = result.rows.map(buildTrackUrls);
     res.json({ tracks });
   } catch (err) {
     console.error('Suggested tracks error:', err);
