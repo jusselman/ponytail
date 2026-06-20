@@ -9,6 +9,125 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// ── Cache directory listings at startup for fast fuzzy matching ──
+const COVERS_ROOT = path.join(__dirname, '../../assets/dev_seed/covers');
+const MP3_ROOT = path.join(__dirname, '../../assets/dev_seed/mp3');
+
+const normalize = (s) => s
+  .toLowerCase()
+  .replace(/\b(and|feat|ft|with|vs)\b/g, '') // strip common connector words
+  .replace(/[^a-z0-9]/g, '');
+
+// ── Build a normalized lookup map once: normalized name -> real filename ──
+const buildNormalizedMap = (files) => {
+  const map = new Map();
+  for (const f of files) {
+    map.set(normalize(f), f);
+  }
+  return map;
+};
+
+let coversMap = new Map();
+let artistFoldersMap = new Map(); // normalized artist name -> real folder name
+
+try {
+  const coverFiles = fs.readdirSync(COVERS_ROOT);
+  coversMap = buildNormalizedMap(coverFiles);
+  console.log(`Cached ${coversMap.size} cover filenames for fuzzy matching.`);
+} catch (err) {
+  console.error('Failed to read covers directory:', err.message);
+}
+
+try {
+  const artistFolders = fs.readdirSync(MP3_ROOT);
+  artistFoldersMap = buildNormalizedMap(artistFolders);
+  console.log(`Cached ${artistFoldersMap.size} artist folders for fuzzy matching.`);
+} catch (err) {
+  console.error('Failed to read mp3 directory:', err.message);
+}
+
+// ── Cache album folders per artist, built lazily on first access ──
+const albumFoldersCache = new Map(); // realArtistFolder -> Map(normalized album -> real folder)
+
+const getAlbumMap = (realArtistFolder) => {
+  if (albumFoldersCache.has(realArtistFolder)) {
+    return albumFoldersCache.get(realArtistFolder);
+  }
+  try {
+    const albums = fs.readdirSync(path.join(MP3_ROOT, realArtistFolder));
+    const map = buildNormalizedMap(albums);
+    albumFoldersCache.set(realArtistFolder, map);
+    return map;
+  } catch {
+    const empty = new Map();
+    albumFoldersCache.set(realArtistFolder, empty);
+    return empty;
+  }
+};
+
+// ── Cache track filenames per album, built lazily on first access ──
+const trackFilesCache = new Map(); // "artistFolder/albumFolder" -> Map(normalized filename -> real filename)
+
+const getTrackMap = (realArtistFolder, realAlbumFolder) => {
+  const key = `${realArtistFolder}/${realAlbumFolder}`;
+  if (trackFilesCache.has(key)) {
+    return trackFilesCache.get(key);
+  }
+  try {
+    const tracks = fs.readdirSync(path.join(MP3_ROOT, realArtistFolder, realAlbumFolder));
+    const map = buildNormalizedMap(tracks);
+    trackFilesCache.set(key, map);
+    return map;
+  } catch {
+    const empty = new Map();
+    trackFilesCache.set(key, empty);
+    return empty;
+  }
+};
+
+// ── Resolve a cover path using the cached normalized map ──
+const resolveCover = (coverPath) => {
+  if (!coverPath) return null;
+  const filename = coverPath.replace(/^\/?bin\/covers\//, '');
+  const real = coversMap.get(normalize(filename));
+  return real || null;
+};
+
+// ── Resolve an audio path using cached normalized maps, lazily built ──
+const resolveAudio = (artist, album, filename) => {
+  if (!artist || !album || !filename) return null;
+  const bareFilename = filename.replace(/^bin\/mp3\//, '');
+
+  const realArtistFolder = artistFoldersMap.get(normalize(artist));
+  if (!realArtistFolder) return null;
+
+  const albumMap = getAlbumMap(realArtistFolder);
+  const realAlbumFolder = albumMap.get(normalize(album));
+  if (!realAlbumFolder) return null;
+
+  const trackMap = getTrackMap(realArtistFolder, realAlbumFolder);
+  const realTrackFile = trackMap.get(normalize(bareFilename));
+  if (!realTrackFile) return null;
+
+  return `${realArtistFolder}/${realAlbumFolder}/${realTrackFile}`;
+};
+
+// ── Build full coverUrl and audioUrl using cached fuzzy resolution ──
+const buildTrackUrls = (track) => {
+  const realCover = resolveCover(track.cover);
+  const realAudioPath = resolveAudio(track.artist, track.album, track.filename);
+
+  return {
+    ...track,
+    coverUrl: realCover
+      ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
+      : null,
+    audioUrl: realAudioPath
+      ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
+      : `http://localhost:5000/audio/dummy.mp3`,
+  };
+};
+
 // ── Ensure uploads directory exists ──
 const uploadDir = path.join(__dirname, '../../assets/uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -32,27 +151,6 @@ const upload = multer({
     allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'));
   },
 });
-
-// ── Build full coverUrl and audioUrl from raw DB paths ──
-const buildTrackUrls = (track) => {
-  const bareFilename = track.filename
-    ? track.filename.replace(/^bin\/mp3\//, '')
-    : null;
-
-  const audioPath = bareFilename
-    ? `${track.artist}/${track.album}/${bareFilename}`
-    : null;
-
-  return {
-    ...track,
-    coverUrl: track.cover
-      ? `http://localhost:5000/covers/${encodeURIComponent(track.cover.replace(/^\/?bin\/covers\//, ''))}`
-      : null,
-    audioUrl: audioPath
-      ? `http://localhost:5000/audio/${audioPath.split('/').map(encodeURIComponent).join('/')}`
-      : `http://localhost:5000/audio/dummy.mp3`,
-  };
-};
 
 // Upload profile picture
 router.post('/upload-avatar', requireAuth, upload.single('avatar'), async (req, res) => {
@@ -129,16 +227,16 @@ router.get('/search', async (req, res) => {
 
   try {
     // ── Normalize query — strip punctuation, collapse spaces, lowercase ──
-    const normalized = q.trim().toLowerCase()
+    const normalizedQuery = q.trim().toLowerCase()
       .replace(/['']/g, '')
       .replace(/[^a-z0-9\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
     // ── Also strip leading "the " for better matching ──
-    const stripped = normalized.startsWith('the ')
-      ? normalized.slice(4).trim()
-      : normalized;
+    const stripped = normalizedQuery.startsWith('the ')
+      ? normalizedQuery.slice(4).trim()
+      : normalizedQuery;
 
     const SIMILARITY_THRESHOLD = 0.15;
 
@@ -155,7 +253,7 @@ router.get('/search', async (req, res) => {
         ORDER BY artist, GREATEST(similarity(LOWER(artist), $1), similarity(LOWER(artist), $2)) DESC
         LIMIT 10
       `;
-      params = [normalized, stripped, SIMILARITY_THRESHOLD];
+      params = [normalizedQuery, stripped, SIMILARITY_THRESHOLD];
     } else if (type === 'track') {
       query = `
         SELECT title, artist, album, genre
@@ -167,7 +265,7 @@ router.get('/search', async (req, res) => {
         ORDER BY GREATEST(similarity(LOWER(title), $1), similarity(LOWER(title), $2)) DESC
         LIMIT 10
       `;
-      params = [normalized, stripped, SIMILARITY_THRESHOLD];
+      params = [normalizedQuery, stripped, SIMILARITY_THRESHOLD];
     } else {
       query = `
         (
@@ -178,6 +276,7 @@ router.get('/search', async (req, res) => {
             NULL as album,
             NULL as artist_name,
             cover,
+            NULL as filename,
             GREATEST(
               similarity(LOWER(artist), $1),
               similarity(LOWER(artist), $2)
@@ -199,6 +298,7 @@ router.get('/search', async (req, res) => {
             album,
             artist as artist_name,
             cover,
+            filename,
             GREATEST(
               similarity(LOWER(title), $1),
               similarity(LOWER(title), $2)
@@ -214,11 +314,20 @@ router.get('/search', async (req, res) => {
         ORDER BY score DESC
         LIMIT 10
       `;
-      params = [normalized, stripped, SIMILARITY_THRESHOLD];
+      params = [normalizedQuery, stripped, SIMILARITY_THRESHOLD];
     }
 
     const result = await pool.query(query, params);
-    res.json({ results: result.rows });
+    const mapped = result.rows.map(r => ({
+      ...r,
+      coverUrl: resolveCover(r.cover)
+        ? `http://localhost:5000/covers/${encodeURIComponent(resolveCover(r.cover))}`
+        : null,
+      audioUrl: resolveAudio(r.artist_name, r.album, r.filename)
+        ? `http://localhost:5000/audio/${resolveAudio(r.artist_name, r.album, r.filename).split('/').map(encodeURIComponent).join('/')}`
+        : null,
+    }));
+    res.json({ results: mapped });
   } catch (err) {
     console.error('Search error:', err);
     res.status(500).json({ error: 'Search failed' });
@@ -244,6 +353,46 @@ router.get('/tracks/random', async (req, res) => {
   }
 });
 
+// Get random albums for discovery (one random track per album for preview audio)
+router.get('/albums/random', async (req, res) => {
+  const { limit = 15 } = req.query;
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT ON (artist, album)
+        artist, album, genre, cover, filename
+       FROM seed_tracks
+       WHERE album IS NOT NULL AND album != ''
+       ORDER BY artist, album, RANDOM()
+       LIMIT $1`,
+      [parseInt(limit) * 3] // overfetch since we'll shuffle and trim after grouping
+    );
+
+    // ── Shuffle the album list and trim to requested limit ──
+    const shuffled = result.rows.sort(() => Math.random() - 0.5).slice(0, parseInt(limit));
+
+    const albums = shuffled.map(row => {
+      const realCover = resolveCover(row.cover);
+      const realAudioPath = resolveAudio(row.artist, row.album, row.filename);
+      return {
+        artist: row.artist,
+        album: row.album,
+        genre: row.genre,
+        coverUrl: realCover
+          ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
+          : null,
+        audioUrl: realAudioPath
+          ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
+          : `http://localhost:5000/audio/dummy.mp3`,
+      };
+    });
+
+    res.json({ albums });
+  } catch (err) {
+    console.error('Random albums error:', err);
+    res.status(500).json({ error: 'Failed to fetch albums' });
+  }
+});
+
 // Search unique artists from seed_tracks
 router.get('/artists/search', async (req, res) => {
   const { q } = req.query;
@@ -263,11 +412,11 @@ router.get('/artists/search', async (req, res) => {
       [`%${q.trim().toLowerCase()}%`]
     );
     const artists = result.rows.map(r => ({
-      id: r.name, // use name as id since seed_tracks has no artist uuid
+      id: r.name,
       name: r.name,
       genre: r.genre,
-      coverUrl: r.cover
-        ? `http://localhost:5000/covers/${encodeURIComponent(r.cover.replace(/^\/?bin\/covers\//, ''))}`
+      coverUrl: resolveCover(r.cover)
+        ? `http://localhost:5000/covers/${encodeURIComponent(resolveCover(r.cover))}`
         : null,
     }));
     res.json({ artists });

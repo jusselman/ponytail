@@ -1,0 +1,66 @@
+Artist/Folder Mismatch Report
+Generated: 2026-06-20T01:14:58.582Z
+
+Total unique CSV artists: 953
+Matched to a real folder: 896
+Mismatched (no folder): 57
+Match rate: 94.0%
+
+── Mismatched Artists ──
+Ali Farka Tour� With Ry Cooder
+Anders Johansson
+Aquarius
+Bela Bart�k
+Bill Evans/Tony Bennett
+Biscuits & Gravy m4a
+Bj�rk
+Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir
+Bob B. Soxx and the Blue Jeans
+Brad Bradley, David Hyde Pierce, Emily Hsu & Greg Reuter
+Chameleon
+Christian Borle
+Christian Borle, Christopher Sieber, David Hyde Pierce, Ensemble & Hank Azaria
+Christian Borle, David Hyde Pierce, Ensemble & Hank Azaria
+Christopher Sieber & Sara Ramirez
+Christopher Sieber, Company, David Hyde Pierce, Ensemble, Hank Azaria, Michael MCGrath, Steve Rosen & Tim Curry
+Christopher Sieber, David Hyde Pierce, Ensemble, Hank Azaria, Michael MCGrath, Sara Ramirez, Steve Rosen & Tim Curry
+Christopher Sieber, David Hyde Pierce, Hank Azaria, Michael MCGrath, Steve Rosen & Tim Curry
+Company
+Darlene Love
+David Hyde Pierce & Ensemble
+Ensemble & Hank Azaria
+Ensemble & Michael MCGrath
+Ensemble & Tim Curry
+Ensemble, Michael MCGrath & Tim Curry
+Gil Scott-Heron
+H�sker D�
+Johann Sebastian Bach
+John Prez
+Jon Connor
+Koffi Olomid�
+Michael Bubl�
+Michael MCGrath & Tim Curry
+Milton Nascimento & L� Borges
+Ni�o Josele
+Orchestra
+Peshay
+Peter Erskine, Nguy�n L�, Michel Benita
+PFM
+Phil Spector and Artists
+PJ Morton m4a
+Rachelle Ferrell m4a
+Sara Ramirez
+Sara Ramirez & Tim Curry
+Sigur R�s
+Sin�ad O'Connor
+Smashing Pumpkins
+Sonny Rollins
+Stan Getz/Jo�o Gilberto
+The Crystals
+The Game
+The Ronettes
+The Sugarcubes
+The Young Gods
+Tito Puente & His Orchestra
+Vangelis O
+Willie Col�n & Rub�n Blades
