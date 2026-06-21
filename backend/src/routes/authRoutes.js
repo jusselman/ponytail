@@ -266,55 +266,80 @@ router.get('/search', async (req, res) => {
         LIMIT 10
       `;
       params = [normalizedQuery, stripped, SIMILARITY_THRESHOLD];
-    } else {
-      query = `
-        (
-          SELECT DISTINCT ON (artist)
-            'artist' as type,
-            artist as name,
-            genre,
-            NULL as album,
-            NULL as artist_name,
-            cover,
-            NULL as filename,
-            GREATEST(
-              similarity(LOWER(artist), $1),
-              similarity(LOWER(artist), $2)
-            ) as score
-          FROM seed_tracks
-          WHERE
-            similarity(LOWER(artist), $1) > $3
-            OR similarity(LOWER(artist), $2) > $3
-            OR LOWER(artist) LIKE '%' || $2 || '%'
-          ORDER BY artist, score DESC
-          LIMIT 5
+   } else {
+  query = `
+    (
+      SELECT DISTINCT ON (artist)
+        'artist' as type,
+        artist as name,
+        genre,
+        NULL as album,
+        NULL as artist_name,
+        cover,
+        NULL as filename,
+        GREATEST(
+          similarity(LOWER(artist), $1),
+          similarity(LOWER(artist), $2)
+        ) as score
+      FROM seed_tracks
+      WHERE
+        similarity(LOWER(artist), $1) > $3
+        OR similarity(LOWER(artist), $2) > $3
+        OR LOWER(artist) LIKE '%' || $2 || '%'
+      ORDER BY artist, score DESC
+      LIMIT 5
+    )
+    UNION ALL
+    (
+      SELECT DISTINCT ON (artist, album)
+        'album' as type,
+        album as name,
+        genre,
+        album,
+        artist as artist_name,
+        cover,
+        NULL as filename,
+        GREATEST(
+          similarity(LOWER(album), $1),
+          similarity(LOWER(album), $2)
+        ) as score
+      FROM seed_tracks
+      WHERE
+        album IS NOT NULL AND album != ''
+        AND (
+          similarity(LOWER(album), $1) > $3
+          OR similarity(LOWER(album), $2) > $3
+          OR LOWER(album) LIKE '%' || $2 || '%'
         )
-        UNION ALL
-        (
-          SELECT
-            'track' as type,
-            title as name,
-            genre,
-            album,
-            artist as artist_name,
-            cover,
-            filename,
-            GREATEST(
-              similarity(LOWER(title), $1),
-              similarity(LOWER(title), $2)
-            ) as score
-          FROM seed_tracks
-          WHERE
-            similarity(LOWER(title), $1) > $3
-            OR similarity(LOWER(title), $2) > $3
-            OR LOWER(title) LIKE '%' || $2 || '%'
-          ORDER BY score DESC
-          LIMIT 5
-        )
-        ORDER BY score DESC
-        LIMIT 10
-      `;
-      params = [normalizedQuery, stripped, SIMILARITY_THRESHOLD];
+      ORDER BY artist, album, score DESC
+      LIMIT 5
+    )
+    UNION ALL
+    (
+      SELECT
+        'track' as type,
+        title as name,
+        genre,
+        album,
+        artist as artist_name,
+        cover,
+        filename,
+        GREATEST(
+          similarity(LOWER(title), $1),
+          similarity(LOWER(title), $2)
+        ) as score
+      FROM seed_tracks
+      WHERE
+        similarity(LOWER(title), $1) > $3
+        OR similarity(LOWER(title), $2) > $3
+        OR LOWER(title) LIKE '%' || $2 || '%'
+      ORDER BY score DESC
+      LIMIT 5
+    )
+    ORDER BY score DESC
+    LIMIT 15
+  `;
+  params = [normalizedQuery, stripped, SIMILARITY_THRESHOLD];
     }
 
     const result = await pool.query(query, params);
@@ -350,6 +375,132 @@ router.get('/tracks/random', async (req, res) => {
   } catch (err) {
     console.error('Random tracks error:', err);
     res.status(500).json({ error: 'Failed to fetch tracks' });
+  }
+});
+
+// Get full artist detail — albums grouped, plus tags
+router.get('/artists/detail', async (req, res) => {
+  const { name } = req.query;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Artist name is required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT title, album, genre, subgenre, similar_artist, mood, cover, filename
+       FROM seed_tracks
+       WHERE artist = $1
+       ORDER BY album`,
+      [name]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Artist not found.' });
+    }
+
+    // ── Group tracks by album ──
+    const albumMap = new Map();
+    for (const row of result.rows) {
+      if (!row.album) continue;
+      if (!albumMap.has(row.album)) {
+        albumMap.set(row.album, {
+          album: row.album,
+          trackCount: 0,
+          cover: row.cover,
+          filename: row.filename,
+        });
+      }
+      albumMap.get(row.album).trackCount += 1;
+    }
+
+    const albums = Array.from(albumMap.values()).map(a => {
+      const realCover = resolveCover(a.cover);
+      const realAudioPath = resolveAudio(name, a.album, a.filename);
+      return {
+        album: a.album,
+        trackCount: a.trackCount,
+        coverUrl: realCover
+          ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
+          : null,
+        audioUrl: realAudioPath
+          ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
+          : `http://localhost:5000/audio/dummy.mp3`,
+      };
+    });
+
+    // ── Collect unique tags across all tracks ──
+    const genres = [...new Set(result.rows.map(r => r.genre).filter(Boolean))];
+    const subgenres = [...new Set(result.rows.map(r => r.subgenre).filter(Boolean))];
+    const similarArtists = [...new Set(result.rows.map(r => r.similar_artist).filter(Boolean))];
+    const moods = [...new Set(result.rows.map(r => r.mood).filter(Boolean))];
+
+    // ── Background image: cover of the album with the most tracks ──
+    const backgroundAlbum = albums.sort((a, b) => b.trackCount - a.trackCount)[0];
+
+    res.json({
+      artist: name,
+      backgroundUrl: backgroundAlbum?.coverUrl || null,
+      albums,
+      genres,
+      subgenres,
+      similarArtists,
+      moods,
+    });
+  } catch (err) {
+    console.error('Artist detail error:', err);
+    res.status(500).json({ error: 'Failed to fetch artist detail' });
+  }
+});
+
+// Get full album detail — tracklist in order
+router.get('/albums/detail', async (req, res) => {
+  const { artist, album } = req.query;
+  if (!artist || !album) {
+    return res.status(400).json({ error: 'Artist and album are required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT title, track_number, length_seconds, genre, cover, filename
+      FROM seed_tracks
+      WHERE artist = $1 AND album = $2
+      ORDER BY 
+        CASE WHEN track_number ~ '^[0-9]+$' THEN track_number::int ELSE 999 END`,
+      [artist, album]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Album not found.' });
+    }
+
+    const realCover = resolveCover(result.rows[0].cover);
+    const coverUrl = realCover
+      ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
+      : null;
+
+    const tracks = result.rows.map((row, i) => {
+      const realAudioPath = resolveAudio(artist, album, row.filename);
+      return {
+        trackNumber: row.track_number || String(i + 1),
+        title: row.title,
+        lengthSeconds: row.length_seconds,
+        coverUrl,
+        audioUrl: realAudioPath
+          ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
+          : `http://localhost:5000/audio/dummy.mp3`,
+      };
+    });
+
+    res.json({
+      artist,
+      album,
+      coverUrl,
+      genre: result.rows[0].genre,
+      tracks,
+    });
+  } catch (err) {
+    console.error('Album detail error:', err);
+    res.status(500).json({ error: 'Failed to fetch album detail' });
   }
 });
 
