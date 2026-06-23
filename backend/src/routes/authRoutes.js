@@ -544,6 +544,70 @@ router.get('/albums/random', async (req, res) => {
   }
 });
 
+// Get tracks similar to a given track, based on genre and similar_artist
+router.get('/tracks/similar', async (req, res) => {
+  const { artist, genre, limit = 8 } = req.query;
+
+  try {
+    let similarArtists = [];
+    if (artist) {
+      const tagResult = await pool.query(
+        `SELECT DISTINCT similar_artist FROM seed_tracks WHERE artist = $1 AND similar_artist IS NOT NULL`,
+        [artist]
+      );
+      similarArtists = tagResult.rows.map(r => r.similar_artist).filter(Boolean);
+    }
+
+    const conditions = [];
+    const params = [];
+    let paramIndex = 1;
+
+    if (similarArtists.length > 0) {
+      conditions.push(`artist = ANY($${paramIndex})`);
+      params.push(similarArtists);
+      paramIndex++;
+    }
+
+    if (genre) {
+      conditions.push(`genre = $${paramIndex}`);
+      params.push(genre);
+      paramIndex++;
+    }
+
+    if (artist) {
+      conditions.push(`artist != $${paramIndex}`);
+      params.push(artist);
+      paramIndex++;
+    }
+
+    if (conditions.length === 0) {
+      return res.json({ tracks: [] });
+    }
+
+    const whereClause = conditions.length > 1
+      ? `(${conditions.slice(0, -1).filter((_, i) => i < conditions.length - (artist ? 1 : 0)).join(' OR ')})${artist ? ` AND ${conditions[conditions.length - 1]}` : ''}`
+      : conditions[0];
+
+    params.push(parseInt(limit));
+    const limitParam = paramIndex;
+
+    const result = await pool.query(
+      `SELECT title, artist, album, genre, cover, filename
+       FROM seed_tracks
+       WHERE ${whereClause}
+       ORDER BY RANDOM()
+       LIMIT $${limitParam}`,
+      params
+    );
+
+    const tracks = result.rows.map(buildTrackUrls);
+    res.json({ tracks });
+  } catch (err) {
+    console.error('Similar tracks error:', err);
+    res.status(500).json({ error: 'Failed to fetch similar tracks' });
+  }
+});
+
 // Search unique artists from seed_tracks
 router.get('/artists/search', async (req, res) => {
   const { q } = req.query;
