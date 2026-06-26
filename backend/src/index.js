@@ -33,6 +33,7 @@ app.use(passport.session());
 app.use('/uploads', express.static(path.join(__dirname, '../assets/uploads')));
 app.use('/covers', express.static(path.join(__dirname, '../assets/dev_seed/covers')));
 app.use('/audio', express.static(path.join(__dirname, '../assets/dev_seed/mp3')));
+app.use('/vinyl', express.static(path.join(__dirname, '../assets/dev_seed/VinylCases')));
 
 // ── Routes ──
 app.use('/api/auth', authRoutes);
