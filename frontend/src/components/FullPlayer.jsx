@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePlayer } from '../context/PlayerContext';
+import QueuePanel from './QueuePanel';
 
 const colors = {
   bg: "#222222",
@@ -44,6 +45,9 @@ export default function FullPlayer() {
     const ratio = (e.clientX - rect.left) / rect.width;
     seekTo(Math.max(0, Math.min(1, ratio)));
   };
+
+  // Queue panel state
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
 
   if (!currentTrack) return null;
 
@@ -223,6 +227,28 @@ export default function FullPlayer() {
             <NextIcon />
           </button>
         </div>
+
+        {/* ── Queue button ── */}
+        <div style={{ display: "flex", justifyContent: "center", marginTop: "24px" }}>
+          <button
+            onClick={() => setIsQueueOpen(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: "8px",
+              background: "none", border: "none", cursor: "pointer",
+              padding: "8px 16px", borderRadius: "20px",
+              backgroundColor: "rgba(255,255,255,0.05)",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M3 6h18M3 12h18M3 18h12" stroke={colors.muted} strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif", fontWeight: "500" }}>
+              Queue
+            </span>
+          </button>
+        </div>
+
+        <QueuePanel isOpen={isQueueOpen} onClose={() => setIsQueueOpen(false)} />
       </div>
     </div>
   </>

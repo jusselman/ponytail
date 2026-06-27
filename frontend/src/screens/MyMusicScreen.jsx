@@ -324,19 +324,6 @@ useEffect(() => {
 
           {/* ── Header ── */}
         <AppHeader user={user} />
-        <div style={{
-        padding: "8px 20px 16px",
-        backgroundColor: colors.bg,
-        borderBottom: `1px solid ${colors.border}`,
-        flexShrink: 0,
-        }}>
-        <div style={{ fontSize: "16px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-            My Music
-        </div>
-        <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px", minHeight: "18px" }}>
-            {user?.username || ""}
-        </div>
-        </div>
 
           {/* ── Scrollable content ── */}
           <div style={{

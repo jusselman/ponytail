@@ -382,7 +382,7 @@ const LoginScreen = ({ setLocalScreen, setAppScreen }) => {
   const handleLogin = async () => {
     try {
       const data = await login(form.email, form.password);
-      console.log('Logged in successfully:', data.user);
+      // console.log('Logged in successfully:', data.user);
       setAppScreen("home");
     } catch (err) {
       const message = err.response?.data?.error || 'Invalid email or password.';

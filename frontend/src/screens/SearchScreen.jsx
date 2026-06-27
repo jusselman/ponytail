@@ -7,6 +7,8 @@ import FooterNav from '../components/FooterNav';
 import { usePlayer } from '../context/PlayerContext';
 import ProfilePanel from '../components/ProfilePanel';
 import FullPlayer from '../components/FullPlayer';
+import ArtistPanel from '../components/ArtistPanel';
+import AlbumPanel from '../components/AlbumPanel';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const colors = {
@@ -37,6 +39,15 @@ const MOCK_GENRES = [
   "Jazz", "Classical", "Progressive Rock", "Rock", "Soul",
   "Folk", "Electronic", "Jazz Fusion", "Surf Rock", "New Age",
   "Instrumental Hip Hop", "Post-bop",
+];
+
+// ─── Vinyl case overlay images ─────────────────────────────────────────────────
+const VINYL_CASES = [
+  'Vinyl-Relic1.png',
+  'Vinyl-Relic2.png',
+  'Vinyl-Relic3.png',
+  'Vinyl-VG.png',
+  'Vinyl-mint.png',
 ];
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -125,13 +136,13 @@ const XIcon = ({ size = 28, color = "#ff4444" }) => (
 );
 
 // ─── Standard Search Tab ──────────────────────────────────────────────────────
-const StandardSearch = ({ loved }) => {
+const StandardSearch = ({ loved, onArtistTap, onAlbumTap }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [focused, setFocused] = useState(false);
   const debounceRef = useRef(null);
-  const { playTrack } = usePlayer();
+  const { playStandaloneTrack, playTrack } = usePlayer();
   
 
  const searchTracks = async (q) => {
@@ -148,9 +159,8 @@ const StandardSearch = ({ loved }) => {
       genre: r.genre,
       artist: r.artist_name,
       album: r.album,
-      coverUrl: r.cover
-        ? `http://localhost:5000/covers/${encodeURIComponent(r.cover.split('/covers/')[1])}`
-        : null,
+      coverUrl: r.coverUrl || null,
+      audioUrl: r.audioUrl || null,
     }));
     console.log('Mapped results:', mapped);
     setResults(mapped);
@@ -189,7 +199,7 @@ const StandardSearch = ({ loved }) => {
             boxShadow: focused ? `0 0 0 3px rgba(93,235,215,0.1)` : "none",
             transition: "all 0.2s ease",
           }}
-          placeholder="Search artists and tracks..."
+          placeholder="Check it out!"
           value={query}
           onChange={handleQueryChange}
           onFocus={() => setFocused(true)}
@@ -211,39 +221,30 @@ const StandardSearch = ({ loved }) => {
       </div>
 
       {/* ── Results ── */}
-      {showResults && results.length > 0 && (
-        <div style={{ marginBottom: "20px" }}>
-          <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-            Results
-          </div>
-          {results.map((result, i) => (
-            <div
-              key={i}
-              onClick={() => {
-                if (result.type === "track") {
-                  const trackQueue = results
-                    .filter(r => r.type === "track")
-                    .map(r => ({
-                      title: r.name,
-                      artist: r.artist,
-                      album: r.album,
-                      genre: r.genre,
-                      coverUrl: r.coverUrl,
-                      audioUrl: "http://localhost:5000/audio/dummy.mp3",
-                    }));
-                  const startIndex = results
-                    .filter(r => r.type === "track")
-                    .findIndex(r => r.name === result.name);
-                  playTrack({
-                    title: result.name,
-                    artist: result.artist,
-                    album: result.album,
-                    genre: result.genre,
-                    coverUrl: result.coverUrl,
-                    audioUrl: "http://localhost:5000/audio/dummy.mp3",
-                  }, trackQueue, startIndex);
-                }
-              }}
+{showResults && results.length > 0 && (
+  <div style={{ marginBottom: "20px" }}>
+    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+      Results
+    </div>
+    {results.map((result, i) => (
+      <div
+        key={i}
+        onClick={() => {
+          if (result.type === "track") {
+            playStandaloneTrack({
+              title: result.name,
+              artist: result.artist,
+              album: result.album,
+              genre: result.genre,
+              coverUrl: result.coverUrl,
+              audioUrl: result.audioUrl || null,
+            });
+          } else if (result.type === "artist") {
+            onArtistTap(result.name);
+          } else if (result.type === "album") {
+            onAlbumTap({ artist: result.artist, album: result.name });
+          }
+        }}
               style={{
                 display: "flex", alignItems: "center", gap: "12px",
                 padding: "10px 0", borderBottom: `1px solid ${colors.border}`,
@@ -262,16 +263,16 @@ const StandardSearch = ({ loved }) => {
                 </div>
               </div>
               <div style={{
-                fontSize: "10px",
-                color: result.type === "track" ? colors.teal : colors.muted,
-                fontFamily: "'Kanit', sans-serif",
-                backgroundColor: result.type === "track" ? colors.tealGlow : "transparent",
-                border: `1px solid ${result.type === "track" ? colors.teal : colors.border}`,
-                padding: "2px 8px", borderRadius: "20px",
-                textTransform: "capitalize", flexShrink: 0,
-              }}>
-                {result.type}
-              </div>
+              fontSize: "10px",
+              color: colors.teal,
+              fontFamily: "'Kanit', sans-serif",
+              backgroundColor: colors.tealGlow,
+              border: `1px solid ${colors.teal}`,
+              padding: "2px 8px", borderRadius: "20px",
+              textTransform: "capitalize", flexShrink: 0,
+            }}>
+              {result.type}
+            </div>
             </div>
           ))}
         </div>
@@ -400,7 +401,7 @@ const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = fal
   const startY = useRef(null);
   const audioRef = useRef(null);
 
-  const SWIPE_THRESHOLD = 80;
+  const SWIPE_THRESHOLD = 140;
   const rotation = dragX * 0.08;
   const likeOpacity = Math.max(0, Math.min(1, dragX / SWIPE_THRESHOLD));
   const skipOpacity = Math.max(0, Math.min(1, -dragX / SWIPE_THRESHOLD));
@@ -452,6 +453,10 @@ const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = fal
     };
   }, [isDragging, dragX]);
 
+  const vinylCase = VINYL_CASES[
+    Math.abs((track.artist + track.album).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % VINYL_CASES.length
+  ];
+
   // ── Touch drag ──
   const handleTouchStart = (e) => {
     startX.current = e.touches[0].clientX;
@@ -479,7 +484,7 @@ const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = fal
       onTouchEnd={handleTouchEnd}
       style={{
         width: "100%", height: "100%",
-        borderRadius: "24px", overflow: "hidden",
+        borderRadius: "0", overflow: "hidden",
         position: "absolute", top: 0, left: 0,
         cursor: isDragging ? "grabbing" : "grab",
         transform: `translateX(${dragX}px) translateY(${dragY * 0.3}px) rotate(${rotation}deg)`,
@@ -498,6 +503,7 @@ const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = fal
           <img
             src={track.coverUrl}
             alt={track.album}
+            draggable={false}
             onLoad={() => {}} // no-op, loading tracked by parent
             style={{
               width: "100%", height: "100%", objectFit: "cover",
@@ -506,63 +512,50 @@ const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = fal
             }}
           />
         )}
-        {/* Dark overlay for readability */}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.92) 100%)" }} />
+       {/* Vinyl case overlay image */}
+        <img
+          src={`http://localhost:5000/vinyl/${vinylCase}`}
+          alt=""
+          style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
+            objectFit: "cover",
+            pointerEvents: "none",
+          }}
+        />
       </div>
 
-      {/* ── Like / Skip indicators ── */}
+      {/* ── Like / Skip indicators — centered for visibility ── */}
       <div style={{
-        position: "absolute", top: "32px", left: "24px", zIndex: 10,
-        opacity: skipOpacity, border: "3px solid #ff4444", borderRadius: "8px", padding: "4px 12px",
-        transform: "rotate(-15deg)",
+        position: "absolute", top: "40%", left: "50%", zIndex: 10,
+        opacity: skipOpacity,
+        transform: "translate(-50%, -50%) rotate(-10deg)",
+        border: "3px solid #ff4444", borderRadius: "8px", padding: "6px 18px",
+        pointerEvents: "none",
       }}>
-        <span style={{ fontSize: "22px", fontWeight: "800", color: "#ff4444", fontFamily: "'Kanit', sans-serif", letterSpacing: "2px" }}>SKIP</span>
+        <span style={{ fontSize: "28px", fontWeight: "800", color: "#ff4444", fontFamily: "'Kanit', sans-serif", letterSpacing: "2px" }}>NOPE</span>
       </div>
       <div style={{
-        position: "absolute", top: "32px", right: "24px", zIndex: 10,
-        opacity: likeOpacity, border: `3px solid ${colors.teal}`, borderRadius: "8px", padding: "4px 12px",
-        transform: "rotate(15deg)",
+        position: "absolute", top: "40%", left: "50%", zIndex: 10,
+        opacity: likeOpacity,
+        transform: "translate(-50%, -50%) rotate(10deg)",
+        border: `3px solid ${colors.teal}`, borderRadius: "8px", padding: "6px 18px",
+        pointerEvents: "none",
       }}>
-        <span style={{ fontSize: "22px", fontWeight: "800", color: colors.teal, fontFamily: "'Kanit', sans-serif", letterSpacing: "2px" }}>LOVE</span>
+        <span style={{ fontSize: "28px", fontWeight: "800", color: colors.teal, fontFamily: "'Kanit', sans-serif", letterSpacing: "2px" }}>YEAH!</span>
       </div>
 
       {/* ── Track info ── */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        padding: "24px 24px 24px",
+        padding: "24px 24px 28px",
         zIndex: 1,
       }}>
-        {/* Album art thumbnail */}
-        {track.coverUrl && (
-          <div style={{
-            width: 56, height: 56, borderRadius: "10px", overflow: "hidden",
-            marginBottom: "14px",
-            border: "2px solid rgba(255,255,255,0.2)",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-          }}>
-            <img src={track.coverUrl} alt={track.album} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          </div>
-        )}
-
-        <div style={{ fontSize: "22px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px", marginBottom: "4px", lineHeight: 1.2 }}>
-          {track.title}
-        </div>
-        <div style={{ fontSize: "15px", color: colors.teal, fontFamily: "'Kanit', sans-serif", fontWeight: "600", marginBottom: "4px" }}>
-          {track.artist}
-        </div>
-        <div style={{ fontSize: "13px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginBottom: "10px" }}>
+        <div style={{ fontSize: "22px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px", marginBottom: "4px", lineHeight: 1.2, textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}>
           {track.album}
         </div>
-        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-          {track.genre && (
-            <div style={{
-              fontSize: "11px", fontWeight: "600", color: colors.teal,
-              backgroundColor: colors.tealGlow, border: `1px solid ${colors.teal}`,
-              borderRadius: "20px", padding: "3px 10px", fontFamily: "'Kanit', sans-serif",
-            }}>
-              {track.genre}
-            </div>
-          )}
+        <div style={{ fontSize: "15px", color: colors.teal, fontFamily: "'Kanit', sans-serif", fontWeight: "600", textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}>
+          {track.artist}
         </div>
       </div>
     </div>
@@ -598,12 +591,12 @@ const DiscoverySearch = ({ onLove }) => {
     const fetchTracks = async () => {
       setLoading(true);
       try {
-        const res = await fetch('http://localhost:5000/api/auth/tracks/random?limit=15');
+        const res = await fetch('http://localhost:5000/api/auth/albums/random?limit=15');
         const data = await res.json();
-        setPool(data.tracks || []);
+        setPool(data.albums || []);
       } catch (err) {
-        console.log('Failed to fetch tracks:', err);
-        setError('Could not load tracks. Make sure the backend is running.');
+        console.log('Failed to fetch albums:', err);
+        setError('Could not load albums. Make sure the backend is running.');
       } finally {
         setLoading(false);
       }
@@ -652,8 +645,13 @@ const DiscoverySearch = ({ onLove }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "0 16px 16px", boxSizing: "border-box" }}>
 
-      {/* Card stack — render current and next simultaneously */}
-<div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+     
+{/* Card stack — render current and next simultaneously */}
+<div style={{
+  flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+  minHeight: 0, padding: "0 8px",
+}}>
+  <div style={{ width: "100%", maxWidth: "340px", aspectRatio: "1", position: "relative" }}>
   {remaining === 0 ? (
     <div style={{
       width: "100%", height: "100%", borderRadius: "24px",
@@ -714,6 +712,7 @@ const DiscoverySearch = ({ onLove }) => {
       </div>
     </>
   )}
+  </div>
 </div>
 
       {/* ── Action buttons ── */}
@@ -770,6 +769,19 @@ export default function SearchScreen({ setScreen }) {
   const [activeNav, setActiveNav] = useState("search");
   const { openProfile, profileImage } = useUI();
   const { isPlayerOpen, isPlaying, togglePlay } = usePlayer();
+  const [panelStack, setPanelStack] = useState([]); // array of { type: 'artist'|'album', artist, album }
+
+  const openArtist = (artistName) => {
+    setPanelStack(prev => [...prev, { type: 'artist', artist: artistName }]);
+  };
+
+  const openAlbum = (artist, album) => {
+    setPanelStack(prev => [...prev, { type: 'album', artist, album }]);
+  };
+
+  const closeTopPanel = () => {
+    setPanelStack(prev => prev.slice(0, -1));
+  };
 
   useEffect(() => {
     const loadUser = async () => {
@@ -850,7 +862,7 @@ export default function SearchScreen({ setScreen }) {
   </div>
   <div style={{ display: "flex", gap: "4px", width: "100%" }}>
     {[
-      { key: "search", label: "Artists & Tracks" },
+      { key: "search", label: "Search" },
       { key: "discovery", label: "Discover" },
     ].map(tab => (
       <button
@@ -881,8 +893,15 @@ export default function SearchScreen({ setScreen }) {
             overflowX: "hidden", paddingTop: "16px",
             width: "100%", boxSizing: "border-box", minHeight: 0,
           }}>
-            {activeTab === "search" && <StandardSearch loved={loved} user={user} />}
             {activeTab === "discovery" && <DiscoverySearch onLove={handleLove} />}
+            {activeTab === "search" && (
+            <StandardSearch
+              loved={loved}
+              user={user}
+              onArtistTap={openArtist}
+              onAlbumTap={(albumObj) => openAlbum(albumObj.artist, albumObj.album)}
+            />
+          )}
           </div>
 
           {/* ── Mini Player ── */}
@@ -904,7 +923,37 @@ export default function SearchScreen({ setScreen }) {
 
           {/* ── Profile Panel ── */}
           <ProfilePanel />
-          
+
+          {/* ── Artist Panel & Album Panel ── */}
+          {panelStack.map((panel, index) => {
+          const zIndex = 1090 + index; // each panel opened later sits higher
+          if (panel.type === 'artist') {
+            return (
+              <ArtistPanel
+                key={`${panel.type}-${index}`}
+                artistName={panel.artist}
+                isOpen={true}
+                zIndexOverride={zIndex}
+                onClose={closeTopPanel}
+                onAlbumTap={(albumObj) => openAlbum(albumObj.artist, albumObj.album)}
+              />
+            );
+          }
+          if (panel.type === 'album') {
+            return (
+              <AlbumPanel
+                key={`${panel.type}-${index}`}
+                artistName={panel.artist}
+                albumName={panel.album}
+                isOpen={true}
+                zIndexOverride={zIndex}
+                onClose={closeTopPanel}
+                onArtistTap={openArtist}
+              />
+            );
+          }
+          return null;
+        })} 
         </div>
       </div>
     </>
