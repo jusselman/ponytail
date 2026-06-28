@@ -1,5 +1,19 @@
 import { usePlayer } from '../context/PlayerContext';
 import { useState, useEffect, useRef, memo } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const colors = {
   bg: "#222222",
@@ -12,9 +26,6 @@ const colors = {
   muted: "#666666",
   border: "rgba(255,255,255,0.07)",
 };
-
-const ROW_HEIGHT = 64; // approximate height of each QueueTrackRow, used for drag math
-const HOLD_DELAY = 200; // ms before drag activates
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const ChevronLeft = () => (
@@ -52,19 +63,17 @@ const DragHandle = () => (
   </svg>
 );
 
-// ─── Queue Track Row ──────────────────────────────────────────────────────────
-const QueueTrackRow = ({ track, isActive, onTap, isDragHandleVisible, isBeingDragged, dragHandlers }) => (
+// ─── Queue Track Row content (drag wiring is applied by SortableRow) ──
+const QueueTrackRow = ({ track, isActive, onTap, isBeingDragged }) => (
   <div
-    onClick={isBeingDragged ? undefined : onTap}
-    {...(dragHandlers || {})}
+    onClick={onTap}
     style={{
       display: "flex", alignItems: "center", gap: "12px",
-      padding: "10px 0", cursor: isDragHandleVisible ? "default" : "pointer",
+      padding: "10px 0", cursor: "pointer",
       backgroundColor: isBeingDragged ? colors.bgCardHover : colors.bg,
       borderRadius: isBeingDragged ? "10px" : "0",
       boxShadow: isBeingDragged ? "0 8px 24px rgba(0,0,0,0.5)" : "none",
       userSelect: "none",
-      touchAction: isDragHandleVisible ? "none" : "auto",
     }}
   >
     <div style={{
@@ -95,15 +104,40 @@ const QueueTrackRow = ({ track, isActive, onTap, isDragHandleVisible, isBeingDra
       </div>
     </div>
     {isActive && <PlayingBars />}
-    {isDragHandleVisible && <DragHandle />}
+    <DragHandle />
   </div>
 );
+
+// ─── Sortable row wrapper — provides drag behavior via dnd-kit's useSortable ──
+const SortableRow = ({ id, track, onTap }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    position: "relative",
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <QueueTrackRow track={track} isActive={false} onTap={onTap} isBeingDragged={isDragging} />
+    </div>
+  );
+};
 
 // ─── Queue Panel ──────────────────────────────────────────────────────────────
 function QueuePanel({ isOpen, onClose }) {
   const { queue, queueIndex, currentTrack, isPlaying, jumpToQueueIndex, reorderQueue } = usePlayer();
+
   const upcoming = queue.slice(queueIndex + 1);
-  // ── Combined list of absolute indices, in display order, spanning both sections ──
   const upcomingWithIndices = upcoming.map((track, i) => ({ track, absoluteIndex: queueIndex + 1 + i }));
   const manualUpcoming = upcomingWithIndices.filter(t => t.track.source !== 'auto');
   const autoUpcoming = upcomingWithIndices.filter(t => t.track.source === 'auto');
@@ -122,175 +156,44 @@ function QueuePanel({ isOpen, onClose }) {
     prevTrackRef.current = currentTrack;
   }, [currentTrack]);
 
-  // ── Drag-to-reorder state ──
-  const [draggingIndex, setDraggingIndex] = useState(null);
-  const [dragOverIndex, setDragOverIndex] = useState(null);
-  const [dragY, setDragY] = useState(0);
-  const holdTimerRef = useRef(null);
-  const startYRef = useRef(null);
-  const isDraggingRef = useRef(false);
   const justDraggedRef = useRef(false);
 
-  const clearHoldTimer = () => {
-    if (holdTimerRef.current) {
-      clearTimeout(holdTimerRef.current);
-      holdTimerRef.current = null;
-    }
-  };
-
-  // ── Now safe to reference justDraggedRef since it's already declared above ──
-  const handleTrackTap = (track, absoluteIndex) => {
+  const handleTrackTap = (absoluteIndex) => {
     if (justDraggedRef.current) return;
     jumpToQueueIndex(absoluteIndex);
   };
 
-  const handlePressStart = (absoluteIndex, clientY) => {
-//   console.log('mousedown fired', absoluteIndex);
-  isDraggingRef.current = false;
-  setDraggingIndex(null);
-  setDragOverIndex(null);
-  setDragY(0);
-
-  startYRef.current = clientY;
-  clearHoldTimer();
-  holdTimerRef.current = setTimeout(() => {
-    // console.log('HOLD FIRED', absoluteIndex);
-    isDraggingRef.current = true;
-    setDraggingIndex(absoluteIndex);
-    setDragOverIndex(absoluteIndex);
-    setDragY(0);
-  }, HOLD_DELAY);
-};
-
-const dragOverIndexRef = useRef(null);
-
-const handlePressMove = (clientY) => {
-  if (!isDraggingRef.current) {
-    if (Math.abs(clientY - startYRef.current) > 8) {
-      clearHoldTimer();
-    }
-    return;
-  }
-  const offset = clientY - startYRef.current;
-  setDragY(offset);
-
-  const rowsMoved = Math.round(offset / ROW_HEIGHT);
-  const newIndex = Math.max(
-    queueIndex + 1,
-    Math.min(queue.length - 1, draggingIndex + rowsMoved)
+  // ── dnd-kit sensors — unified mouse and touch support out of the box ──
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 }, // press-and-hold before drag activates
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    })
   );
-  dragOverIndexRef.current = newIndex; // ← always current, ref reads are never stale
-  setDragOverIndex(newIndex); // still update state too, for the visual preview rendering
-};
 
-const handlePressEnd = () => {
-  clearHoldTimer();
-  if (isDraggingRef.current && draggingIndex !== null && dragOverIndexRef.current !== null) {
-    const fromIndex = draggingIndex;
-    const toIndex = dragOverIndexRef.current;
+  const getRowId = (track) => `${track.title}|${track.artist}`;
 
-    if (fromIndex !== toIndex) {
-      reorderQueue(fromIndex, toIndex);
+  // ── Build a single ordered array of sortable IDs spanning both sections ──
+  const allUpcomingIds = upcomingWithIndices.map(t => getRowId(t.track));
 
-      // ── Keep the row visually frozen at its drop position briefly,
-      //     giving React time to actually re-render the reordered list,
-      //     before clearing the drag transform ──
-      setTimeout(() => {
-        isDraggingRef.current = false;
-        setDraggingIndex(null);
-        setDragOverIndex(null);
-        dragOverIndexRef.current = null;
-        setDragY(0);
-      }, 50);
-    } else {
-      isDraggingRef.current = false;
-      setDraggingIndex(null);
-      setDragOverIndex(null);
-      dragOverIndexRef.current = null;
-      setDragY(0);
-    }
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const fromIdx = allUpcomingIds.indexOf(active.id);
+    const toIdx = allUpcomingIds.indexOf(over.id);
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    // ── Convert local sortable-list indices back into absolute queue indices ──
+    const fromAbsolute = queueIndex + 1 + fromIdx;
+    const toAbsolute = queueIndex + 1 + toIdx;
+
+    reorderQueue(fromAbsolute, toAbsolute);
 
     justDraggedRef.current = true;
-    setTimeout(() => { justDraggedRef.current = false; }, 100);
-    return;
-  }
-
-  isDraggingRef.current = false;
-  setDraggingIndex(null);
-  setDragOverIndex(null);
-  dragOverIndexRef.current = null;
-  setDragY(0);
-};
-
-  // ── Global window listeners while dragging, attached only once a drag is active ──
-  useEffect(() => {
-    if (draggingIndex === null) return;
-
-    const handleWindowMouseMove = (e) => handlePressMove(e.clientY);
-    const handleWindowMouseUp = () => handlePressEnd();
-    const handleWindowTouchMove = (e) => handlePressMove(e.touches[0].clientY);
-    const handleWindowTouchEnd = () => handlePressEnd();
-
-    window.addEventListener('mousemove', handleWindowMouseMove);
-    window.addEventListener('mouseup', handleWindowMouseUp);
-    window.addEventListener('touchmove', handleWindowTouchMove);
-    window.addEventListener('touchend', handleWindowTouchEnd);
-
-    return () => {
-      window.removeEventListener('mousemove', handleWindowMouseMove);
-      window.removeEventListener('mouseup', handleWindowMouseUp);
-      window.removeEventListener('touchmove', handleWindowTouchMove);
-      window.removeEventListener('touchend', handleWindowTouchEnd);
-    };
-  }, [draggingIndex]);
-
-  // ── Build the drag event handlers for a given row ──
-  const getDragHandlers = (absoluteIndex) => ({
-  onMouseDown: (e) => handlePressStart(absoluteIndex, e.clientY),
-  onMouseUp: () => { if (draggingIndex === null) clearHoldTimer(); },
-  onMouseLeave: () => { if (draggingIndex === null) clearHoldTimer(); },
-  onTouchStart: (e) => handlePressStart(absoluteIndex, e.touches[0].clientY),
-  onTouchEnd: () => { if (draggingIndex === null) clearHoldTimer(); },
-});
-
-  // ── Render a single section's rows with drag offset preview applied ──
-  const renderRow = ({ track, absoluteIndex }) => {
-  const isBeingDragged = draggingIndex === absoluteIndex;
-
-  let visualShift = 0;
-  if (draggingIndex !== null && dragOverIndex !== null && !isBeingDragged) {
-    if (draggingIndex < dragOverIndex && absoluteIndex > draggingIndex && absoluteIndex <= dragOverIndex) {
-      visualShift = -ROW_HEIGHT;
-    } else if (draggingIndex > dragOverIndex && absoluteIndex < draggingIndex && absoluteIndex >= dragOverIndex) {
-      visualShift = ROW_HEIGHT;
-    }
-  }
-
-  const transformValue = isBeingDragged ? `translateY(${dragY}px)` : `translateY(${visualShift}px)`;
-//   console.log(`row ${absoluteIndex} — isBeingDragged: ${isBeingDragged}, transform: ${transformValue}, draggingIndex: ${draggingIndex}, dragY: ${dragY}`);
-
-  return (
-      <div
-        key={absoluteIndex}
-        style={{
-          position: "relative",
-          transform: isBeingDragged
-            ? `translateY(${dragY}px)`
-            : `translateY(${visualShift}px)`,
-          transition: isBeingDragged ? "none" : "transform 0.2s ease",
-          zIndex: isBeingDragged ? 10 : 1,
-        }}
-      >
-        <QueueTrackRow
-          track={track}
-          isActive={false}
-          onTap={() => handleTrackTap(track, absoluteIndex)}
-          isDragHandleVisible={true}
-          isBeingDragged={isBeingDragged}
-          dragHandlers={getDragHandlers(absoluteIndex)}
-        />
-      </div>
-    );
+    setTimeout(() => { justDraggedRef.current = false; }, 150);
   };
 
   return (
@@ -351,7 +254,7 @@ const handlePressEnd = () => {
         </div>
 
         {/* Scrollable content */}
-        <div style={{ flex: 1, overflowY: draggingIndex !== null ? "hidden" : "auto", padding: "16px 20px 0" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 0" }}>
 
           {/* ── Now Playing ── */}
           <div style={{ marginBottom: "20px" }}>
@@ -385,35 +288,60 @@ const handlePressEnd = () => {
             </div>
           </div>
 
-          {/* ── Manually queued / from album ── */}
-          {manualUpcoming.length > 0 && (
-            <div style={{ marginBottom: "20px" }}>
-              <div style={{ fontSize: "11px", fontWeight: "600", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "8px" }}>
-                Next Up
-              </div>
-              {manualUpcoming.map(renderRow)}
-            </div>
-          )}
+          {/* ── Single DndContext spanning the entire upcoming list (both sections) ── */}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={allUpcomingIds} strategy={verticalListSortingStrategy}>
 
-          {/* ── Divider before auto-recommended tracks ── */}
-          {autoUpcoming.length > 0 && (
-            <>
-              <div style={{
-                display: "flex", alignItems: "center", gap: "8px",
-                margin: "8px 0 16px",
-              }}>
-                <div style={{ flex: 1, height: "1px", backgroundColor: colors.border }} />
-                <div style={{ fontSize: "10px", color: colors.teal, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.5px", textTransform: "uppercase" }}>
-                  Based on what's playing
+              {/* ── Manually queued / from album ── */}
+              {manualUpcoming.length > 0 && (
+                <div style={{ marginBottom: "20px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "600", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "8px" }}>
+                    Next Up
+                  </div>
+                  {manualUpcoming.map(({ track, absoluteIndex }) => (
+                    <SortableRow
+                      key={getRowId(track)}
+                      id={getRowId(track)}
+                      track={track}
+                      onTap={() => handleTrackTap(absoluteIndex)}
+                    />
+                  ))}
                 </div>
-                <div style={{ flex: 1, height: "1px", backgroundColor: colors.border }} />
-              </div>
+              )}
 
-              <div style={{ marginBottom: "20px" }}>
-                {autoUpcoming.map(renderRow)}
-              </div>
-            </>
-          )}
+              {/* ── Divider before auto-recommended tracks ── */}
+              {autoUpcoming.length > 0 && (
+                <>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: "8px",
+                    margin: "8px 0 16px",
+                  }}>
+                    <div style={{ flex: 1, height: "1px", backgroundColor: colors.border }} />
+                    <div style={{ fontSize: "10px", color: colors.teal, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.5px", textTransform: "uppercase" }}>
+                      Based on what's playing
+                    </div>
+                    <div style={{ flex: 1, height: "1px", backgroundColor: colors.border }} />
+                  </div>
+
+                  <div style={{ marginBottom: "20px" }}>
+                    {autoUpcoming.map(({ track, absoluteIndex }) => (
+                      <SortableRow
+                        key={getRowId(track)}
+                        id={getRowId(track)}
+                        track={track}
+                        onTap={() => handleTrackTap(absoluteIndex)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+            </SortableContext>
+          </DndContext>
 
           {upcoming.length === 0 && (
             <div style={{

@@ -34,11 +34,13 @@ const MOCK_RECENT = [
   { type: "artist", name: "Jimi Hendrix", genre: "Classic Rock" },
 ];
 
-// ─── Mock genre chips ─────────────────────────────────────────────────────────
+// ─── Real genre chips, pulled from seed_tracks, ordered by track count ─────────
 const MOCK_GENRES = [
-  "Jazz", "Classical", "Progressive Rock", "Rock", "Soul",
-  "Folk", "Electronic", "Jazz Fusion", "Surf Rock", "New Age",
-  "Instrumental Hip Hop", "Post-bop",
+  "Rock", "Jazz", "Pop", "Hip-Hop", "Electronic", "Folk", "Classical",
+  "Country", "Metal", "Soul", "Punk", "R&B", "Funk", "World", "Reggae",
+  "Soundtrack", "Latin", "Blues", "Brazilian", "Dance", "Experimental",
+  "Industrial", "Ska", "Indie", "Vocal", "Musical", "Afrobeat", "Alternative",
+  "Acoustic", "Chanson", "MPB", "Flamenco",
 ];
 
 // ─── Vinyl case overlay images ─────────────────────────────────────────────────
@@ -151,7 +153,6 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap }) => {
   try {
     const res = await fetch(`http://localhost:5000/api/auth/search?q=${encodeURIComponent(q)}`);
     const data = await res.json();
-    console.log('Raw API response:', data);
     const mapped = (data.results || []).map(r => ({
       type: r.type,
       id: r.name,
@@ -162,7 +163,6 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap }) => {
       coverUrl: r.coverUrl || null,
       audioUrl: r.audioUrl || null,
     }));
-    console.log('Mapped results:', mapped);
     setResults(mapped);
   } catch (err) {
     console.log('Search error:', err);
@@ -575,7 +575,7 @@ const DiscoverySearch = ({ onLove }) => {
   useEffect(() => {
     const preload = (track) => {
       if (!track?.coverUrl) return;
-      if (loadedImages[track.coverUrl]) return; // already loaded
+      if (loadedImages[track.coverUrl]) return; 
       const img = new Image();
       img.onload = () => {
         setLoadedImages(prev => ({ ...prev, [track.coverUrl]: true }));
