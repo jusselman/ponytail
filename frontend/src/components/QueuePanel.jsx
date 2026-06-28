@@ -1,5 +1,5 @@
 import { usePlayer } from '../context/PlayerContext';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 
 const colors = {
   bg: "#222222",
@@ -14,7 +14,7 @@ const colors = {
 };
 
 const ROW_HEIGHT = 64; // approximate height of each QueueTrackRow, used for drag math
-const HOLD_DELAY = 400; // ms before drag activates
+const HOLD_DELAY = 200; // ms before drag activates
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const ChevronLeft = () => (
@@ -100,9 +100,8 @@ const QueueTrackRow = ({ track, isActive, onTap, isDragHandleVisible, isBeingDra
 );
 
 // ─── Queue Panel ──────────────────────────────────────────────────────────────
-export default function QueuePanel({ isOpen, onClose }) {
+function QueuePanel({ isOpen, onClose }) {
   const { queue, queueIndex, currentTrack, isPlaying, jumpToQueueIndex, reorderQueue } = usePlayer();
-
   const upcoming = queue.slice(queueIndex + 1);
   // ── Combined list of absolute indices, in display order, spanning both sections ──
   const upcomingWithIndices = upcoming.map((track, i) => ({ track, absoluteIndex: queueIndex + 1 + i }));
@@ -146,7 +145,7 @@ export default function QueuePanel({ isOpen, onClose }) {
   };
 
   const handlePressStart = (absoluteIndex, clientY) => {
-  console.log('mousedown fired', absoluteIndex);
+//   console.log('mousedown fired', absoluteIndex);
   isDraggingRef.current = false;
   setDraggingIndex(null);
   setDragOverIndex(null);
@@ -155,7 +154,7 @@ export default function QueuePanel({ isOpen, onClose }) {
   startYRef.current = clientY;
   clearHoldTimer();
   holdTimerRef.current = setTimeout(() => {
-    console.log('HOLD FIRED', absoluteIndex);
+    // console.log('HOLD FIRED', absoluteIndex);
     isDraggingRef.current = true;
     setDraggingIndex(absoluteIndex);
     setDragOverIndex(absoluteIndex);
@@ -187,12 +186,35 @@ const handlePressMove = (clientY) => {
 const handlePressEnd = () => {
   clearHoldTimer();
   if (isDraggingRef.current && draggingIndex !== null && dragOverIndexRef.current !== null) {
-    if (draggingIndex !== dragOverIndexRef.current) {
-      reorderQueue(draggingIndex, dragOverIndexRef.current);
+    const fromIndex = draggingIndex;
+    const toIndex = dragOverIndexRef.current;
+
+    if (fromIndex !== toIndex) {
+      reorderQueue(fromIndex, toIndex);
+
+      // ── Keep the row visually frozen at its drop position briefly,
+      //     giving React time to actually re-render the reordered list,
+      //     before clearing the drag transform ──
+      setTimeout(() => {
+        isDraggingRef.current = false;
+        setDraggingIndex(null);
+        setDragOverIndex(null);
+        dragOverIndexRef.current = null;
+        setDragY(0);
+      }, 50);
+    } else {
+      isDraggingRef.current = false;
+      setDraggingIndex(null);
+      setDragOverIndex(null);
+      dragOverIndexRef.current = null;
+      setDragY(0);
     }
+
     justDraggedRef.current = true;
-    setTimeout(() => { justDraggedRef.current = false; }, 50);
+    setTimeout(() => { justDraggedRef.current = false; }, 100);
+    return;
   }
+
   isDraggingRef.current = false;
   setDraggingIndex(null);
   setDragOverIndex(null);
@@ -224,26 +246,30 @@ const handlePressEnd = () => {
 
   // ── Build the drag event handlers for a given row ──
   const getDragHandlers = (absoluteIndex) => ({
-    onMouseDown: (e) => handlePressStart(absoluteIndex, e.clientY),
-    onMouseLeave: () => { if (draggingIndex === null) clearHoldTimer(); },
-    onTouchStart: (e) => handlePressStart(absoluteIndex, e.touches[0].clientY),
-  });
+  onMouseDown: (e) => handlePressStart(absoluteIndex, e.clientY),
+  onMouseUp: () => { if (draggingIndex === null) clearHoldTimer(); },
+  onMouseLeave: () => { if (draggingIndex === null) clearHoldTimer(); },
+  onTouchStart: (e) => handlePressStart(absoluteIndex, e.touches[0].clientY),
+  onTouchEnd: () => { if (draggingIndex === null) clearHoldTimer(); },
+});
 
   // ── Render a single section's rows with drag offset preview applied ──
   const renderRow = ({ track, absoluteIndex }) => {
-    const isBeingDragged = draggingIndex === absoluteIndex;
+  const isBeingDragged = draggingIndex === absoluteIndex;
 
-    // ── Compute visual shift for rows displaced by the drag preview ──
-    let visualShift = 0;
-    if (draggingIndex !== null && dragOverIndex !== null && !isBeingDragged) {
-      if (draggingIndex < dragOverIndex && absoluteIndex > draggingIndex && absoluteIndex <= dragOverIndex) {
-        visualShift = -ROW_HEIGHT;
-      } else if (draggingIndex > dragOverIndex && absoluteIndex < draggingIndex && absoluteIndex >= dragOverIndex) {
-        visualShift = ROW_HEIGHT;
-      }
+  let visualShift = 0;
+  if (draggingIndex !== null && dragOverIndex !== null && !isBeingDragged) {
+    if (draggingIndex < dragOverIndex && absoluteIndex > draggingIndex && absoluteIndex <= dragOverIndex) {
+      visualShift = -ROW_HEIGHT;
+    } else if (draggingIndex > dragOverIndex && absoluteIndex < draggingIndex && absoluteIndex >= dragOverIndex) {
+      visualShift = ROW_HEIGHT;
     }
+  }
 
-    return (
+  const transformValue = isBeingDragged ? `translateY(${dragY}px)` : `translateY(${visualShift}px)`;
+//   console.log(`row ${absoluteIndex} — isBeingDragged: ${isBeingDragged}, transform: ${transformValue}, draggingIndex: ${draggingIndex}, dragY: ${dragY}`);
+
+  return (
       <div
         key={absoluteIndex}
         style={{
@@ -404,3 +430,5 @@ const handlePressEnd = () => {
     </div>
   );
 }
+
+export default memo(QueuePanel);

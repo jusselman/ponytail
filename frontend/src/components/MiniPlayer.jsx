@@ -1,7 +1,8 @@
-import { usePlayer } from '../context/PlayerContext';
+import { usePlayer, usePlaybackProgress } from '../context/PlayerContext';
 
 export default function MiniPlayer() {
-  const { currentTrack, isPlaying, togglePlay, openPlayer, progress, seekTo } = usePlayer();
+  const { currentTrack, isPlaying, togglePlay, openPlayer, seekTo } = usePlayer();
+  const { progress, duration, currentTime } = usePlaybackProgress();
 
   if (!currentTrack) return null;
 
