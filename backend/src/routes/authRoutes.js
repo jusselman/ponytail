@@ -378,6 +378,123 @@ router.get('/tracks/random', async (req, res) => {
   }
 });
 
+// Get albums for the Discovery feed — genre-filtered if genres provided, otherwise personalized via history
+router.get('/albums/discover', requireAuth, async (req, res) => {
+  const { genres, limit = 15 } = req.query;
+
+  try {
+    let result;
+
+    if (genres) {
+      // ── Genre filter mode — up to 5 genres, OR'd together ──
+      const genreList = genres.split(',').map(g => g.trim()).slice(0, 5);
+
+     result = await pool.query(
+        `SELECT DISTINCT ON (artist, album)
+          artist, album, genre, cover, filename
+        FROM (
+          SELECT * FROM seed_tracks
+          WHERE album IS NOT NULL AND album != ''
+            AND genre = ANY($1)
+          ORDER BY RANDOM()
+          LIMIT 1000
+        ) randomized
+        LIMIT $2`,
+        [genreList, parseInt(limit) * 3]
+      );
+    } else {
+      // ── No genre filter — personalize using onboarding favorite artists (weighted heavily) + play history ──
+      const userResult = await pool.query(
+        `SELECT favorite_artists FROM users WHERE id = $1`,
+        [req.user.id]
+      );
+      const favoriteArtists = userResult.rows[0]?.favorite_artists || [];
+
+      const historyResult = await pool.query(
+        `SELECT DISTINCT artist, genre FROM user_play_history WHERE user_id = $1`,
+        [req.user.id]
+      );
+      const historyArtists = historyResult.rows.map(r => r.artist);
+      const historyGenres = [...new Set(historyResult.rows.map(r => r.genre).filter(Boolean))];
+
+      if (favoriteArtists.length === 0 && historyArtists.length === 0) {
+        // ── Brand new user, no signal at all yet — fall back to fully random ──
+        result = await pool.query(
+          `SELECT DISTINCT ON (artist, album)
+            artist, album, genre, cover, filename
+          FROM (
+            SELECT * FROM seed_tracks
+            WHERE album IS NOT NULL AND album != ''
+            ORDER BY RANDOM()
+            LIMIT 1000
+          ) randomized
+          LIMIT $1`,
+          [parseInt(limit) * 3]
+        );
+      } else {
+        // ── Weighted query: favorite artists OR history artists OR history genres, favorites get priority via UNION ordering ──
+        result = await pool.query(
+          `SELECT * FROM (
+            (
+              SELECT DISTINCT ON (artist, album)
+                artist, album, genre, cover, filename, 2 as weight
+              FROM (
+                SELECT * FROM seed_tracks
+                WHERE album IS NOT NULL AND album != ''
+                  AND artist = ANY($1)
+                ORDER BY RANDOM()
+                LIMIT 500
+              ) randomized_favorites
+              LIMIT $3
+            )
+            UNION ALL
+            (
+              SELECT DISTINCT ON (artist, album)
+                artist, album, genre, cover, filename, 1 as weight
+              FROM (
+                SELECT * FROM seed_tracks
+                WHERE album IS NOT NULL AND album != ''
+                  AND (artist = ANY($2) OR genre = ANY($4))
+                  AND NOT (artist = ANY($1))
+                ORDER BY RANDOM()
+                LIMIT 500
+              ) randomized_history
+              LIMIT $3
+            )
+          ) AS combined
+          ORDER BY weight DESC, RANDOM()
+          LIMIT $5`,
+          [favoriteArtists, historyArtists, parseInt(limit) * 2, historyGenres, parseInt(limit) * 3]
+        );
+      }
+    }
+
+    // ── Shuffle and trim to requested limit, resolve real cover/audio URLs ──
+    const shuffled = result.rows.sort(() => Math.random() - 0.5).slice(0, parseInt(limit));
+
+    const albums = shuffled.map(row => {
+      const realCover = resolveCover(row.cover);
+      const realAudioPath = resolveAudio(row.artist, row.album, row.filename);
+      return {
+        artist: row.artist,
+        album: row.album,
+        genre: row.genre,
+        coverUrl: realCover
+          ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
+          : null,
+        audioUrl: realAudioPath
+          ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
+          : `http://localhost:5000/audio/dummy.mp3`,
+      };
+    });
+
+    res.json({ albums });
+  } catch (err) {
+    console.error('Discover albums error:', err);
+    res.status(500).json({ error: 'Failed to fetch discovery albums' });
+  }
+});
+
 // Get full artist detail — albums grouped, plus tags
 router.get('/artists/detail', async (req, res) => {
   const { name } = req.query;
@@ -689,6 +806,51 @@ router.get('/tracks/suggested', async (req, res) => {
   } catch (err) {
     console.error('Suggested tracks error:', err);
     res.status(500).json({ error: 'Failed to fetch suggested tracks' });
+  }
+});
+
+// Record a track play in the user's permanent listening history (upsert, no duplicates)
+router.post('/history/play', requireAuth, async (req, res) => {
+  const { title, artist, album, genre } = req.body;
+  if (!title || !artist) {
+    return res.status(400).json({ error: 'Title and artist are required.' });
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO user_play_history (user_id, track_title, artist, album, genre)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (user_id, track_title, artist)
+       DO UPDATE SET
+         last_played_at = NOW(),
+         play_count = user_play_history.play_count + 1`,
+      [req.user.id, title, artist, album || null, genre || null]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Play history error:', err);
+    res.status(500).json({ error: 'Failed to record play history' });
+  }
+});
+
+// Record a track selected specifically from search results (upsert, no duplicates)
+router.post('/history/search-selection', requireAuth, async (req, res) => {
+  const { title, artist, album, genre } = req.body;
+  if (!title || !artist) {
+    return res.status(400).json({ error: 'Title and artist are required.' });
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO user_search_selections (user_id, track_title, artist, album, genre)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (user_id, track_title, artist) DO NOTHING`,
+      [req.user.id, title, artist, album || null, genre || null]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Search selection history error:', err);
+    res.status(500).json({ error: 'Failed to record search selection' });
   }
 });
 

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { getMe } from '../services/authService';
 import { useUI } from '../context/UIContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
@@ -138,7 +139,7 @@ const XIcon = ({ size = 28, color = "#ff4444" }) => (
 );
 
 // ─── Standard Search Tab ──────────────────────────────────────────────────────
-const StandardSearch = ({ loved, onArtistTap, onAlbumTap }) => {
+const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onToggleGenre }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -360,31 +361,38 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap }) => {
     </div>
 
     {/* Genre chips */}
-    <div>
-      <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-        Browse by Genre
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-        {MOCK_GENRES.map((genre, i) => {
-          const hue = (i * 37 + 160) % 360;
-          return (
-            <div key={i} style={{
-              padding: "6px 14px", borderRadius: "20px",
-              background: `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
-              border: `1px solid hsl(${hue}, 40%, 35%)`,
-              fontSize: "12px", fontWeight: "500",
-              color: colors.text, fontFamily: "'Kanit', sans-serif",
-              cursor: "pointer", transition: "opacity 0.2s ease",
-            }}
-              onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
-              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-            >
-              {genre}
-            </div>
-          );
-        })}
-      </div>
-    </div>
+<div>
+  <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+    Browse by Genre {selectedGenres.length > 0 && `(${selectedGenres.length}/5)`}
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+    {MOCK_GENRES.map((genre, i) => {
+      const hue = (i * 37 + 160) % 360;
+      const isSelected = selectedGenres.includes(genre);
+      return (
+        <div
+          key={i}
+          onClick={() => onToggleGenre(genre)}
+          style={{
+            padding: "6px 14px", borderRadius: "20px",
+            background: isSelected
+              ? colors.tealGlow
+              : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+            border: isSelected ? `2px solid ${colors.teal}` : `1px solid hsl(${hue}, 40%, 35%)`,
+            fontSize: "12px", fontWeight: "500",
+            color: isSelected ? colors.teal : colors.text,
+            fontFamily: "'Kanit', sans-serif",
+            cursor: "pointer", transition: "opacity 0.2s ease",
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
+          onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+        >
+          {genre}
+        </div>
+      );
+    })}
+  </div>
+</div>
   </>
 )}
 </div>
@@ -563,7 +571,7 @@ const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = fal
 };
 
 // ─── Discovery Tab ────────────────────────────────────────────────────────────
-const DiscoverySearch = ({ onLove }) => {
+const DiscoverySearch = ({ onLove, selectedGenres }) => {
   const [pool, setPool] = useState([]);
   const [current, setCurrent] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -588,21 +596,30 @@ const DiscoverySearch = ({ onLove }) => {
 
   // ── Fetch random tracks from backend ──
   useEffect(() => {
-    const fetchTracks = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch('http://localhost:5000/api/auth/albums/random?limit=15');
-        const data = await res.json();
-        setPool(data.albums || []);
-      } catch (err) {
-        console.log('Failed to fetch albums:', err);
-        setError('Could not load albums. Make sure the backend is running.');
-      } finally {
-        setLoading(false);
+  const fetchTracks = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem('ponytail_token');
+      const params = new URLSearchParams();
+      if (selectedGenres.length > 0) {
+        params.set('genres', selectedGenres.join(','));
       }
-    };
-    fetchTracks();
-  }, []);
+      params.set('limit', '15');
+
+      const res = await fetch(`http://localhost:5000/api/auth/albums/discover?${params.toString()}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setPool(data.albums || []);
+    } catch (err) {
+      console.log('Failed to fetch albums:', err);
+      setError('Could not load albums. Make sure the backend is running.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchTracks();
+}, [selectedGenres]);
 
   const handleLike = () => {
     if (current >= pool.length) return;
@@ -620,7 +637,7 @@ const DiscoverySearch = ({ onLove }) => {
   const remaining = pool.length - current;
   const track = pool[current];
   const nextTrack = pool[current + 1];
-    const peekScale = 0.96 + (Math.min(Math.abs(dragX), 80) / 80) * 0.04;
+  const peekScale = 0.96 + (Math.min(Math.abs(dragX), 80) / 80) * 0.04;
 
   if (loading) {
     return (
@@ -769,7 +786,8 @@ export default function SearchScreen({ setScreen }) {
   const [activeNav, setActiveNav] = useState("search");
   const { openProfile, profileImage } = useUI();
   const { isPlayerOpen, isPlaying, togglePlay } = usePlayer();
-  const [panelStack, setPanelStack] = useState([]); // array of { type: 'artist'|'album', artist, album }
+  const [panelStack, setPanelStack] = useState([]); 
+  const [selectedGenres, setSelectedGenres] = useState([]);
 
   const openArtist = (artistName) => {
     setPanelStack(prev => [...prev, { type: 'artist', artist: artistName }]);
@@ -893,13 +911,23 @@ export default function SearchScreen({ setScreen }) {
             overflowX: "hidden", paddingTop: "16px",
             width: "100%", boxSizing: "border-box", minHeight: 0,
           }}>
-            {activeTab === "discovery" && <DiscoverySearch onLove={handleLove} />}
+            {activeTab === "discovery" && <DiscoverySearch onLove={handleLove} selectedGenres={selectedGenres} />}
             {activeTab === "search" && (
             <StandardSearch
               loved={loved}
               user={user}
               onArtistTap={openArtist}
               onAlbumTap={(albumObj) => openAlbum(albumObj.artist, albumObj.album)}
+              selectedGenres={selectedGenres}
+              onToggleGenre={(genre) => {
+                setSelectedGenres(prev => {
+                  if (prev.includes(genre)) {
+                    return prev.filter(g => g !== genre);
+                  }
+                  if (prev.length >= 5) return prev; // cap at 5
+                  return [...prev, genre];
+                });
+              }}
             />
           )}
           </div>

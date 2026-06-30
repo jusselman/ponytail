@@ -56,3 +56,51 @@ export const updateProfile = async (data) => {
   });
   return response.data;
 };
+
+// ── Record a track play in the user's permanent history ──
+const recordPlayHistory = async (track) => {
+  try {
+    const token = await AsyncStorage.getItem('ponytail_token');
+    if (!token) return;
+
+    await fetch('http://localhost:5000/api/auth/history/play', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        genre: track.genre,
+      }),
+    });
+  } catch (err) {
+    console.log('Failed to record play history:', err);
+  }
+};
+
+// ── Record a track tapped specifically from search results ──
+const recordSearchSelection = async (track) => {
+  try {
+    const token = await AsyncStorage.getItem('ponytail_token');
+    if (!token) return;
+
+    await fetch('http://localhost:5000/api/auth/history/search-selection', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        genre: track.genre,
+      }),
+    });
+  } catch (err) {
+    console.log('Failed to record search selection:', err);
+  }
+};

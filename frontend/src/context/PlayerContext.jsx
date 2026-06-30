@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PlayerContext = createContext(null);
 const PlaybackProgressContext = createContext(null);
@@ -107,28 +108,30 @@ export function PlayerProvider({ children }) {
   // ── Play a single standalone track (search result, loved track, etc.) — no meaningful surrounding queue.
   //     Plays just this track, then silently builds a real queue behind it based on similar tracks. ──
   const playStandaloneTrack = useCallback((track) => {
-    setCurrentTrack(prevTrack => {
-      if (prevTrack && `${prevTrack.title}|${prevTrack.artist}` === `${track.title}|${track.artist}`) {
-        setIsPlaying(p => !p);
-        return prevTrack;
-      }
+  setCurrentTrack(prevTrack => {
+    if (prevTrack && `${prevTrack.title}|${prevTrack.artist}` === `${track.title}|${track.artist}`) {
+      setIsPlaying(p => !p);
+      return prevTrack;
+    }
 
-      const taggedTrack = { ...track, source: 'manual' };
-      setQueue([taggedTrack]);
-      setQueueIndex(0);
-      setIsPlaying(true);
-      setProgress(0);
-      setCurrentTime(0);
-      setPlayHistory(prev => {
-        const filtered = prev.filter(t => `${t.title}|${t.artist}` !== `${track.title}|${track.artist}`);
-        return [track, ...filtered].slice(0, 20);
-      });
-
-      // ── Silently build a real queue behind this track, without skipping ahead ──
-      extendQueue(taggedTrack, 'append');
-      return taggedTrack;
+    const taggedTrack = { ...track, source: 'manual' };
+    setQueue([taggedTrack]);
+    setQueueIndex(0);
+    setIsPlaying(true);
+    setProgress(0);
+    setCurrentTime(0);
+    setPlayHistory(prev => {
+      const filtered = prev.filter(t => `${t.title}|${t.artist}` !== `${track.title}|${track.artist}`);
+      return [track, ...filtered].slice(0, 20);
     });
-  }, [extendQueue]);
+
+    recordPlayHistory(track); // ← new
+    recordSearchSelection(track); // ← new, specific to standalone/search taps
+
+    extendQueue(taggedTrack, 'append');
+    return taggedTrack;
+  });
+}, [extendQueue]);
 
   const togglePlay = useCallback(() => setIsPlaying(prev => !prev), []);
 
@@ -253,6 +256,54 @@ const playerValue = useMemo(() => ({
     </PlayerContext.Provider>
   );
 }
+
+// ── Record a track play in the user's permanent history ──
+const recordPlayHistory = async (track) => {
+  try {
+    const token = await AsyncStorage.getItem('ponytail_token');
+    if (!token) return;
+
+    await fetch('http://localhost:5000/api/auth/history/play', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        genre: track.genre,
+      }),
+    });
+  } catch (err) {
+    console.log('Failed to record play history:', err);
+  }
+};
+
+// ── Record a track tapped specifically from search results ──
+const recordSearchSelection = async (track) => {
+  try {
+    const token = await AsyncStorage.getItem('ponytail_token');
+    if (!token) return;
+
+    await fetch('http://localhost:5000/api/auth/history/search-selection', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        genre: track.genre,
+      }),
+    });
+  } catch (err) {
+    console.log('Failed to record search selection:', err);
+  }
+};
 
 export function usePlayer() {
   const ctx = useContext(PlayerContext);
