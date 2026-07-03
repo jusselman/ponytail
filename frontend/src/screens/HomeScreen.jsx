@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMe } from '../services/authService';
+import { getMe, getToken } from '../services/authService';
 import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
@@ -22,47 +22,12 @@ const colors = {
   border: "rgba(255,255,255,0.07)",
 };
 
-// ─── Mock feed generator ──────────────────────────────────────────────────────
-// Generates mock tracks "similar to" the user's chosen seed artists.
-// Replace with real API call once recommendation engine is built.
-const generateMockFeed = (seedArtists) => {
-  const similarArtists = {
-    default: [
-      { name: "Nola Voss", genre: "Ambient / Electronic" },
-      { name: "Cass Ember", genre: "Indie Folk" },
-      { name: "Maren Hex", genre: "Dream Pop" },
-      { name: "Theo Callum", genre: "Lo-fi Hip Hop" },
-      { name: "Isla Pryor", genre: "Shoegaze" },
-      { name: "Ryn Holt", genre: "Jazz Fusion" },
-      { name: "Pave Lune", genre: "Neo Soul" },
-    ],
-  };
-
-  const trackTitles = [
-    "Hollow Frequencies", "Before the Signal Drops", "Two Moons Collide",
-    "Static Bloom", "Petrichor", "Glass Meridian", "Soft Machinery",
-    "Tender Collapse", "Neon Pastoral", "The Long Dissolve",
-  ];
-
-  const durations = ["2:47", "3:18", "4:02", "3:55", "5:11", "2:59", "4:33"];
-  const plays = ["2.1k", "8.4k", "12.7k", "5.3k", "21.9k", "3.6k", "18.2k"];
-
-  // Build pool from seed artist names for display context
-  const seedNames = seedArtists?.map(a => a.name) || [];
-  const pool = similarArtists.default;
-
-  return pool.map((artist, i) => ({
-    id: String(i + 1),
-    artist: artist.name,
-    genre: artist.genre,
-    trackTitle: trackTitles[i % trackTitles.length],
-    duration: durations[i % durations.length],
-    plays: plays[i % plays.length],
-    isNew: i < 2,
-    postedAt: i === 0 ? "1h ago" : i === 1 ? "3h ago" : i === 2 ? "Yesterday" : `${i} days ago`,
-    // Tag which seed artist this is "similar to"
-    similarTo: seedNames[i % Math.max(seedNames.length, 1)] || null,
-  }));
+// ─── Format seconds as m:ss ───────────────────────────────────────────────────
+const formatDuration = (seconds) => {
+  if (!seconds) return "--:--";
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
 };
 
 // ─── Waveform Animation ───────────────────────────────────────────────────────
@@ -85,9 +50,18 @@ const WaveformIcon = ({ playing }) => (
 );
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
-const Avatar = ({ name, size = 42 }) => {
+const Avatar = ({ name, size = 42, coverUrl }) => {
   const initials = name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
   const hue = name.charCodeAt(0) * 37 % 360;
+
+  if (coverUrl) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+        <img src={coverUrl} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
+    );
+  }
+
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
@@ -156,26 +130,16 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
     >
       {/* ── Artist row ── */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-        <Avatar name={track.artist} size={32} />
+        <Avatar name={track.artist} size={32} coverUrl={track.coverUrl} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: "13px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
             {track.artist}
           </div>
           <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-            {track.postedAt}
+            {track.album}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          {track.isNew && (
-            <div style={{
-              fontSize: "10px", fontWeight: "700", color: colors.teal,
-              backgroundColor: colors.tealGlow, padding: "3px 8px",
-              borderRadius: "20px", letterSpacing: "0.5px",
-              fontFamily: "'Kanit', sans-serif", flexShrink: 0,
-            }}>
-              NEW
-            </div>
-          )}
           {track.similarTo && (
             <div style={{
               fontSize: "10px", color: colors.muted,
@@ -208,9 +172,6 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
             ? <WaveformIcon playing={true} />
             : <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>{track.duration}</div>
           }
-          <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-            {track.plays} plays
-          </div>
         </div>
       </div>
 
@@ -239,12 +200,12 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
           borderRadius: "20px", transition: "all 0.2s",
         }}>
           <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path d="M12 21C12 21 3 16 3 9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 7-9 12-9 12z" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M12 10v4M10 12h4" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
-          </svg>
-          Tip
-        </span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M12 21C12 21 3 16 3 9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 7-9 12-9 12z" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 10v4M10 12h4" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+            Tip
+          </span>
         </button>
       </div>
     </div>
@@ -252,7 +213,6 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
 };
 
 // ─── Seed Artist Pills ────────────────────────────────────────────────────────
-// Shows which artists the feed is based on
 const SeedArtistPills = ({ artists }) => {
   if (!artists || artists.length === 0) return null;
   return (
@@ -271,7 +231,7 @@ const SeedArtistPills = ({ artists }) => {
             padding: "4px 12px",
             fontFamily: "'Kanit', sans-serif",
           }}>
-            {artist.name}
+            {typeof artist === 'string' ? artist : artist.name}
           </div>
         ))}
       </div>
@@ -283,31 +243,80 @@ const SeedArtistPills = ({ artists }) => {
 export default function HomeScreen({ setScreen }) {
   const [user, setUser] = useState(null);
   const [feed, setFeed] = useState([]);
-  const [playingId, setPlayingId] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeNav, setActiveNav] = useState("home");
+  const { playStandaloneTrack, currentTrack, isPlaying, togglePlay } = usePlayer();
 
   useEffect(() => {
-    const loadUser = async () => {
+    const loadFeed = async () => {
       try {
         const me = await getMe();
         setUser(me);
-        // Generate mock feed based on user's favorite artists
-        const seedArtists = me?.favorite_artists || [];
-        setFeed(generateMockFeed(seedArtists));
+
+        const token = await getToken();
+        const res = await fetch('http://localhost:5000/api/auth/home/feed?limit=20', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        // ── Map real API fields onto the shape TrackCard expects ──
+        const mapped = (data.tracks || []).map((track, i) => ({
+          id: `${track.title}|${track.artist}`,
+          trackTitle: track.title,
+          artist: track.artist,
+          album: track.album,
+          genre: track.genre,
+          duration: formatDuration(track.length_seconds),
+          coverUrl: track.coverUrl,
+          audioUrl: track.audioUrl,
+          similarTo: track.similarTo,
+          // ── Stubbed fields — build out later ──
+          plays: null,
+          isNew: false,
+          postedAt: null,
+        }));
+
+        setFeed(mapped);
       } catch (err) {
-        console.log('Could not load user:', err);
-        // Fall back to default mock feed
-        setFeed(generateMockFeed([]));
+        console.log('Could not load feed:', err);
+      } finally {
+        setLoading(false);
       }
     };
-    loadUser();
+    loadFeed();
   }, []);
 
-  const handleTogglePlay = (id) => {
-    setPlayingId(prev => prev === id ? null : id);
+  const handleTogglePlay = (trackId) => {
+    const track = feed.find(t => t.id === trackId);
+    if (!track) return;
+
+    const isCurrentlyPlaying =
+      currentTrack?.title === track.trackTitle &&
+      currentTrack?.artist === track.artist;
+
+    if (isCurrentlyPlaying) {
+      togglePlay();
+    } else {
+      playStandaloneTrack({
+        title: track.trackTitle,
+        artist: track.artist,
+        album: track.album,
+        genre: track.genre,
+        coverUrl: track.coverUrl,
+        audioUrl: track.audioUrl,
+      });
+    }
   };
 
-  const currentTrack = feed.find(t => t.id === playingId) || null;
+  const isTrackPlaying = (trackId) => {
+    const track = feed.find(t => t.id === trackId);
+    if (!track) return false;
+    return (
+      currentTrack?.title === track.trackTitle &&
+      currentTrack?.artist === track.artist &&
+      isPlaying
+    );
+  };
 
   return (
     <>
@@ -326,14 +335,12 @@ export default function HomeScreen({ setScreen }) {
         ::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* ── Full viewport background ── */}
       <div style={{
         minHeight: "100vh", width: "100%", backgroundColor: colors.bgDeep,
         display: "flex", alignItems: "flex-start", justifyContent: "center",
         fontFamily: "'Kanit', sans-serif",
       }}>
 
-        {/* ── Phone frame ── */}
         <div style={{
           width: "375px",
           height: "750px",
@@ -348,10 +355,8 @@ export default function HomeScreen({ setScreen }) {
           flexDirection: "column",
         }}>
 
-          {/* ── Header ── */}
           <AppHeader user={user} />
 
-          {/* ── Scrollable feed ── */}
           <div style={{
             flex: 1, overflowY: "auto", overflowX: "hidden",
             paddingTop: "20px", width: "100%",
@@ -365,28 +370,32 @@ export default function HomeScreen({ setScreen }) {
                   fontSize: "22px", fontWeight: "700", color: colors.text,
                   fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px",
                 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  Hey {user?.username || "there"}
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M7 11.5V6a1.5 1.5 0 0 1 3 0v4.5" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
-                    <path d="M10 7.5V5a1.5 1.5 0 0 1 3 0v5" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
-                    <path d="M13 6.5V5a1.5 1.5 0 0 1 3 0v6" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
-                    <path d="M16 8.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6v-1a1.5 1.5 0 0 1 3 0" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
-                  </svg>
-                </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    Hey {user?.username || "there"}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M7 11.5V6a1.5 1.5 0 0 1 3 0v4.5" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
+                      <path d="M10 7.5V5a1.5 1.5 0 0 1 3 0v5" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
+                      <path d="M13 6.5V5a1.5 1.5 0 0 1 3 0v6" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
+                      <path d="M16 8.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6v-1a1.5 1.5 0 0 1 3 0" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                  </div>
                 </div>
                 <div style={{ fontSize: "14px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginTop: "4px" }}>
                   Here's what we think you'll love.
                 </div>
               </div>
 
-              {/* Seed artist pills */}
+              {/* Seed artist pills from onboarding */}
               <SeedArtistPills artists={user?.favorite_artists} />
 
               {/* Feed */}
-              {feed.length === 0 ? (
+              {loading ? (
                 <div style={{ textAlign: "center", color: colors.muted, fontFamily: "'Kanit', sans-serif", fontSize: "14px", paddingTop: "40px" }}>
                   Building your feed...
+                </div>
+              ) : feed.length === 0 ? (
+                <div style={{ textAlign: "center", color: colors.muted, fontFamily: "'Kanit', sans-serif", fontSize: "14px", paddingTop: "40px" }}>
+                  Play some tracks to personalize your feed.
                 </div>
               ) : (
                 feed.map((track, i) => (
@@ -394,7 +403,7 @@ export default function HomeScreen({ setScreen }) {
                     key={track.id}
                     track={track}
                     index={i}
-                    isPlaying={playingId === track.id}
+                    isPlaying={isTrackPlaying(track.id)}
                     onTogglePlay={handleTogglePlay}
                   />
                 ))
@@ -403,17 +412,8 @@ export default function HomeScreen({ setScreen }) {
             </div>
           </div>
 
-          {/* ── Mini Player ── */}
-          <MiniPlayer
-            track={currentTrack ? {
-              title: currentTrack.trackTitle,
-              artist: currentTrack.artist,
-              album: currentTrack.genre,
-              coverUrl: null,
-            } : null}
-          />
+          <MiniPlayer />
 
-          {/* ── Footer Nav ── */}
           <FooterNav
             activeTab={activeNav}
             onTabPress={(tab) => {
@@ -425,10 +425,7 @@ export default function HomeScreen({ setScreen }) {
             }}
           />
 
-          {/* ── Full Screen Player ── */}
           <FullPlayer />
-
-          {/* ── Profile Panel ── */}
           <ProfilePanel />
 
         </div>

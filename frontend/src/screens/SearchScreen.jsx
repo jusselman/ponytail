@@ -146,6 +146,7 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onTogg
   const [focused, setFocused] = useState(false);
   const debounceRef = useRef(null);
   const { playStandaloneTrack, playTrack } = usePlayer();
+  const [recentActivity, setRecentActivity] = useState([]);
   
 
  const searchTracks = async (q) => {
@@ -181,6 +182,22 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onTogg
 
   const showResults = query.length >= 2;
   const showEmpty = !query;
+
+  useEffect(() => {
+  const fetchRecent = async () => {
+      try {
+        const token = await AsyncStorage.getItem('ponytail_token');
+        const res = await fetch('http://localhost:5000/api/auth/history/recent?limit=10', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setRecentActivity(data.tracks || []);
+      } catch (err) {
+        console.log('Failed to fetch recent activity:', err);
+      }
+    };
+    fetchRecent();
+  }, []);
 
   return (
     <div style={{ padding: "0 16px 20px", width: "100%", boxSizing: "border-box" }}>
@@ -288,6 +305,29 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onTogg
       {/* ── Empty state ── */}
 {showEmpty && (
   <>
+    {/* Recent */}
+    {recentActivity.length > 0 && (
+      <div style={{ marginBottom: "24px" }}>
+        <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+          Recent
+        </div>
+        <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px" }}>
+          {recentActivity.map((track, i) => (
+            <div
+              key={i}
+              onClick={() => onArtistTap(track.artist)}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flexShrink: 0, cursor: "pointer" }}
+            >
+              <Avatar name={track.artist} size={52} coverUrl={track.coverUrl} />
+              <div style={{ fontSize: "10px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", textAlign: "center", maxWidth: "52px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {track.title}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
     {/* Loved Artists */}
     {loved.length > 0 && (
       <div style={{ marginBottom: "24px" }}>
@@ -334,70 +374,45 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onTogg
       </div>
     )}
 
-   {/* Recent searches */}
-    <div style={{ marginBottom: "24px" }}>
-      <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-        Recent
-      </div>
-      {MOCK_RECENT.map((item, i) => (
-        <div key={i} style={{
-          display: "flex", alignItems: "center", gap: "12px",
-          padding: "9px 0", borderBottom: `1px solid ${colors.border}`, cursor: "pointer",
-        }}>
-          <div style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: colors.bgCard, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            {item.type === "artist" ? <ClockIcon /> : <MusicNoteIcon />}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "13px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>{item.name}</div>
-            <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-              {item.type === "artist" ? item.genre : `by ${item.artist}`}
-            </div>
-          </div>
-          <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textTransform: "capitalize" }}>
-            {item.type}
-          </div>
-        </div>
-      ))}
-    </div>
-
     {/* Genre chips */}
-<div>
-  <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-    Browse by Genre {selectedGenres.length > 0 && `(${selectedGenres.length}/5)`}
-  </div>
-  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-    {MOCK_GENRES.map((genre, i) => {
-      const hue = (i * 37 + 160) % 360;
-      const isSelected = selectedGenres.includes(genre);
-      return (
-        <div
-          key={i}
-          onClick={() => onToggleGenre(genre)}
-          style={{
-            padding: "6px 14px", borderRadius: "20px",
-            background: isSelected
-              ? colors.tealGlow
-              : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
-            border: isSelected ? `2px solid ${colors.teal}` : `1px solid hsl(${hue}, 40%, 35%)`,
-            fontSize: "12px", fontWeight: "500",
-            color: isSelected ? colors.teal : colors.text,
-            fontFamily: "'Kanit', sans-serif",
-            cursor: "pointer", transition: "opacity 0.2s ease",
-          }}
-          onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
-          onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-        >
-          {genre}
-        </div>
-      );
-    })}
-  </div>
-</div>
-  </>
+    <div>
+      <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+        Browse by Genre {selectedGenres.length > 0 && `(${selectedGenres.length}/5)`}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        {MOCK_GENRES.map((genre, i) => {
+          const hue = (i * 37 + 160) % 360;
+          const isSelected = selectedGenres.includes(genre);
+          return (
+            <div
+              key={i}
+              onClick={() => onToggleGenre(genre)}
+              style={{
+                padding: "6px 14px", borderRadius: "20px",
+                background: isSelected
+                  ? colors.tealGlow
+                  : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+                border: isSelected ? `2px solid ${colors.teal}` : `2px solid transparent`,
+                fontSize: "12px", fontWeight: "500",
+                color: isSelected ? colors.teal : colors.text,
+                fontFamily: "'Kanit', sans-serif",
+                cursor: "pointer", transition: "opacity 0.2s ease",
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
+              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+            >
+              {genre}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+   </>
 )}
 </div>
   );
 };
+
 
 // ─── Discovery Card (Tinder style) ────────────────────────────────────────────
 const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = false }) => {

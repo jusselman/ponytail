@@ -854,4 +854,175 @@ router.post('/history/search-selection', requireAuth, async (req, res) => {
   }
 });
 
+// Get the user's most recent activity — merged play history and search selections, deduplicated by track
+router.get('/history/recent', requireAuth, async (req, res) => {
+  const { limit = 10 } = req.query;
+
+  try {
+    const result = await pool.query(
+      `SELECT track_title, artist, album, genre, activity_at FROM (
+        SELECT track_title, artist, album, genre, last_played_at as activity_at
+        FROM user_play_history
+        WHERE user_id = $1
+        UNION ALL
+        SELECT track_title, artist, album, genre, selected_at as activity_at
+        FROM user_search_selections
+        WHERE user_id = $1
+      ) combined_activity
+      ORDER BY activity_at DESC`,
+      [req.user.id]
+    );
+
+    // ── Deduplicate by track identity, keeping the first (most recent) occurrence ──
+    const seen = new Set();
+    const deduped = [];
+    for (const row of result.rows) {
+      const key = `${row.track_title}|${row.artist}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        deduped.push(row);
+      }
+    }
+
+    const trimmed = deduped.slice(0, parseInt(limit));
+
+    // ── Look up real cover/filename for each track from seed_tracks, then resolve real URLs ──
+    const tracks = await Promise.all(trimmed.map(async (row) => {
+      const seedResult = await pool.query(
+        `SELECT cover, filename FROM seed_tracks WHERE title = $1 AND artist = $2 LIMIT 1`,
+        [row.track_title, row.artist]
+      );
+      const seedRow = seedResult.rows[0];
+
+      const realCover = seedRow ? resolveCover(seedRow.cover) : null;
+      const realAudioPath = seedRow ? resolveAudio(row.artist, row.album, seedRow.filename) : null;
+
+      return {
+        title: row.track_title,
+        artist: row.artist,
+        album: row.album,
+        genre: row.genre,
+        coverUrl: realCover
+          ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
+          : null,
+        audioUrl: realAudioPath
+          ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
+          : `http://localhost:5000/audio/dummy.mp3`,
+      };
+    }));
+
+    res.json({ tracks });
+  } catch (err) {
+    console.error('Recent activity error:', err);
+    res.status(500).json({ error: 'Failed to fetch recent activity' });
+  }
+});
+
+// Get personalized home feed tracks — seeded from user's full play history, merged and shuffled
+router.get('/home/feed', requireAuth, async (req, res) => {
+  const { limit = 20 } = req.query;
+
+  try {
+    // ── Get all tracks from user's play history as seeds ──
+    const historyResult = await pool.query(
+      `SELECT track_title, artist, genre FROM user_play_history
+       WHERE user_id = $1
+       ORDER BY last_played_at DESC`,
+      [req.user.id]
+    );
+
+    const historyTracks = historyResult.rows;
+
+    // ── If no history yet, fall back to favorite artists or pure random ──
+    if (historyTracks.length === 0) {
+      const userResult = await pool.query(
+        `SELECT favorite_artists FROM users WHERE id = $1`,
+        [req.user.id]
+      );
+      const favoriteArtists = userResult.rows[0]?.favorite_artists || [];
+
+      let fallbackResult;
+      if (favoriteArtists.length > 0) {
+        fallbackResult = await pool.query(
+          `SELECT title, artist, album, genre, cover, filename, length_seconds
+           FROM seed_tracks
+           WHERE artist = ANY($1)
+           ORDER BY RANDOM()
+           LIMIT $2`,
+          [favoriteArtists, parseInt(limit)]
+        );
+      } else {
+        fallbackResult = await pool.query(
+          `SELECT title, artist, album, genre, cover, filename, length_seconds
+           FROM seed_tracks
+           ORDER BY RANDOM()
+           LIMIT $1`,
+          [parseInt(limit)]
+        );
+      }
+
+      const tracks = fallbackResult.rows.map(buildTrackUrls).map(t => ({
+        title: t.title,
+        artist: t.artist,
+        album: t.album,
+        genre: t.genre,
+        length_seconds: t.length_seconds,
+        coverUrl: t.coverUrl,
+        audioUrl: t.audioUrl,
+        similarTo: null,
+      }));
+      return res.json({ tracks });
+    }
+
+    // ── For each history track, fetch a small batch of similar tracks ──
+    const tracksPerSeed = Math.max(2, Math.ceil(parseInt(limit) / historyTracks.length));
+    const seen = new Set();
+    const allTracks = [];
+
+    for (const seed of historyTracks) {
+      const similar = await pool.query(
+        `SELECT title, artist, album, genre, cover, filename, length_seconds
+         FROM seed_tracks
+         WHERE (
+           artist IN (
+             SELECT DISTINCT similar_artist FROM seed_tracks
+             WHERE artist = $1 AND similar_artist IS NOT NULL
+           )
+           OR genre = $2
+         )
+         AND artist != $1
+         ORDER BY RANDOM()
+         LIMIT $3`,
+        [seed.artist, seed.genre, tracksPerSeed]
+      );
+
+      for (const row of similar.rows) {
+        const key = `${row.title}|${row.artist}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          const resolved = buildTrackUrls(row);
+          allTracks.push({
+            title: row.title,
+            artist: row.artist,
+            album: row.album,
+            genre: row.genre,
+            length_seconds: row.length_seconds,
+            coverUrl: resolved.coverUrl,
+            audioUrl: resolved.audioUrl,
+            similarTo: seed.artist, 
+          });
+        }
+      }
+    }
+
+    // ── Shuffle the merged pool and trim to requested limit ──
+    const shuffled = allTracks.sort(() => Math.random() - 0.5).slice(0, parseInt(limit));
+    res.json({ tracks: shuffled });
+
+  } catch (err) {
+    console.error('Home feed error:', err);
+    res.status(500).json({ error: 'Failed to fetch home feed' });
+  }
+});
+
 module.exports = router;
