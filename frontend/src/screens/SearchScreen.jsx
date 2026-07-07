@@ -27,14 +27,6 @@ const colors = {
   gold: "#f5cf00",
 };
 
-// ─── Mock recent searches ─────────────────────────────────────────────────────
-const MOCK_RECENT = [
-  { type: "artist", name: "Radiohead", genre: "Alternative Rock" },
-  { type: "artist", name: "Dua Lipa", genre: "Pop" },
-  { type: "track", name: "Creep", artist: "Radiohead" },
-  { type: "artist", name: "Jimi Hendrix", genre: "Classic Rock" },
-];
-
 // ─── Real genre chips, pulled from seed_tracks, ordered by track count ─────────
 const MOCK_GENRES = [
   "Rock", "Jazz", "Pop", "Hip-Hop", "Electronic", "Folk", "Classical",
@@ -203,7 +195,7 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onTogg
     <div style={{ padding: "0 16px 20px", width: "100%", boxSizing: "border-box" }}>
 
       {/* ── Search bar ── */}
-      <div style={{ position: "relative", marginBottom: "20px" }}>
+      <div style={{ position: "relative", marginBottom: "12px" }}>
         <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
           <SearchIcon color={focused ? colors.teal : "#666"} />
         </div>
@@ -304,110 +296,124 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onTogg
 
       {/* ── Empty state ── */}
 {showEmpty && (
-  <>
+  <div style={{ opacity: 1 }}>
     {/* Recent */}
-    {recentActivity.length > 0 && (
-      <div style={{ marginBottom: "24px" }}>
-        <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-          Recent
+<div style={{ marginBottom: "6px", animation: "fadeSlideUp 0.4s ease 0.05s forwards", opacity: 0 }}>
+  <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+    Recent
+  </div>
+  <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px", minHeight: "70px", alignItems: "center" }}>
+    {recentActivity.length > 0 ? (
+      recentActivity.map((track, i) => (
+        <div
+          key={i}
+          onClick={() => onArtistTap(track.artist)}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flexShrink: 0, cursor: "pointer" }}
+        >
+          <Avatar name={track.artist} size={52} coverUrl={track.coverUrl} />
+          <div style={{ fontSize: "10px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", textAlign: "center", maxWidth: "52px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {track.title}
+          </div>
         </div>
-        <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px" }}>
-          {recentActivity.map((track, i) => (
-            <div
-              key={i}
-              onClick={() => onArtistTap(track.artist)}
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flexShrink: 0, cursor: "pointer" }}
-            >
-              <Avatar name={track.artist} size={52} coverUrl={track.coverUrl} />
-              <div style={{ fontSize: "10px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", textAlign: "center", maxWidth: "52px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {track.title}
-              </div>
-            </div>
-          ))}
+      ))
+    ) : (
+      // ── Skeleton placeholders — same size as real avatars, reserve space ──
+      [1,2,3,4,5].map(i => (
+        <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+          <div style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: colors.bgCard }} />
+          <div style={{ width: 44, height: 8, borderRadius: 4, backgroundColor: colors.bgCard }} />
         </div>
-      </div>
+      ))
     )}
+  </div>
+</div>
 
-    {/* Loved Artists */}
-    {loved.length > 0 && (
-      <div style={{ marginBottom: "24px" }}>
-        <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-          Loved
-        </div>
-        <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px" }}>
-          {loved.map((track, i) => (
-            <div
-              key={i}
-              onClick={() => playTrack(
-                {
-                  title: track.title,
-                  artist: track.artist,
-                  album: track.album,
-                  genre: track.genre,
-                  coverUrl: track.coverUrl,
-                  audioUrl: track.audioUrl || "http://localhost:5000/audio/dummy.mp3",
-                },
-                loved.map(t => ({
-                  title: t.title,
-                  artist: t.artist,
-                  album: t.album,
-                  genre: t.genre,
-                  coverUrl: t.coverUrl,
-                  audioUrl: t.audioUrl || "http://localhost:5000/audio/dummy.mp3",
-                })),
-                i
-              )}
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flexShrink: 0, cursor: "pointer" }}
-            >
-              <div style={{ position: "relative" }}>
-                <Avatar name={track.artist} size={52} coverUrl={track.coverUrl} />
-                <div style={{ position: "absolute", bottom: -2, right: -2, backgroundColor: colors.teal, borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <HeartIcon size={10} color="#1a1a1a" filled />
-                </div>
-              </div>
-              <div style={{ fontSize: "10px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", textAlign: "center", maxWidth: "52px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {track.artist}
-              </div>
+{/* Loved */}
+<div style={{ marginBottom: "24px", animation: "fadeSlideUp 0.4s ease 0.15s forwards", opacity: 0 }}>
+  <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+    Loved
+  </div>
+  <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px", minHeight: "70px", alignItems: "center" }}>
+    {loved.length > 0 ? (
+      loved.map((track, i) => (
+        <div
+          key={i}
+          onClick={() => playTrack(
+            { title: track.title, artist: track.artist, album: track.album, genre: track.genre, coverUrl: track.coverUrl, audioUrl: track.audioUrl || "http://localhost:5000/audio/dummy.mp3" },
+            loved.map(t => ({ title: t.title, artist: t.artist, album: t.album, genre: t.genre, coverUrl: t.coverUrl, audioUrl: t.audioUrl || "http://localhost:5000/audio/dummy.mp3" })),
+            i
+          )}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flexShrink: 0, cursor: "pointer" }}
+        >
+          <div style={{ position: "relative" }}>
+            <Avatar name={track.artist} size={52} coverUrl={track.coverUrl} />
+            <div style={{ position: "absolute", bottom: -2, right: -2, backgroundColor: colors.teal, borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <HeartIcon size={10} color="#1a1a1a" filled />
             </div>
-          ))}
+          </div>
+          <div style={{ fontSize: "10px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", textAlign: "center", maxWidth: "52px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {track.artist}
+          </div>
         </div>
-      </div>
+      ))
+    ) : (
+      // ── Skeleton placeholders ──
+      [1,2,3,4,5].map(i => (
+        <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+          <div style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: colors.bgCard }} />
+          <div style={{ width: 44, height: 8, borderRadius: 4, backgroundColor: colors.bgCard }} />
+        </div>
+      ))
     )}
+  </div>
+</div>
 
-    {/* Genre chips */}
-    <div>
-      <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-        Browse by Genre {selectedGenres.length > 0 && `(${selectedGenres.length}/5)`}
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-        {MOCK_GENRES.map((genre, i) => {
-          const hue = (i * 37 + 160) % 360;
-          const isSelected = selectedGenres.includes(genre);
-          return (
-            <div
-              key={i}
-              onClick={() => onToggleGenre(genre)}
-              style={{
-                padding: "6px 14px", borderRadius: "20px",
-                background: isSelected
-                  ? colors.tealGlow
-                  : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
-                border: isSelected ? `2px solid ${colors.teal}` : `2px solid transparent`,
-                fontSize: "12px", fontWeight: "500",
-                color: isSelected ? colors.teal : colors.text,
-                fontFamily: "'Kanit', sans-serif",
-                cursor: "pointer", transition: "opacity 0.2s ease",
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
-              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-            >
-              {genre}
-            </div>
-          );
-        })}
-      </div>
+{/* Genre chips */}
+<div style={{ animation: "fadeSlideUp 0.4s ease 0.25s forwards", opacity: 0 }}>
+  <div style={{ position: "relative", marginBottom: "12px" }}>
+    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase" }}>
+      Browse by Genre
     </div>
-   </>
+    {selectedGenres.length > 0 && (
+      <div style={{
+        position: "absolute", top: 0, right: 0,
+        fontSize: "11px", fontWeight: "600",
+        color: colors.teal,
+        fontFamily: "'Kanit', sans-serif",
+      }}>
+        {selectedGenres.length}/5
+      </div>
+    )}
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+    {MOCK_GENRES.map((genre, i) => {
+      const hue = (i * 37 + 160) % 360;
+      const isSelected = selectedGenres.includes(genre);
+      return (
+        <div
+          key={i}
+          onClick={() => onToggleGenre(genre)}
+          style={{
+            padding: "6px 14px", borderRadius: "20px",
+            background: isSelected
+              ? colors.tealGlow
+              : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+            border: isSelected ? `2px solid ${colors.teal}` : `2px solid transparent`,
+            fontSize: "12px", fontWeight: "500",
+            color: isSelected ? colors.teal : colors.text,
+            fontFamily: "'Kanit', sans-serif",
+            cursor: "pointer", transition: "opacity 0.2s ease",
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
+          onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+        >
+          {genre}
+        </div>
+      );
+    })}
+  </div>
+</div>
+   </div>
 )}
 </div>
   );
@@ -796,13 +802,25 @@ const DiscoverySearch = ({ onLove, selectedGenres }) => {
 // ─── Search Screen ────────────────────────────────────────────────────────────
 export default function SearchScreen({ setScreen }) {
   const [activeTab, setActiveTab] = useState("search");
-  const [loved, setLoved] = useState([]);
   const [user, setUser] = useState(null);
   const [activeNav, setActiveNav] = useState("search");
   const { openProfile, profileImage } = useUI();
   const { isPlayerOpen, isPlaying, togglePlay } = usePlayer();
   const [panelStack, setPanelStack] = useState([]); 
   const [selectedGenres, setSelectedGenres] = useState([]);
+  const [loved, setLoved] = useState([]);
+
+  useEffect(() => {
+    const loadLoved = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('ponytail_loved');
+        if (stored) setLoved(JSON.parse(stored));
+      } catch (err) {
+        console.log('Failed to load loved tracks:', err);
+      }
+    };
+    loadLoved();
+  }, []);
 
   const openArtist = (artistName) => {
     setPanelStack(prev => [...prev, { type: 'artist', artist: artistName }]);
@@ -828,13 +846,21 @@ export default function SearchScreen({ setScreen }) {
     loadUser();
   }, []);
 
-  const handleLove = (track) => {
-    setLoved(prev => {
-      const key = `${track.title}|${track.artist}`;
-      if (prev.find(t => `${t.title}|${t.artist}` === key)) return prev;
-      return [...prev, track];
-    });
-  };
+  const handleLove = (album) => {
+  setLoved(prev => {
+    const alreadyLoved = prev.some(t =>
+      t.artist === album.artist && t.album === album.album
+    );
+    if (alreadyLoved) return prev;
+
+    const updated = [album, ...prev].slice(0, 15);
+
+    AsyncStorage.setItem('ponytail_loved', JSON.stringify(updated))
+      .catch(err => console.log('Failed to save loved tracks:', err));
+
+    return updated;
+  });
+};
 
   return (
     <>
@@ -853,6 +879,7 @@ export default function SearchScreen({ setScreen }) {
         minHeight: "100vh", width: "100%", backgroundColor: colors.bgDeep,
         display: "flex", alignItems: "flex-start", justifyContent: "center",
         fontFamily: "'Kanit', sans-serif",
+        overflowX: "hidden",
       }}>
         <div style={{
           width: "375px", height: "750px",
