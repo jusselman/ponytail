@@ -107,7 +107,32 @@ const PlayButton = ({ playing, onToggle }) => (
 // ─── Track Card ───────────────────────────────────────────────────────────────
 const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
   const [hovered, setHovered] = useState(false);
-  const [liked, setLiked] = useState(false);
+  const [reaction, setReaction] = useState(null); 
+
+  const handleReaction = async (type) => {
+  if (reaction === type) {
+    setReaction(null);
+    return;
+  }
+  try {
+    const token = await getToken();
+    const endpoint = type === 'liked' ? 'like' : 'dislike';
+    await fetch(`http://localhost:5000/api/auth/tracks/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: track.trackTitle,
+        artist: track.artist,
+      }),
+    });
+    setReaction(type);
+  } catch (err) {
+    console.log(`Failed to ${type} track:`, err);
+  }
+};
 
   return (
     <div
@@ -180,18 +205,43 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
         marginTop: "12px", paddingTop: "12px",
         borderTop: `1px solid ${colors.border}`,
         display: "flex", justifyContent: "flex-end", gap: "8px",
+        alignItems: "center",
       }}>
+       <button
+        onClick={() => handleReaction('dislike')}
+        style={{
+          background: "none", border: "none",
+          cursor: "pointer",
+          color: reaction === 'dislike' ? "#ff4444" : colors.muted,
+          fontSize: "12px", cursor: reaction === 'dislike' ? "default" : "pointer",
+          fontFamily: "'Kanit', sans-serif", padding: "4px 8px",
+          transition: "color 0.2s ease",
+          display: "flex", alignItems: "center", gap: "4px",
+        }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M17 2H19C20.1046 2 21 2.89543 21 4V13C21 14.1046 20.1046 15 19 15H17M17 2L11 2C9.34315 2 8 3.34315 8 5V16.5C8 17.3284 7.32843 18 6.5 18V18C5.11929 18 4 19.1193 4 20.5V20.5C4 21.3284 4.67157 22 5.5 22H13C14.6569 22 16 20.6569 16 19V15M17 2V15" 
+              stroke={reaction === 'dislike' ? "#ff4444" : colors.muted} 
+              strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
         <button
-          onClick={() => setLiked(!liked)}
+          onClick={() => handleReaction('liked')}
           style={{
             background: "none", border: "none",
-            color: liked ? colors.teal : colors.muted,
-            fontSize: "12px", cursor: "pointer",
+            cursor: "pointer",
+            color: reaction === 'liked' ? colors.teal : colors.muted,
+            fontSize: "12px", cursor: reaction === 'liked' ? "default" : "pointer",
             fontFamily: "'Kanit', sans-serif", padding: "4px 8px",
             transition: "color 0.2s ease",
+            display: "flex", alignItems: "center", gap: "4px",
           }}
         >
-          {liked ? "♥ Liked" : "♡ Like"}
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M7 22H5C3.89543 22 3 21.1046 3 20V11C3 9.89543 3.89543 9 5 9H7M7 22L13 22C14.6569 22 16 20.6569 16 19V7.5C16 6.67157 16.6716 6 17.5 6V6C18.8807 6 20 4.88071 20 3.5V3.5C20 2.67157 19.3284 2 18.5 2H11C9.34315 2 8 3.34315 8 5V9M7 22V9"
+              stroke={reaction === 'liked' ? colors.teal : colors.muted}
+              strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
         <button style={{
           background: "none", border: `1px solid ${colors.teal}`,

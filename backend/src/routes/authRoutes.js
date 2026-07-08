@@ -1025,4 +1025,58 @@ router.get('/home/feed', requireAuth, async (req, res) => {
   }
 });
 
+// Increment thumb_up count on a track — global like counter
+router.post('/tracks/like', requireAuth, async (req, res) => {
+  const { title, artist } = req.body;
+  if (!title || !artist) {
+    return res.status(400).json({ error: 'Title and artist are required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE seed_tracks
+       SET thumb_up = COALESCE(thumb_up, 0) + 1
+       WHERE title = $1 AND artist = $2
+       RETURNING thumb_up`,
+      [title, artist]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Track not found.' });
+    }
+
+    res.json({ success: true, thumbUp: result.rows[0].thumb_up });
+  } catch (err) {
+    console.error('Track like error:', err);
+    res.status(500).json({ error: 'Failed to like track' });
+  }
+});
+
+// Increment thumb_down count on a track — global dislike counter
+router.post('/tracks/dislike', requireAuth, async (req, res) => {
+  const { title, artist } = req.body;
+  if (!title || !artist) {
+    return res.status(400).json({ error: 'Title and artist are required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE seed_tracks
+       SET thumb_down = COALESCE(thumb_down, 0) + 1
+       WHERE title = $1 AND artist = $2
+       RETURNING thumb_down`,
+      [title, artist]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Track not found.' });
+    }
+
+    res.json({ success: true, thumbDown: result.rows[0].thumb_down });
+  } catch (err) {
+    console.error('Track dislike error:', err);
+    res.status(500).json({ error: 'Failed to dislike track' });
+  }
+});
+
 module.exports = router;
