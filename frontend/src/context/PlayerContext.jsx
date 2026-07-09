@@ -46,42 +46,51 @@ export function PlayerProvider({ children }) {
   //     mode 'advance' (default) jumps playback to the first new track immediately.
   //     mode 'append' just adds tracks to the queue silently, keeping current playback untouched. ──
   const extendQueue = useCallback(async (lastTrack, mode = 'advance') => {
-    if (!lastTrack) return;
-    try {
-      const params = new URLSearchParams();
-      if (lastTrack.artist) params.set('artist', lastTrack.artist);
-      if (lastTrack.genre) params.set('genre', lastTrack.genre);
-      params.set('limit', '15');
+  if (!lastTrack) return;
+  try {
+    const params = new URLSearchParams();
+    if (lastTrack.artist) params.set('artist', lastTrack.artist);
+    if (lastTrack.genre) params.set('genre', lastTrack.genre);
+    params.set('limit', '15');
 
-      const res = await fetch(`http://localhost:5000/api/auth/tracks/similar?${params.toString()}`);
-      const data = await res.json();
+    const res = await fetch(`http://localhost:5000/api/auth/tracks/similar?${params.toString()}`);
+    const data = await res.json();
 
-      if (data.tracks && data.tracks.length > 0) {
-        const taggedTracks = data.tracks.map(t => ({ ...t, source: 'auto' }));
+    if (data.tracks && data.tracks.length > 0) {
+      // ── Filter out incomplete rows then tag as auto ──
+      const taggedTracks = data.tracks
+        .filter(t => t.title && t.artist)
+        .map(t => ({ ...t, source: 'auto' }));
 
-        if (mode === 'append') {
-          setQueue(prev => [...prev, ...taggedTracks]);
-          return;
-        }
-
+      if (mode === 'append') {
         setQueue(prev => {
-          const newQueue = [...prev, ...taggedTracks];
-          const newIndex = prev.length;
-          setQueueIndex(newIndex);
-          setCurrentTrack(newQueue[newIndex]);
-          setIsPlaying(true);
-          setProgress(0);
-          setCurrentTime(0);
-          return newQueue;
+          const existingKeys = new Set(prev.map(t => `${t.title}|${t.artist}`));
+          const newTracks = taggedTracks.filter(t => !existingKeys.has(`${t.title}|${t.artist}`));
+          return [...prev, ...newTracks];
         });
-      } else if (mode === 'advance') {
-        setIsPlaying(false);
+        return;
       }
-    } catch (err) {
-      console.log('Failed to extend queue:', err);
-      if (mode === 'advance') setIsPlaying(false);
+
+      setQueue(prev => {
+        const existingKeys = new Set(prev.map(t => `${t.title}|${t.artist}`));
+        const newTracks = taggedTracks.filter(t => !existingKeys.has(`${t.title}|${t.artist}`));
+        const newQueue = [...prev, ...newTracks];
+        const newIndex = prev.length;
+        setQueueIndex(newIndex);
+        setCurrentTrack(newQueue[newIndex]);
+        setIsPlaying(true);
+        setProgress(0);
+        setCurrentTime(0);
+        return newQueue;
+      });
+    } else if (mode === 'advance') {
+      setIsPlaying(false);
     }
-  }, []);
+  } catch (err) {
+    console.log('Failed to extend queue:', err);
+    if (mode === 'advance') setIsPlaying(false);
+  }
+}, []);
 
   // ── Play a track as part of a real, meaningful queue (e.g. an album) ──
   const playTrack = useCallback((track, trackQueue = [], startIndex = 0) => {

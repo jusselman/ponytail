@@ -173,7 +173,11 @@ function QueuePanel({ isOpen, onClose }) {
     })
   );
 
-  const getRowId = (track) => `${track.title}|${track.artist}`;
+  const getRowId = (track) => {
+    const title = track.title || track.trackTitle || 'unknown';
+    const artist = track.artist || 'unknown';
+    return `${title}|${artist}`;
+  };
 
   // ── Build a single ordered array of sortable IDs spanning both sections ──
   const allUpcomingIds = upcomingWithIndices.map(t => getRowId(t.track));

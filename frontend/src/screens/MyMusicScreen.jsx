@@ -23,6 +23,14 @@ const colors = {
   gold: "#f5cf00",
 };
 
+// ─── Mock user playlists — hardcoded for now, same shape as ProfilePanel's MOCK_PLAYLISTS ──
+const MOCK_USER_PLAYLISTS = [
+  { id: "pl1", name: "Late Night Drives", tracks: 24, hue: 220 },
+  { id: "pl2", name: "Morning Jazz", tracks: 18, hue: 40 },
+  { id: "pl3", name: "Focus Mode", tracks: 31, hue: 160 },
+  { id: "pl4", name: "Weekend Vibes", tracks: 12, hue: 300 },
+];
+
 // ─── Album Card ───────────────────────────────────────────────────────────────
 const AlbumCard = ({ track, onPlay, size = 120, currentTrack, isPlaying }) => {
   const isCurrentTrack = currentTrack && 
@@ -127,6 +135,88 @@ const AlbumCard = ({ track, onPlay, size = 120, currentTrack, isPlaying }) => {
   );
 };
 
+// ─── Playlist Card — same visual language as AlbumCard, but title/track-count instead of title/artist ──
+const PlaylistCard = ({ playlist, onPlay, size = 120 }) => {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onClick={() => onPlay(playlist)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        flexShrink: 0,
+        width: size,
+        cursor: "pointer",
+        transition: "transform 0.2s ease",
+        transform: hovered ? "translateY(-2px)" : "translateY(0)",
+      }}
+    >
+      {/* Playlist art */}
+      <div style={{
+        width: size, height: size,
+        borderRadius: "10px", overflow: "hidden",
+        backgroundColor: colors.bgCard,
+        marginBottom: "8px",
+        boxShadow: hovered ? "0 8px 24px rgba(0,0,0,0.4)" : "0 4px 12px rgba(0,0,0,0.2)",
+        transition: "box-shadow 0.2s ease",
+        position: "relative",
+      }}>
+        <div style={{
+          width: "100%", height: "100%",
+          background: `linear-gradient(135deg, hsl(${playlist.hue}, 50%, 30%), hsl(${playlist.hue + 40}, 40%, 20%))`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18V6l12-2v12" stroke={colors.teal} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="6" cy="18" r="3" stroke={colors.teal} strokeWidth="1.5" />
+            <circle cx="18" cy="16" r="3" stroke={colors.teal} strokeWidth="1.5" />
+          </svg>
+        </div>
+
+        {hovered && (
+          <div style={{
+            position: "absolute", inset: 0,
+            backgroundColor: "rgba(0,0,0,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: "50%",
+              backgroundColor: colors.teal,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <div style={{
+                width: 0, height: 0,
+                borderTop: "7px solid transparent",
+                borderBottom: "7px solid transparent",
+                borderLeft: "12px solid #1a1a1a",
+                marginLeft: 3,
+              }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Playlist info */}
+      <div style={{
+        fontSize: "12px", fontWeight: "600", color: colors.text,
+        fontFamily: "'Kanit', sans-serif",
+        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+        marginBottom: "2px",
+      }}>
+        {playlist.name}
+      </div>
+      <div style={{
+        fontSize: "11px", color: colors.muted,
+        fontFamily: "'Kanit', sans-serif",
+        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+      }}>
+        {playlist.tracks} track{playlist.tracks === 1 ? '' : 's'}
+      </div>
+    </div>
+  );
+};
+
 // ─── Section Header ───────────────────────────────────────────────────────────
 const SectionHeader = ({ title, subtitle, index = 0 }) => (
   <div style={{
@@ -146,8 +236,8 @@ const SectionHeader = ({ title, subtitle, index = 0 }) => (
 );
 
 // ─── Horizontal Scroll Row ────────────────────────────────────────────────────
-const ScrollRow = ({ tracks, onPlay, emptyMessage, currentTrack, isPlaying, index = 0 }) => {
-  if (!tracks || tracks.length === 0) {
+const ScrollRow = ({ items, renderItem, emptyMessage, index = 0 }) => {
+  if (!items || items.length === 0) {
     return (
       <div style={{
         height: "120px", display: "flex", alignItems: "center", justifyContent: "center",
@@ -170,57 +260,10 @@ const ScrollRow = ({ tracks, onPlay, emptyMessage, currentTrack, isPlaying, inde
       marginBottom: "28px",
       scrollbarWidth: "none",
     }}>
-      {tracks.map((track, i) => (
-    <AlbumCard 
-      key={i} 
-      track={track} 
-      onPlay={onPlay}
-      currentTrack={currentTrack}
-      isPlaying={isPlaying}
-    />
-  ))}
+      {items.map((item, i) => renderItem(item, i))}
     </div>
   );
 };
-
-// ─── Purchased Empty State ────────────────────────────────────────────────────
-const PurchasedSection = () => (
-  <div style={{
-    backgroundColor: colors.bgCard,
-    borderRadius: "16px",
-    padding: "24px",
-    marginBottom: "28px",
-    display: "flex", flexDirection: "column", alignItems: "center",
-    gap: "12px", textAlign: "center",
-    border: `1px solid ${colors.border}`,
-  }}>
-    <div style={{
-      width: 52, height: 52, borderRadius: "50%",
-      backgroundColor: colors.tealGlow,
-      border: `1px solid ${colors.teal}`,
-      display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m5-9v9m4-9v9m4-9l2 9" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </div>
-    <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-      No purchases yet
-    </div>
-    <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif", lineHeight: 1.5 }}>
-      Music you purchase on Ponytail will live here. Support your favorite independent artists directly.
-    </div>
-    <div style={{
-      fontSize: "11px", fontWeight: "600", color: colors.teal,
-      fontFamily: "'Kanit', sans-serif", letterSpacing: "0.5px",
-      padding: "6px 16px", borderRadius: "20px",
-      border: `1px solid ${colors.teal}`,
-      cursor: "pointer",
-    }}>
-      Browse Music
-    </div>
-  </div>
-);
 
 // ─── My Music Screen ──────────────────────────────────────────────────────────
 export default function MyMusicScreen({ setScreen }) {
@@ -230,6 +273,7 @@ export default function MyMusicScreen({ setScreen }) {
   const [activeNav, setActiveNav] = useState("mymusic");
   const [loadingSuggested, setLoadingSuggested] = useState(true);
   const [loadingNew, setLoadingNew] = useState(true);
+  const [playlists, setPlaylists] = useState(MOCK_USER_PLAYLISTS);
 
   const { playTrack, playHistory, currentTrack, isPlaying } = usePlayer();
   const [frozenHistory, setFrozenHistory] = useState([]);
@@ -295,6 +339,11 @@ useEffect(() => {
     );
   };
 
+  // ── Placeholder — will open the playlist detail view once that exists ──
+  const handlePlaylistTap = (playlist) => {
+    console.log('Playlist tapped:', playlist.name);
+  };
+
   return (
     <>
       <style>{`
@@ -332,49 +381,60 @@ useEffect(() => {
             width: "100%", boxSizing: "border-box", minHeight: 0,
           }}>
 
+            {/* ── Your Playlists ── */}
+            <SectionHeader
+              title="Your Playlists"
+              subtitle={playlists.length === 0 ? null : `${playlists.length} playlist${playlists.length === 1 ? '' : 's'}`}
+              index={0}
+            />
+            <ScrollRow
+              items={playlists}
+              renderItem={(playlist, i) => (
+                <PlaylistCard key={playlist.id} playlist={playlist} onPlay={handlePlaylistTap} />
+              )}
+              emptyMessage="Create a playlist to see it here"
+              index={0}
+            />
+
             {/* ── Recently Played ── */}
             <SectionHeader
               title="Recently Played"
               subtitle={frozenHistory.length === 0 ? null : `${frozenHistory.length} track${frozenHistory.length === 1 ? '' : 's'}`}
+              index={1}
             />
             <ScrollRow
-                tracks={frozenHistory}
-                onPlay={handlePlay}
+                items={frozenHistory}
+                renderItem={(track, i) => (
+                  <AlbumCard key={i} track={track} onPlay={handlePlay} currentTrack={currentTrack} isPlaying={isPlaying} />
+                )}
                 emptyMessage="Tracks you play will appear here"
-                currentTrack={currentTrack}
-                isPlaying={isPlaying}
-                index={0} 
+                index={1}
             />
 
             {/* ── Suggested For You ── */}
             <SectionHeader
               title="Suggested For You"
               subtitle={playHistory.length > 0 ? "Based on your listening" : "Explore something new"}
+              index={2}
             />
             <ScrollRow
-                tracks={loadingSuggested ? [] : suggested}
-                onPlay={handlePlay}
+                items={loadingSuggested ? [] : suggested}
+                renderItem={(track, i) => (
+                  <AlbumCard key={i} track={track} onPlay={handlePlay} currentTrack={currentTrack} isPlaying={isPlaying} />
+                )}
                 emptyMessage={loadingSuggested ? "Loading..." : "No suggestions yet"}
-                currentTrack={currentTrack}
-                isPlaying={isPlaying}
-                index={1} 
-            />
-
-            {/* ── Purchased ── */}
-            <SectionHeader title="Purchased" subtitle="Music you own" />
-            <PurchasedSection 
                 index={2}
             />
 
             {/* ── New Releases ── */}
-            <SectionHeader title="New Releases" subtitle="Recently added to Ponytail" />
+            <SectionHeader title="New Releases" subtitle="Recently added to Ponytail" index={3} />
             <ScrollRow
-                tracks={loadingNew ? [] : newReleases}
-                onPlay={handlePlay}
+                items={loadingNew ? [] : newReleases}
+                renderItem={(track, i) => (
+                  <AlbumCard key={i} track={track} onPlay={handlePlay} currentTrack={currentTrack} isPlaying={isPlaying} />
+                )}
                 emptyMessage={loadingNew ? "Loading..." : "Nothing new yet"}
-                currentTrack={currentTrack}
-                isPlaying={isPlaying}
-                index={3} 
+                index={3}
             />
 
             {/* Bottom padding */}
@@ -393,6 +453,7 @@ useEffect(() => {
               if (tab === "home") setScreen("home");
               if (tab === "search") setScreen("search");
               if (tab === "radio") setScreen("radio");
+              if (tab === "bulletin") setScreen("bulletin");
             }}
           />
 
