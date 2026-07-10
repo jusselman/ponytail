@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const passport = require('./config/passport');
 const authRoutes = require('./routes/authRoutes');
+const playlistRoutes = require('./routes/playlistRoutes');
 const path = require('path');
 require('dotenv').config();
 
@@ -37,6 +38,7 @@ app.use('/vinyl', express.static(path.join(__dirname, '../assets/dev_seed/VinylC
 
 // ── Routes ──
 app.use('/api/auth', authRoutes);
+app.use('/api/playlists', playlistRoutes);
 
 // ── Health check ──
 app.get('/health', (req, res) => {

@@ -1,0 +1,720 @@
+Encoding Fix Report
+Generated: 2026-07-09T21:08:40.420Z
+Mode: WRITE (CSV updated)
+
+Fixed: 684
+Unresolved: 26
+
+── Fixed rows ──
+FIXED [Title, Filename] | 2Pac / Me Against the World / It Ain�t Easy  -->  2Pac / Me Against the World / It Ain’t Easy
+FIXED [Title, Filename] | 50 Cent / Get Rich or Die Tryin' / If I Can�t  -->  50 Cent / Get Rich or Die Tryin' / If I Can’t
+FIXED [Title, Filename] | 50 Cent / Get Rich or Die Tryin' / Don�t Push Me  -->  50 Cent / Get Rich or Die Tryin' / Don’t Push Me
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Push It Along  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Push It Along
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Luck of Lucien  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Luck of Lucien
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / After Hours  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / After Hours
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Footprints  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Footprints
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / I Left My Wallet in El Segundo  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / I Left My Wallet in El Segundo
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Pubic Enemy  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Pubic Enemy
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Bonita Applebum  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Bonita Applebum
+FIXED [Album, Title, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Can I Kick It?  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Can I Kick It 
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Youthful Expression  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Youthful Expression
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Rhythm (Devoted to the Art of Moving Butts)  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Rhythm (Devoted to the Art of Moving Butts)
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Mr. Muhammad  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Mr. Muhammad
+FIXED [Album, Title, Filename, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Ham �n� Eggs  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Ham ’n’ Eggs
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Go Ahead in the Rain  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Go Ahead in the Rain
+FIXED [Album, Cover] | A Tribe Called Quest / People�s Instinctive Travels and the Paths of Rhythm / Description of a Fool  -->  A Tribe Called Quest / People’s Instinctive Travels and the Paths of Rhythm / Description of a Fool
+FIXED [Artist, Title, Filename, Cover] | a-ha / Hunting High and Low / Living a Boy�s Adventure Tale  -->  a‐ha / Hunting High and Low / Living a Boy’s Adventure Tale
+FIXED [Title, Filename] | ABBA / Arrival / That�s Me  -->  ABBA / Arrival / That’s Me
+FIXED [Title, Filename] | ABC / The Lexicon of Love / Valentine�s Day - Steven Wilson Stereo Mix / 2022  -->  ABC / The Lexicon of Love / Valentine’s Day - Steven Wilson Stereo Mix   2022
+FIXED [Title, Filename] | Aerosmith / Toys in the Attic / Adam�s Apple  -->  Aerosmith / Toys in the Attic / Adam’s Apple
+FIXED [Album, Title, Filename, Cover] | Afrika Bambaataa & Soulsonic Force / Planet Rock: The Album / Who You Funkin� With?  -->  Afrika Bambaataa & Soulsonic Force / Planet Rock  The Album / Who You Funkin’ With 
+FIXED [Artist, Cover] | Ali Farka Tour� With Ry Cooder / Talking Timbuktu / Bonde  -->  Ali Farka Touré With Ry Cooder / Talking Timbuktu / Bonde
+FIXED [Artist, Cover] | Ali Farka Tour� With Ry Cooder / Talking Timbuktu / Soukora  -->  Ali Farka Touré With Ry Cooder / Talking Timbuktu / Soukora
+FIXED [Artist, Cover] | Ali Farka Tour� With Ry Cooder / Talking Timbuktu / Gomni  -->  Ali Farka Touré With Ry Cooder / Talking Timbuktu / Gomni
+FIXED [Artist, Cover] | Ali Farka Tour� With Ry Cooder / Talking Timbuktu / Sega  -->  Ali Farka Touré With Ry Cooder / Talking Timbuktu / Sega
+FIXED [Artist, Cover] | Ali Farka Tour� With Ry Cooder / Talking Timbuktu / Amandrai  -->  Ali Farka Touré With Ry Cooder / Talking Timbuktu / Amandrai
+FIXED [Artist, Cover] | Ali Farka Tour� With Ry Cooder / Talking Timbuktu / Lasidan  -->  Ali Farka Touré With Ry Cooder / Talking Timbuktu / Lasidan
+FIXED [Artist, Cover] | Ali Farka Tour� With Ry Cooder / Talking Timbuktu / Kelto  -->  Ali Farka Touré With Ry Cooder / Talking Timbuktu / Kelto
+FIXED [Artist, Cover] | Ali Farka Tour� With Ry Cooder / Talking Timbuktu / Banga  -->  Ali Farka Touré With Ry Cooder / Talking Timbuktu / Banga
+FIXED [Artist, Cover] | Ali Farka Tour� With Ry Cooder / Talking Timbuktu / Ai Du  -->  Ali Farka Touré With Ry Cooder / Talking Timbuktu / Ai Du
+FIXED [Artist, Cover] | Ali Farka Tour� With Ry Cooder / Talking Timbuktu / Diaraby  -->  Ali Farka Touré With Ry Cooder / Talking Timbuktu / Diaraby
+FIXED [Title, Filename] | Baaba Maal / Lam Toro / Daande Le�ol (Voice Of The People)  -->  Baaba Maal / Lam Toro / Daande Leñol (Voice Of The People)
+FIXED [Title, Filename] | Bebel Gilberto / Tanto Tempo / Samba da Ben��o  -->  Bebel Gilberto / Tanto Tempo / Samba da Benção
+FIXED [Title, Filename] | Bebel Gilberto / Tanto Tempo / Sem Conten��o  -->  Bebel Gilberto / Tanto Tempo / Sem Contenção
+FIXED [Title, Filename] | Bebel Gilberto / Tanto Tempo / Algu�m  -->  Bebel Gilberto / Tanto Tempo / Alguém
+FIXED [Title, Filename] | Beck / Guero / Qu� Onda Guero  -->  Beck / Guero / Qué Onda Guero
+FIXED [Artist, Album, Cover] | Bela Bart�k / Emerson String Quartet: 6 Streichquartette (Disc 1) / Streichquartette Nr.1 Lento - attacca  -->  Bela Bartók / Emerson String Quartet  6 Streichquartette (Disc 1) / Streichquartette Nr.1 Lento - attacca
+FIXED [Artist, Album, Cover] | Bela Bart�k / Emerson String Quartet: 6 Streichquartette (Disc 1) / Streichquartette Nr.1 Poco a poco accelerando all'Allegretto  -->  Bela Bartók / Emerson String Quartet  6 Streichquartette (Disc 1) / Streichquartette Nr.1 Poco a poco accelerando all'Allegretto
+FIXED [Artist, Album, Cover] | Bela Bart�k / Emerson String Quartet: 6 Streichquartette (Disc 1) / Streichquartette Nr.1 Allegro vivace  -->  Bela Bartók / Emerson String Quartet  6 Streichquartette (Disc 1) / Streichquartette Nr.1 Allegro vivace
+FIXED [Artist, Album, Cover] | Bela Bart�k / Emerson String Quartet: 6 Streichquartette (Disc 1) / Streichquartette Nr.3 Prima parte- Moderato - attacca  -->  Bela Bartók / Emerson String Quartet  6 Streichquartette (Disc 1) / Streichquartette Nr.3 Prima parte- Moderato - attacca
+FIXED [Artist, Album, Cover] | Bela Bart�k / Emerson String Quartet: 6 Streichquartette (Disc 1) / Streichquartette Nr.3 Seconda parte- Allegro - attacca- Ricapit- Moderato  -->  Bela Bartók / Emerson String Quartet  6 Streichquartette (Disc 1) / Streichquartette Nr.3 Seconda parte- Allegro - attacca- Ricapit- Moderato
+FIXED [Artist, Album, Cover] | Bela Bart�k / Emerson String Quartet: 6 Streichquartette (Disc 1) / Streichquartette Nr.3 Coda- Allegro molto  -->  Bela Bartók / Emerson String Quartet  6 Streichquartette (Disc 1) / Streichquartette Nr.3 Coda- Allegro molto
+FIXED [Artist, Album, Cover] | Bela Bart�k / Emerson String Quartet: 6 Streichquartette (Disc 1) / Streichquartette Nr.5 Allegro  -->  Bela Bartók / Emerson String Quartet  6 Streichquartette (Disc 1) / Streichquartette Nr.5 Allegro
+FIXED [Artist, Album, Cover] | Bela Bart�k / Emerson String Quartet: 6 Streichquartette (Disc 1) / Streichquartette Nr.5 Adagio molto  -->  Bela Bartók / Emerson String Quartet  6 Streichquartette (Disc 1) / Streichquartette Nr.5 Adagio molto
+FIXED [Artist, Album, Cover] | Bela Bart�k / Emerson String Quartet: 6 Streichquartette (Disc 1) / Streichquartette Nr.5 Scherzo Alla bulgarese  -->  Bela Bartók / Emerson String Quartet  6 Streichquartette (Disc 1) / Streichquartette Nr.5 Scherzo Alla bulgarese
+FIXED [Artist, Album, Cover] | Bela Bart�k / Emerson String Quartet: 6 Streichquartette (Disc 1) / Streichquartette Nr.5 Andante  -->  Bela Bartók / Emerson String Quartet  6 Streichquartette (Disc 1) / Streichquartette Nr.5 Andante
+FIXED [Title, Filename] | Bill Evans / From Left To Right / Soir�e  -->  Bill Evans / From Left To Right / Soirée
+FIXED [Title, Filename] | Bill Evans / From Left To Right / Soir�e (Alternate)  -->  Bill Evans / From Left To Right / Soirée (Alternate)
+FIXED [Artist, Album, Cover] | Bj�rk / Bj�rk 1977 / Litli Arabadrengurinn  -->  Björk / Björk 1977 / Litli Arabadrengurinn
+FIXED [Artist, Album, Cover] | Bj�rk / Bj�rk 1977 / Bukolla  -->  Björk / Björk 1977 / Bukolla
+FIXED [Artist, Album, Cover] | Bj�rk / Bj�rk 1977 / Alta Mira  -->  Björk / Björk 1977 / Alta Mira
+FIXED [Artist, Album, Cover] | Bj�rk / Bj�rk 1977 / Johannes Kjarval  -->  Björk / Björk 1977 / Johannes Kjarval
+FIXED [Artist, Album, Cover] | Bj�rk / Bj�rk 1977 / Fusi Hreindyr  -->  Björk / Björk 1977 / Fusi Hreindyr
+FIXED [Artist, Album, Title, Filename, Cover] | Bj�rk / Bj�rk 1977 / Himnaf�r  -->  Björk / Björk 1977 / Himnaför
+FIXED [Artist, Album, Cover] | Bj�rk / Bj�rk 1977 / Oliver  -->  Björk / Björk 1977 / Oliver
+FIXED [Artist, Album, Cover] | Bj�rk / Bj�rk 1977 / Alfur Ut Ur Holl  -->  Björk / Björk 1977 / Alfur Ut Ur Holl
+FIXED [Artist, Album, Cover] | Bj�rk / Bj�rk 1977 / Musastiginn  -->  Björk / Björk 1977 / Musastiginn
+FIXED [Artist, Album, Cover] | Bj�rk / Bj�rk 1977 / Baenin  -->  Björk / Björk 1977 / Baenin
+FIXED [Artist, Cover] | Bj�rk / Debut / Human Behaviour  -->  Björk / Debut / Human Behaviour
+FIXED [Artist, Cover] | Bj�rk / Debut / Crying  -->  Björk / Debut / Crying
+FIXED [Artist, Cover] | Bj�rk / Debut / Venus As A Boy  -->  Björk / Debut / Venus As A Boy
+FIXED [Artist, Cover] | Bj�rk / Debut / There's More To Life Than This  -->  Björk / Debut / There's More To Life Than This
+FIXED [Artist, Cover] | Bj�rk / Debut / Like Someone In Love  -->  Björk / Debut / Like Someone In Love
+FIXED [Artist, Cover] | Bj�rk / Debut / Big Time Sensuality  -->  Björk / Debut / Big Time Sensuality
+FIXED [Artist, Cover] | Bj�rk / Debut / One Day  -->  Björk / Debut / One Day
+FIXED [Artist, Cover] | Bj�rk / Debut / Aeroplane  -->  Björk / Debut / Aeroplane
+FIXED [Artist, Cover] | Bj�rk / Debut / Come To Me  -->  Björk / Debut / Come To Me
+FIXED [Artist, Cover] | Bj�rk / Debut / Violently Happy  -->  Björk / Debut / Violently Happy
+FIXED [Artist, Cover] | Bj�rk / Debut / The Anchor Song  -->  Björk / Debut / The Anchor Song
+FIXED [Artist, Cover] | Bj�rk / Debut / Play Dead  -->  Björk / Debut / Play Dead
+FIXED [Artist, Cover] | Bj�rk / Homogenic / Hunter  -->  Björk / Homogenic / Hunter
+FIXED [Artist, Cover] | Bj�rk / Homogenic / Unravel  -->  Björk / Homogenic / Unravel
+FIXED [Artist, Cover] | Bj�rk / Homogenic / All Neon Like  -->  Björk / Homogenic / All Neon Like
+FIXED [Artist, Cover] | Bj�rk / Homogenic / Pluto  -->  Björk / Homogenic / Pluto
+FIXED [Artist, Cover] | Bj�rk / Homogenic / All Is Full Of Love  -->  Björk / Homogenic / All Is Full Of Love
+FIXED [Artist, Cover] | Bj�rk / Later (DVD) / Hyperballad  -->  Björk / Later (DVD) / Hyperballad
+FIXED [Artist, Cover] | Bj�rk / Later (DVD) / Venus as A Boy  -->  Björk / Later (DVD) / Venus as A Boy
+FIXED [Artist, Cover] | Bj�rk / Later (DVD) / Possibly Maybe  -->  Björk / Later (DVD) / Possibly Maybe
+FIXED [Artist, Cover] | Bj�rk / Later (DVD) / Bachelorette  -->  Björk / Later (DVD) / Bachelorette
+FIXED [Artist, Cover] | Bj�rk / Later (DVD) / Hunter  -->  Björk / Later (DVD) / Hunter
+FIXED [Artist, Cover] | Bj�rk / Later (DVD) / Joga  -->  Björk / Later (DVD) / Joga
+FIXED [Artist, Cover] | Bj�rk / Later (DVD) / So Broken  -->  Björk / Later (DVD) / So Broken
+FIXED [Artist, Cover] | Bj�rk / Medulla / Pleasure Is All Mine  -->  Björk / Medulla / Pleasure Is All Mine
+FIXED [Artist, Cover] | Bj�rk / Medulla / Show Me Forgiveness  -->  Björk / Medulla / Show Me Forgiveness
+FIXED [Artist, Cover] | Bj�rk / Medulla / Where Is The Line  -->  Björk / Medulla / Where Is The Line
+FIXED [Artist, Title, Filename, Cover] | Bj�rk / Medulla / V�kur�  -->  Björk / Medulla / Vökuró
+FIXED [Artist, Title, Filename, Cover] | Bj�rk / Medulla / �ll Birtan  -->  Björk / Medulla / Öll Birtan
+FIXED [Artist, Cover] | Bj�rk / Medulla / Who Is It (Carry My Joy On The Left, Carry My Pain On The Right)  -->  Björk / Medulla / Who Is It (Carry My Joy On The Left, Carry My Pain On The Right)
+FIXED [Artist, Cover] | Bj�rk / Medulla / Submarine  -->  Björk / Medulla / Submarine
+FIXED [Artist, Cover] | Bj�rk / Medulla / Desired Constellation  -->  Björk / Medulla / Desired Constellation
+FIXED [Artist, Cover] | Bj�rk / Medulla / Oceania  -->  Björk / Medulla / Oceania
+FIXED [Artist, Cover] | Bj�rk / Medulla / SonnetsUnrealities XI  -->  Björk / Medulla / SonnetsUnrealities XI
+FIXED [Artist, Cover] | Bj�rk / Medulla / Ancestors  -->  Björk / Medulla / Ancestors
+FIXED [Artist, Cover] | Bj�rk / Medulla / Mouth's Cradle  -->  Björk / Medulla / Mouth's Cradle
+FIXED [Artist, Title, Filename, Cover] | Bj�rk / Medulla / Mi�vikudags  -->  Björk / Medulla / Miðvikudags
+FIXED [Artist, Cover] | Bj�rk / Medulla / Triumph Of A Heart  -->  Björk / Medulla / Triumph Of A Heart
+FIXED [Artist, Cover] | Bj�rk / Telegram / Possibly Maybe (Lucy Mix)  -->  Björk / Telegram / Possibly Maybe (Lucy Mix)
+FIXED [Artist, Cover] | Bj�rk / Telegram / Hyperballad (Brodsky Quartet Version)  -->  Björk / Telegram / Hyperballad (Brodsky Quartet Version)
+FIXED [Artist, Cover] | Bj�rk / Telegram / Enjoy (Further Over The Edge Mix)  -->  Björk / Telegram / Enjoy (Further Over The Edge Mix)
+FIXED [Artist, Cover] | Bj�rk / Telegram / My Spine (Evelyn Glennie Mix)  -->  Björk / Telegram / My Spine (Evelyn Glennie Mix)
+FIXED [Artist, Cover] | Bj�rk / Telegram / I Miss You (Dobie Rub Part One - Sunshine Mix)  -->  Björk / Telegram / I Miss You (Dobie Rub Part One - Sunshine Mix)
+FIXED [Artist, Cover] | Bj�rk / Telegram / Isobel (Deodato Mix)  -->  Björk / Telegram / Isobel (Deodato Mix)
+FIXED [Artist, Cover] | Bj�rk / Telegram / You've Been Flirting Again (Flirt as a Promise)  -->  Björk / Telegram / You've Been Flirting Again (Flirt as a Promise)
+FIXED [Artist, Cover] | Bj�rk / Telegram / Cover Me (Dillinja Mix)  -->  Björk / Telegram / Cover Me (Dillinja Mix)
+FIXED [Artist, Cover] | Bj�rk / Telegram / Army Of Me (Masseymix)  -->  Björk / Telegram / Army Of Me (Masseymix)
+FIXED [Artist, Cover] | Bj�rk / Telegram / Headphones (0 Remix)  -->  Björk / Telegram / Headphones (0 Remix)
+FIXED [Artist, Cover] | Bj�rk / Telegram / I Miss You (Original Mix)  -->  Björk / Telegram / I Miss You (Original Mix)
+FIXED [Artist, Cover] | Bj�rk / Vespertine / Hidden Place  -->  Björk / Vespertine / Hidden Place
+FIXED [Artist, Cover] | Bj�rk / Vespertine / Cocoon  -->  Björk / Vespertine / Cocoon
+FIXED [Artist, Cover] | Bj�rk / Vespertine / It's Not Up To You  -->  Björk / Vespertine / It's Not Up To You
+FIXED [Artist, Cover] | Bj�rk / Vespertine / Undo  -->  Björk / Vespertine / Undo
+FIXED [Artist, Cover] | Bj�rk / Vespertine / Pagan Poetry  -->  Björk / Vespertine / Pagan Poetry
+FIXED [Artist, Cover] | Bj�rk / Vespertine / Frosti  -->  Björk / Vespertine / Frosti
+FIXED [Artist, Cover] | Bj�rk / Vespertine / Aurora  -->  Björk / Vespertine / Aurora
+FIXED [Artist, Cover] | Bj�rk / Vespertine / An Echo, A Stain  -->  Björk / Vespertine / An Echo, A Stain
+FIXED [Artist, Cover] | Bj�rk / Vespertine / Sun In My Mouth  -->  Björk / Vespertine / Sun In My Mouth
+FIXED [Artist, Cover] | Bj�rk / Vespertine / Heirloom  -->  Björk / Vespertine / Heirloom
+FIXED [Artist, Cover] | Bj�rk / Vespertine / Harm Of Will  -->  Björk / Vespertine / Harm Of Will
+FIXED [Artist, Cover] | Bj�rk / Vespertine / Unison  -->  Björk / Vespertine / Unison
+FIXED [Artist, Cover] | Bj�rk / Volta / Earth Intruders  -->  Björk / Volta / Earth Intruders
+FIXED [Artist, Cover] | Bj�rk / Volta / Wanderlust  -->  Björk / Volta / Wanderlust
+FIXED [Artist, Cover] | Bj�rk / Volta / Dull Flame of Desire  -->  Björk / Volta / Dull Flame of Desire
+FIXED [Artist, Cover] | Bj�rk / Volta / Innocence  -->  Björk / Volta / Innocence
+FIXED [Artist, Cover] | Bj�rk / Volta / I See Who You Are  -->  Björk / Volta / I See Who You Are
+FIXED [Artist, Cover] | Bj�rk / Volta / Vertebrae by Vertebrae  -->  Björk / Volta / Vertebrae by Vertebrae
+FIXED [Artist, Cover] | Bj�rk / Volta / Pneumonia  -->  Björk / Volta / Pneumonia
+FIXED [Artist, Cover] | Bj�rk / Volta / Hope  -->  Björk / Volta / Hope
+FIXED [Artist, Cover] | Bj�rk / Volta / Declare Independence  -->  Björk / Volta / Declare Independence
+FIXED [Artist, Cover] | Bj�rk / Volta / My Juvenile  -->  Björk / Volta / My Juvenile
+FIXED [Artist, Cover] | Bj�rk / Volta / I See Who You Are (Mark Bell Mix)  -->  Björk / Volta / I See Who You Are (Mark Bell Mix)
+FIXED [Title, Filename] | Buena Vista Social Club / Buena Vista Social Club / Y T� Qu� Has Hecho?  -->  Buena Vista Social Club / Buena Vista Social Club / Y Tú Qué Has Hecho 
+FIXED [Title, Filename] | Buena Vista Social Club / Buena Vista Social Club / Veinte A�os  -->  Buena Vista Social Club / Buena Vista Social Club / Veinte Años
+FIXED [Title, Filename] | Caetano Veloso / Caetano Veloso / Tropic�lia  -->  Caetano Veloso / Caetano Veloso / Tropicália
+FIXED [Title, Filename] | Caetano Veloso / Caetano Veloso / No D�a Em Que Eu Vim-Me Embora  -->  Caetano Veloso / Caetano Veloso / No Día Em Que Eu Vim-Me Embora
+FIXED [Title, Filename] | Caetano Veloso / Caetano Veloso / Onde Andar�s  -->  Caetano Veloso / Caetano Veloso / Onde Andarás
+FIXED [Title, Filename] | Caetano Veloso / Caetano Veloso / Anuncia��o  -->  Caetano Veloso / Caetano Veloso / Anunciação
+FIXED [Title, Filename] | Caetano Veloso / Caetano Veloso / Paisagem �til  -->  Caetano Veloso / Caetano Veloso / Paisagem Útil
+FIXED [Title, Filename] | Caetano Veloso / Caetano Veloso / Soy Loco Por T�, Am�rica  -->  Caetano Veloso / Caetano Veloso / Soy Loco Por Tí, América
+FIXED [Title, Filename] | Caetano Veloso / Caetano Veloso / Ave Mar�a  -->  Caetano Veloso / Caetano Veloso / Ave María
+FIXED [Title, Filename] | Calexico / Feast Of Wire / G�ero Canelo  -->  Calexico / Feast Of Wire / Güero Canelo
+FIXED [Title, Filename] | Captain Beefheart & His Magic Band / Trout Mask Replica / The Dust Blows Forward �n the Dust Blows Back  -->  Captain Beefheart & His Magic Band / Trout Mask Replica / The Dust Blows Forward ’n the Dust Blows Back
+FIXED [Title, Filename] | Captain Beefheart & His Magic Band / Trout Mask Replica / Dali�s Car  -->  Captain Beefheart & His Magic Band / Trout Mask Replica / Dali’s Car
+FIXED [Title, Filename] | Captain Beefheart & His Magic Band / Trout Mask Replica / Fallin� Ditch  -->  Captain Beefheart & His Magic Band / Trout Mask Replica / Fallin’ Ditch
+FIXED [Title, Filename] | Captain Beefheart & His Magic Band / Trout Mask Replica / Sugar �n Spikes  -->  Captain Beefheart & His Magic Band / Trout Mask Replica / Sugar ’n Spikes
+FIXED [Title, Filename] | Captain Beefheart & His Magic Band / Trout Mask Replica / She�s Too Much for My Mirror  -->  Captain Beefheart & His Magic Band / Trout Mask Replica / She’s Too Much for My Mirror
+FIXED [Title, Filename] | Captain Beefheart & His Magic Band / Trout Mask Replica / Veteran�s Day Poppy  -->  Captain Beefheart & His Magic Band / Trout Mask Replica / Veteran’s Day Poppy
+FIXED [Artist, Album, Cover] | Cee-Lo Green / Cee-Lo Green� Is the Soul Machine / Intro  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / Intro
+FIXED [Artist, Album, Cover] | Cee-Lo Green / Cee-Lo Green� Is the Soul Machine / Soul Machine  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / Soul Machine
+FIXED [Artist, Album, Cover] | Cee-Lo Green / Cee-Lo Green� Is the Soul Machine / Living Again  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / Living Again
+FIXED [Artist, Album, Cover] | Cee-Lo Green / Cee-Lo Green� Is the Soul Machine / I Am Selling Soul  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / I Am Selling Soul
+FIXED [Artist, Album, Cover] | Cee-Lo Green / Cee-Lo Green� Is the Soul Machine / All Day Love Affair  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / All Day Love Affair
+FIXED [Artist, Album, Cover] | Cee-Lo Green / Cee-Lo Green� Is the Soul Machine / Glockappella  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / Glockappella
+FIXED [Artist, Album, Cover] | Cee-Lo Green / Cee-Lo Green� Is the Soul Machine / When We Were Friends  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / When We Were Friends
+FIXED [Artist, Album, Cover] | Cee-Lo Green / Cee-Lo Green� Is the Soul Machine / Sometimes  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / Sometimes
+FIXED [Artist, Album, Cover] | Cee-Lo Green / Cee-Lo Green� Is the Soul Machine / Die Trying  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / Die Trying
+FIXED [Artist, Album, Title, Filename, Cover] | Cee-Lo Green / Cee-Lo Green� Is the Soul Machine / What Don�t You Do? (outro)  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / What Don’t You Do  (outro)
+FIXED [Album, Cover] | CeeLo Green / Cee-Lo Green� Is the Soul Machine / The Art of Noise  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / The Art of Noise
+FIXED [Album, Title, Filename, Cover] | CeeLo Green / Cee-Lo Green� Is the Soul Machine / I�ll Be Around  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / I’ll Be Around
+FIXED [Album, Cover] | CeeLo Green / Cee-Lo Green� Is the Soul Machine / The One  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / The One
+FIXED [Album, Cover] | CeeLo Green / Cee-Lo Green� Is the Soul Machine / My Kind of People  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / My Kind of People
+FIXED [Album, Cover] | CeeLo Green / Cee-Lo Green� Is the Soul Machine / Childz Play  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / Childz Play
+FIXED [Album, Cover] | CeeLo Green / Cee-Lo Green� Is the Soul Machine / Evening News  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / Evening News
+FIXED [Album, Cover] | CeeLo Green / Cee-Lo Green� Is the Soul Machine / Scrap Metal  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / Scrap Metal
+FIXED [Album, Title, Filename, Cover] | CeeLo Green / Cee-Lo Green� Is the Soul Machine / Let�s Stay Together  -->  CeeLo Green / Cee‐Lo Green… Is the Soul Machine / Let’s Stay Together
+FIXED [Album, Cover] | Chic / Risqu� / Good Times  -->  Chic / Risqué / Good Times
+FIXED [Album, Cover] | Chic / Risqu� / A Warm Summer Night  -->  Chic / Risqué / A Warm Summer Night
+FIXED [Album, Cover] | Chic / Risqu� / My Feet Keep Dancing  -->  Chic / Risqué / My Feet Keep Dancing
+FIXED [Album, Cover] | Chic / Risqu� / My Forbidden Lover  -->  Chic / Risqué / My Forbidden Lover
+FIXED [Album, Cover] | Chic / Risqu� / Can't Stand To Love You  -->  Chic / Risqué / Can't Stand To Love You
+FIXED [Album, Cover] | Chic / Risqu� / Will You Cry (When You Hear Th  -->  Chic / Risqué / Will You Cry (When You Hear Th
+FIXED [Album, Cover] | Chic / Risqu� / What About Me  -->  Chic / Risqué / What About Me
+FIXED [Title, Filename] | Christina Aguilera / Stripped / Can�t Hold Us Down  -->  Christina Aguilera / Stripped / Can’t Hold Us Down
+FIXED [Title, Filename] | Christina Aguilera / Stripped / I�m OK  -->  Christina Aguilera / Stripped / I’m OK
+FIXED [Title, Filename] | Christina Aguilera / Stripped / Keep On Singin� My Song  -->  Christina Aguilera / Stripped / Keep On Singin’ My Song
+FIXED [Title, Filename] | Chromeo / She's in control / Ah oui comme �a  -->  Chromeo / She's in control / Ah oui comme ça
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Suite bergamasque I - Pr�lude: Moderato  -->  Claude Debussy / Klára Kormendi  Piano Music / Suite bergamasque I - Prélude  Moderato
+FIXED [Album, Title, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Suite bergamasque II - Menuet: Andantino  -->  Claude Debussy / Klára Kormendi  Piano Music / Suite bergamasque II - Menuet  Andantino
+FIXED [Album, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Suite bergamasque III - Clair de lune  -->  Claude Debussy / Klára Kormendi  Piano Music / Suite bergamasque III - Clair de lune
+FIXED [Album, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Suite bergamasque IV - Passepied  -->  Claude Debussy / Klára Kormendi  Piano Music / Suite bergamasque IV - Passepied
+FIXED [Album, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / La plus que lente  -->  Claude Debussy / Klára Kormendi  Piano Music / La plus que lente
+FIXED [Album, Title, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Images I - Reflets dans l'eau: Andantino molto  -->  Claude Debussy / Klára Kormendi  Piano Music / Images I - Reflets dans l'eau  Andantino molto
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Images I - Hommage � Rameau: Lent e grave  -->  Claude Debussy / Klára Kormendi  Piano Music / Images I - Hommage à Rameau  Lent e grave
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Images I - Mouvement: Anim�  -->  Claude Debussy / Klára Kormendi  Piano Music / Images I - Mouvement  Animé
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Images II - Cloches � travers les feuilles  -->  Claude Debussy / Klára Kormendi  Piano Music / Images II - Cloches à travers les feuilles
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Images II - Et ta lune descend sur le temple qui f�t  -->  Claude Debussy / Klára Kormendi  Piano Music / Images II - Et ta lune descend sur le temple qui fût
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Images II - Poissons d'or: Anim�  -->  Claude Debussy / Klára Kormendi  Piano Music / Images II - Poissons d'or  Animé
+FIXED [Album, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Deux arabesques I - Andantino con moto  -->  Claude Debussy / Klára Kormendi  Piano Music / Deux arabesques I - Andantino con moto
+FIXED [Album, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Deux arabesques II - Allegretto Scherzando  -->  Claude Debussy / Klára Kormendi  Piano Music / Deux arabesques II - Allegretto Scherzando
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Pr�ludes I - No. 6 Des pas sur la neige  -->  Claude Debussy / Klára Kormendi  Piano Music / Préludes I - No. 6 Des pas sur la neige
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Pr�ludes I - No. 8 La fille aux cheveux de lin  -->  Claude Debussy / Klára Kormendi  Piano Music / Préludes I - No. 8 La fille aux cheveux de lin
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Pr�ludes I - No. 11 La danse de Puck  -->  Claude Debussy / Klára Kormendi  Piano Music / Préludes I - No. 11 La danse de Puck
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Pr�ludes II - No. 6 G�n�ral Lavine  -->  Claude Debussy / Klára Kormendi  Piano Music / Préludes II - No. 6 Général Lavine
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Pr�ludes II - No. 7 La terrasse des audiences du  -->  Claude Debussy / Klára Kormendi  Piano Music / Préludes II - No. 7 La terrasse des audiences du
+FIXED [Album, Title, Filename, Cover] | Claude Debussy / Kl�ra Kormendi: Piano Music / Pr�ludes II - No. 12 Feux d'artifice  -->  Claude Debussy / Klára Kormendi  Piano Music / Préludes II - No. 12 Feux d'artifice
+FIXED [Title, Filename] | Claude Debussy / Petite Suite / II - Cort�ge  -->  Claude Debussy / Petite Suite / II - Cortège
+FIXED [Title, Filename] | Count Basie / The Complete Atomic Basie / Li�l Darlin�  -->  Count Basie / The Complete Atomic Basie / Li’l Darlin’
+FIXED [Title, Filename] | Count Basie / The Complete Atomic Basie / Sleepwalker�s Serenade (alternate take)  -->  Count Basie / The Complete Atomic Basie / Sleepwalker’s Serenade (alternate take)
+FIXED [Title, Filename] | Count Basie / The Complete Atomic Basie / Sleepwalker�s Serenade  -->  Count Basie / The Complete Atomic Basie / Sleepwalker’s Serenade
+FIXED [Album, Cover] | Crosby, Stills, Nash & Young / D�j� Vu / Carry On  -->  Crosby, Stills, Nash & Young / Déjà Vu / Carry On
+FIXED [Album, Cover] | Crosby, Stills, Nash & Young / D�j� Vu / Teach Your Children  -->  Crosby, Stills, Nash & Young / Déjà Vu / Teach Your Children
+FIXED [Album, Cover] | Crosby, Stills, Nash & Young / D�j� Vu / Almost Cut My Hair  -->  Crosby, Stills, Nash & Young / Déjà Vu / Almost Cut My Hair
+FIXED [Album, Cover] | Crosby, Stills, Nash & Young / D�j� Vu / Helpless  -->  Crosby, Stills, Nash & Young / Déjà Vu / Helpless
+FIXED [Album, Cover] | Crosby, Stills, Nash & Young / D�j� Vu / Woodstock  -->  Crosby, Stills, Nash & Young / Déjà Vu / Woodstock
+FIXED [Album, Title, Filename, Cover] | Crosby, Stills, Nash & Young / D�j� Vu / D�j� Vu  -->  Crosby, Stills, Nash & Young / Déjà Vu / Déjà Vu
+FIXED [Album, Cover] | Crosby, Stills, Nash & Young / D�j� Vu / Our House  -->  Crosby, Stills, Nash & Young / Déjà Vu / Our House
+FIXED [Album, Cover] | Crosby, Stills, Nash & Young / D�j� Vu / 4 + 20  -->  Crosby, Stills, Nash & Young / Déjà Vu / 4 + 20
+FIXED [Album, Title, Cover] | Crosby, Stills, Nash & Young / D�j� Vu / Country Girl: Whiskey Boot Hil  -->  Crosby, Stills, Nash & Young / Déjà Vu / Country Girl  Whiskey Boot Hil
+FIXED [Album, Cover] | Crosby, Stills, Nash & Young / D�j� Vu / Everybody I Love You  -->  Crosby, Stills, Nash & Young / Déjà Vu / Everybody I Love You
+FIXED [Title, Filename] | Dead Kennedys / Fresh Fruit for Rotting Vegetables / Let�s Lynch the Landlord  -->  Dead Kennedys / Fresh Fruit for Rotting Vegetables / Let’s Lynch the Landlord
+FIXED [Title, Filename] | Dead Kennedys / Fresh Fruit for Rotting Vegetables / California �ber alles  -->  Dead Kennedys / Fresh Fruit for Rotting Vegetables / California über alles
+FIXED [Title, Filename] | Dead Kennedys / Fresh Fruit for Rotting Vegetables / Stealing People�s Mail  -->  Dead Kennedys / Fresh Fruit for Rotting Vegetables / Stealing People’s Mail
+FIXED [Title, Filename] | Def Leppard / Hysteria / Don�t Shoot Shotgun  -->  Def Leppard / Hysteria / Don’t Shoot Shotgun
+FIXED [Title, Filename] | Devendra Banhart / Rejoicing In The Hands / This Beard Is For Siobh�n  -->  Devendra Banhart / Rejoicing In The Hands / This Beard Is For Siobhán
+FIXED [Title, Filename] | Disposable Heroes Of Hiphopris / Hypocrisy Is The Greatest Luxury / California �ber Alles  -->  Disposable Heroes Of Hiphopris / Hypocrisy Is The Greatest Luxury / California Über Alles
+FIXED [Title, Filename] | Donovan / Sunshine Superman / Bert�s Blues  -->  Donovan / Sunshine Superman / Bert’s Blues
+FIXED [Album, Cover] | Earth, Wind & Fire / That�s the Way of the World / Shining Star  -->  Earth, Wind & Fire / That’s the Way of the World / Shining Star
+FIXED [Album, Title, Filename, Cover] | Earth, Wind & Fire / That�s the Way of the World / That�s the Way of the World  -->  Earth, Wind & Fire / That’s the Way of the World / That’s the Way of the World
+FIXED [Album, Title, Filename, Cover] | Earth, Wind & Fire / That�s the Way of the World / Happy Feelin�  -->  Earth, Wind & Fire / That’s the Way of the World / Happy Feelin’
+FIXED [Album, Cover] | Earth, Wind & Fire / That�s the Way of the World / All About Love  -->  Earth, Wind & Fire / That’s the Way of the World / All About Love
+FIXED [Album, Title, Filename, Cover] | Earth, Wind & Fire / That�s the Way of the World / Yearnin� Learnin�  -->  Earth, Wind & Fire / That’s the Way of the World / Yearnin’ Learnin’
+FIXED [Album, Cover] | Earth, Wind & Fire / That�s the Way of the World / Reasons  -->  Earth, Wind & Fire / That’s the Way of the World / Reasons
+FIXED [Album, Cover] | Earth, Wind & Fire / That�s the Way of the World / Africano  -->  Earth, Wind & Fire / That’s the Way of the World / Africano
+FIXED [Album, Cover] | Earth, Wind & Fire / That�s the Way of the World / See the Light  -->  Earth, Wind & Fire / That’s the Way of the World / See the Light
+FIXED [Title, Filename] | Elis Regina / Vento do Maio / O Medo De Amar � O Medo De Ser Livre  -->  Elis Regina / Vento do Maio / O Medo De Amar É O Medo De Ser Livre
+FIXED [Title, Filename] | Ella Fitzgerald & Joe Pass / Take Love Easy / You're Blas�  -->  Ella Fitzgerald & Joe Pass / Take Love Easy / You're Blasé
+FIXED [Album, Title, Cover] | Ensemble Organum / Chants de l'�glise de Rome - P�riode byzantine / Alleluia: V. O Pimenon ton Israhil  -->  Ensemble Organum / Chants de l'Église de Rome - Période byzantine / Alleluia  V. O Pimenon ton Israhil
+FIXED [Album, Title, Filename, Cover] | Ensemble Organum / Chants de l'�glise de Rome - P�riode byzantine / Intro�t: Resurrexi  -->  Ensemble Organum / Chants de l'Église de Rome - Période byzantine / Introït  Resurrexi
+FIXED [Album, Title, Cover] | Ensemble Organum / Chants de l'�glise de Rome - P�riode byzantine / Gradual Hec dies: V. Confitemini Domino / Dicat nunc Israhel  -->  Ensemble Organum / Chants de l'Église de Rome - Période byzantine / Gradual Hec dies  V. Confitemini Domino   Dicat nunc Israhel
+FIXED [Album, Title, Cover] | Ensemble Organum / Chants de l'�glise de Rome - P�riode byzantine / Alleluia: V. Pascha nostrum / V. Epulemur / Alleluia  -->  Ensemble Organum / Chants de l'Église de Rome - Période byzantine / Alleluia  V. Pascha nostrum   V. Epulemur   Alleluia
+FIXED [Album, Title, Cover] | Ensemble Organum / Chants de l'�glise de Rome - P�riode byzantine / Offertory Terra Tremuit: V. Notus in ludea / V. Et factus est in pace / V. Ibi confregit  -->  Ensemble Organum / Chants de l'Église de Rome - Période byzantine / Offertory Terra Tremuit  V. Notus in ludea   V. Et factus est in pace   V. Ibi confregit
+FIXED [Album, Title, Cover] | Ensemble Organum / Chants de l'�glise de Rome - P�riode byzantine / Alleluia: V. Epi si kyrie  -->  Ensemble Organum / Chants de l'Église de Rome - Période byzantine / Alleluia  V. Epi si kyrie
+FIXED [Album, Title, Cover] | Ensemble Organum / Chants de l'�glise de Rome - P�riode byzantine / Communion: Pascha nostrum  -->  Ensemble Organum / Chants de l'Église de Rome - Période byzantine / Communion  Pascha nostrum
+FIXED [Album, Title, Cover] | Ensemble Organum / Chants de l'�glise de Rome - P�riode byzantine / Alleluia: V. O Kyrios / V. Gar estereocsen  -->  Ensemble Organum / Chants de l'Église de Rome - Période byzantine / Alleluia  V. O Kyrios   V. Gar estereocsen
+FIXED [Title, Filename] | Faust / Faust IV / L�uft... Heisst das es l�uft oder es kommt bald... L�uft  -->  Faust / Faust IV / Läuft... Heisst das es läuft oder es kommt bald... Läuft
+FIXED [Title, Filename] | fIREHOSE / fROMOHIO / Whisperin� While Hollerin�  -->  fIREHOSE / fROMOHIO / Whisperin’ While Hollerin’
+FIXED [Title, Filename] | fIREHOSE / fROMOHIO / If�n  -->  fIREHOSE / fROMOHIO / If’n
+FIXED [Title, Filename] | fIREHOSE / fROMOHIO / �Nuf That Shit, George  -->  fIREHOSE / fROMOHIO / ’Nuf That Shit, George
+FIXED [Title, Filename] | Fishbone / Truth and Soul / Freddie�s Dead  -->  Fishbone / Truth and Soul / Freddie’s Dead
+FIXED [Title, Filename] | Fishbone / Truth and Soul / Bonin� in the Boneyard  -->  Fishbone / Truth and Soul / Bonin’ in the Boneyard
+FIXED [Title, Filename] | Fishbone / Truth and Soul / Slow Bus Movin� (Howard Beach Party)  -->  Fishbone / Truth and Soul / Slow Bus Movin’ (Howard Beach Party)
+FIXED [Title, Filename] | Frank Sinatra / Frank Albert Sinatra & Antonio Carlos Jobim / The Girl From Ipanema (G�rota  -->  Frank Sinatra / Frank Albert Sinatra & Antonio Carlos Jobim / The Girl From Ipanema (Gârota
+FIXED [Title, Filename] | Frank Sinatra / Frank Albert Sinatra & Antonio Carlos Jobim / Meditation (Meditac�o)  -->  Frank Sinatra / Frank Albert Sinatra & Antonio Carlos Jobim / Meditation (Meditacáo)
+FIXED [Title, Filename] | Franz Ferdinand / Franz Ferdinand / The Dark Of The Matin�e  -->  Franz Ferdinand / Franz Ferdinand / The Dark Of The Matinée
+FIXED [Title, Filename] | Gustav Mahler / Symphony No. 5 / II - St�rmisch Bewegt  -->  Gustav Mahler / Symphony No. 5 / II - Stürmisch Bewegt
+FIXED [Title, Filename] | Harmonium / L'heptade d'harmonium / Lumi�res de Vie  -->  Harmonium / L'heptade d'harmonium / Lumières de Vie
+FIXED [Title, Filename] | Harmonium / L'heptade d'harmonium / Sommeil Sans R�ves  -->  Harmonium / L'heptade d'harmonium / Sommeil Sans Rêves
+FIXED [Title, Filename] | Harmonium / L'heptade d'harmonium / Pr�lude d'Amour  -->  Harmonium / L'heptade d'harmonium / Prélude d'Amour
+FIXED [Title, Filename] | Harmonium / L'heptade d'harmonium / �pilogue  -->  Harmonium / L'heptade d'harmonium / Épilogue
+FIXED [Title, Filename] | Heaven 17 / Penthouse and Pavement / (We Don�t Need This) Fascist Groove Thang  -->  Heaven 17 / Penthouse and Pavement / (We Don’t Need This) Fascist Groove Thang
+FIXED [Title, Filename] | Heaven 17 / Penthouse and Pavement / Let�s All Make a Bomb  -->  Heaven 17 / Penthouse and Pavement / Let’s All Make a Bomb
+FIXED [Title, Filename] | Heaven 17 / Penthouse and Pavement / We�re Going to Live for a Very Long Time  -->  Heaven 17 / Penthouse and Pavement / We’re Going to Live for a Very Long Time
+FIXED [Album, Title, Filename, Cover] | henri dutilleux / "string quartet, ""ainsi la nuit""" / i. parenth�se 1  -->  henri dutilleux / string quartet,  ainsi la nuit / i. parenthèse 1
+FIXED [Album, Title, Filename, Cover] | henri dutilleux / "string quartet, ""ainsi la nuit""" / ii. parenth�se 2  -->  henri dutilleux / string quartet,  ainsi la nuit / ii. parenthèse 2
+FIXED [Album, Title, Filename, Cover] | henri dutilleux / "string quartet, ""ainsi la nuit""" / iii. parenth�se 3  -->  henri dutilleux / string quartet,  ainsi la nuit / iii. parenthèse 3
+FIXED [Album, Title, Filename, Cover] | henri dutilleux / "string quartet, ""ainsi la nuit""" / v. parenth�se 4  -->  henri dutilleux / string quartet,  ainsi la nuit / v. parenthèse 4
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / These Important Years  -->  Hüsker Dü / Warehouse  Songs and Stories / These Important Years
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Charity, Chastity, Prudence, and Hope  -->  Hüsker Dü / Warehouse  Songs and Stories / Charity, Chastity, Prudence, and Hope
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Standing in the Rain  -->  Hüsker Dü / Warehouse  Songs and Stories / Standing in the Rain
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Back from Somewhere  -->  Hüsker Dü / Warehouse  Songs and Stories / Back from Somewhere
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Ice Cold Ice  -->  Hüsker Dü / Warehouse  Songs and Stories / Ice Cold Ice
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / You're a Soldier  -->  Hüsker Dü / Warehouse  Songs and Stories / You're a Soldier
+FIXED [Artist, Album, Title, Cover] | H�sker D� / Warehouse: Songs and Stories / Could You be the One?  -->  Hüsker Dü / Warehouse  Songs and Stories / Could You be the One 
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Too Much Spice  -->  Hüsker Dü / Warehouse  Songs and Stories / Too Much Spice
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Friend, You've Got to Fall  -->  Hüsker Dü / Warehouse  Songs and Stories / Friend, You've Got to Fall
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Visionary  -->  Hüsker Dü / Warehouse  Songs and Stories / Visionary
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / She Floated Away  -->  Hüsker Dü / Warehouse  Songs and Stories / She Floated Away
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Bed of Nails  -->  Hüsker Dü / Warehouse  Songs and Stories / Bed of Nails
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Tell You Why Tomorrow  -->  Hüsker Dü / Warehouse  Songs and Stories / Tell You Why Tomorrow
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / It's Not Peculiar  -->  Hüsker Dü / Warehouse  Songs and Stories / It's Not Peculiar
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Actual Condition  -->  Hüsker Dü / Warehouse  Songs and Stories / Actual Condition
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / No Reservations  -->  Hüsker Dü / Warehouse  Songs and Stories / No Reservations
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Turn It Around  -->  Hüsker Dü / Warehouse  Songs and Stories / Turn It Around
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / She's a Woman (And Now He is a Man)  -->  Hüsker Dü / Warehouse  Songs and Stories / She's a Woman (And Now He is a Man)
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / Up in the Air  -->  Hüsker Dü / Warehouse  Songs and Stories / Up in the Air
+FIXED [Artist, Album, Cover] | H�sker D� / Warehouse: Songs and Stories / You Can Live at Home  -->  Hüsker Dü / Warehouse  Songs and Stories / You Can Live at Home
+FIXED [Title, Filename] | Ian Dury / New Boots and Panties!! / I�m Partial to Your Abracadabra  -->  Ian Dury / New Boots and Panties!! / I’m Partial to Your Abracadabra
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 1 in G Major, BWV 1007 - I. Praeludium  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 1 in G Major, BWV 1007 - I. Praeludium
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 2 in D minor, BWV 1008 - I. Praeludium  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 2 in D minor, BWV 1008 - I. Praeludium
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 1 in G Major, BWV 1007 - II. Allemande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 1 in G Major, BWV 1007 - II. Allemande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 2 in D minor, BWV 1008 - II. Allemande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 2 in D minor, BWV 1008 - II. Allemande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 1 in G Major, BWV 1007 - III. Courante  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 1 in G Major, BWV 1007 - III. Courante
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 2 in D minor, BWV 1008 - III. Courante  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 2 in D minor, BWV 1008 - III. Courante
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 1 in G Major, BWV 1007 - IV. Sarabande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 1 in G Major, BWV 1007 - IV. Sarabande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 2 in D minor, BWV 1008 - IV. Sarabande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 2 in D minor, BWV 1008 - IV. Sarabande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 1 in G Major, BWV 1007 - V. Menuet I  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 1 in G Major, BWV 1007 - V. Menuet I
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 2 in D minor, BWV 1008 - V. Menuet I  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 2 in D minor, BWV 1008 - V. Menuet I
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 1 in G Major, BWV 1007 - V. Menuet II  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 1 in G Major, BWV 1007 - V. Menuet II
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 2 in D minor, BWV 1008 - V. Menuet II  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 2 in D minor, BWV 1008 - V. Menuet II
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 1 in G Major, BWV 1007 - VI. Gigue  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 1 in G Major, BWV 1007 - VI. Gigue
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 2 in D minor, BWV 1008 - VI. Gigue  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 2 in D minor, BWV 1008 - VI. Gigue
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 4 in Eb Major, BWV 1010 - I. Praeludium  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 4 in Eb Major, BWV 1010 - I. Praeludium
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 3 in C Major, BWV 1009 - I. Praeludium  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 3 in C Major, BWV 1009 - I. Praeludium
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 4 in Eb Major, BWV 1010 - II. Allemande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 4 in Eb Major, BWV 1010 - II. Allemande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 3 in C Major, BWV 1009 - II. Allemande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 3 in C Major, BWV 1009 - II. Allemande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 4 in Eb Major, BWV 1010 - III. Courante  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 4 in Eb Major, BWV 1010 - III. Courante
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 3 in C Major, BWV 1009 - III. Courante  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 3 in C Major, BWV 1009 - III. Courante
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 4 in Eb Major, BWV 1010 - IV. Sarabande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 4 in Eb Major, BWV 1010 - IV. Sarabande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 3 in C Major, BWV 1009 - IV. Sarabande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 3 in C Major, BWV 1009 - IV. Sarabande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 4 in Eb Major, BWV 1010 - V. Bourr�e I  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 4 in Eb Major, BWV 1010 - V. Bourrée I
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 3 in C Major, BWV 1009 - V. Bourr�e I  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 3 in C Major, BWV 1009 - V. Bourrée I
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 4 in Eb Major, BWV 1010 - V. Bourr�e II  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 4 in Eb Major, BWV 1010 - V. Bourrée II
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 3 in C Major, BWV 1009 - V. Bourr�e II  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 3 in C Major, BWV 1009 - V. Bourrée II
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 4 in Eb Major, BWV 1010 - VI. Gigue  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 4 in Eb Major, BWV 1010 - VI. Gigue
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 3 in C Major, BWV 1009 - VI. Gigue  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 3 in C Major, BWV 1009 - VI. Gigue
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 5 in C minor, BWV 1011 - I. Praeludium  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 5 in C minor, BWV 1011 - I. Praeludium
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 6 in D Major, BWV 1012 - I. Praeludium  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 6 in D Major, BWV 1012 - I. Praeludium
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 5 in C minor, BWV 1011 - II. Allemande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 5 in C minor, BWV 1011 - II. Allemande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 6 in D Major, BWV 1012 - II. Allemande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 6 in D Major, BWV 1012 - II. Allemande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 5 in C minor, BWV 1011 - III. Courante  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 5 in C minor, BWV 1011 - III. Courante
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 6 in D Major, BWV 1012 - III. Courante  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 6 in D Major, BWV 1012 - III. Courante
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 5 in C minor, BWV 1011 - IV. Sarabande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 5 in C minor, BWV 1011 - IV. Sarabande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 6 in D Major, BWV 1012 - IV. Sarabande  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 6 in D Major, BWV 1012 - IV. Sarabande
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 5 in C minor, BWV 1011 - V. Gavotte I  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 5 in C minor, BWV 1011 - V. Gavotte I
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 6 in D Major, BWV 1012 - V. Gavotte I  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 6 in D Major, BWV 1012 - V. Gavotte I
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 5 in C minor, BWV 1011 - V. Gavotte II  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 5 in C minor, BWV 1011 - V. Gavotte II
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 6 in D Major, BWV 1012 - V. Gavotte II  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 6 in D Major, BWV 1012 - V. Gavotte II
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 5 in C minor, BWV 1011 - VI. Gigue  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 5 in C minor, BWV 1011 - VI. Gigue
+FIXED [Album, Title, Filename, Cover] | J. S. Bach / Paul Tortelier: Cello Suites / Suite N� 6 in D Major, BWV 1012 - VI. Gigue  -->  J. S. Bach / Paul Tortelier  Cello Suites / Suite N° 6 in D Major, BWV 1012 - VI. Gigue
+FIXED [Artist, Cover] | Jah Wobble�s Invaders of the Heart / Rising Above Bedlam / Visions of You  -->  Jah Wobble’s Invaders of the Heart / Rising Above Bedlam / Visions of You
+FIXED [Artist, Cover] | Jah Wobble�s Invaders of the Heart / Rising Above Bedlam / Relight the Flame  -->  Jah Wobble’s Invaders of the Heart / Rising Above Bedlam / Relight the Flame
+FIXED [Artist, Cover] | Jah Wobble�s Invaders of the Heart / Rising Above Bedlam / Bomba  -->  Jah Wobble’s Invaders of the Heart / Rising Above Bedlam / Bomba
+FIXED [Artist, Cover] | Jah Wobble�s Invaders of the Heart / Rising Above Bedlam / Ungodly Kingdom  -->  Jah Wobble’s Invaders of the Heart / Rising Above Bedlam / Ungodly Kingdom
+FIXED [Artist, Cover] | Jah Wobble�s Invaders of the Heart / Rising Above Bedlam / Rising Above Bedlam  -->  Jah Wobble’s Invaders of the Heart / Rising Above Bedlam / Rising Above Bedlam
+FIXED [Artist, Cover] | Jah Wobble�s Invaders of the Heart / Rising Above Bedlam / Erzulie  -->  Jah Wobble’s Invaders of the Heart / Rising Above Bedlam / Erzulie
+FIXED [Artist, Title, Filename, Cover] | Jah Wobble�s Invaders of the Heart / Rising Above Bedlam / Everyman�s an Island  -->  Jah Wobble’s Invaders of the Heart / Rising Above Bedlam / Everyman’s an Island
+FIXED [Artist, Cover] | Jah Wobble�s Invaders of the Heart / Rising Above Bedlam / Soledad  -->  Jah Wobble’s Invaders of the Heart / Rising Above Bedlam / Soledad
+FIXED [Artist, Cover] | Jah Wobble�s Invaders of the Heart / Rising Above Bedlam / Sweet Divinity  -->  Jah Wobble’s Invaders of the Heart / Rising Above Bedlam / Sweet Divinity
+FIXED [Artist, Cover] | Jah Wobble�s Invaders of the Heart / Rising Above Bedlam / Wonderful World  -->  Jah Wobble’s Invaders of the Heart / Rising Above Bedlam / Wonderful World
+FIXED [Album, Cover] | Jane's Addiction / Nothing�s Shocking / Up the Beach  -->  Jane's Addiction / Nothing’s Shocking / Up the Beach
+FIXED [Album, Cover] | Jane's Addiction / Nothing�s Shocking / Ocean Size  -->  Jane's Addiction / Nothing’s Shocking / Ocean Size
+FIXED [Album, Cover] | Jane's Addiction / Nothing�s Shocking / Had a Dad  -->  Jane's Addiction / Nothing’s Shocking / Had a Dad
+FIXED [Album, Title, Filename, Cover] | Jane's Addiction / Nothing�s Shocking / Ted, Just Admit It�  -->  Jane's Addiction / Nothing’s Shocking / Ted, Just Admit It…
+FIXED [Album, Title, Filename, Cover] | Jane's Addiction / Nothing�s Shocking / Standing in the Shower� Thinking  -->  Jane's Addiction / Nothing’s Shocking / Standing in the Shower… Thinking
+FIXED [Album, Cover] | Jane's Addiction / Nothing�s Shocking / Summertime Rolls  -->  Jane's Addiction / Nothing’s Shocking / Summertime Rolls
+FIXED [Album, Cover] | Jane's Addiction / Nothing�s Shocking / Mountain Song  -->  Jane's Addiction / Nothing’s Shocking / Mountain Song
+FIXED [Album, Cover] | Jane's Addiction / Nothing�s Shocking / Idiots Rule  -->  Jane's Addiction / Nothing’s Shocking / Idiots Rule
+FIXED [Album, Cover] | Jane's Addiction / Nothing�s Shocking / Jane Says  -->  Jane's Addiction / Nothing’s Shocking / Jane Says
+FIXED [Album, Cover] | Jane's Addiction / Nothing�s Shocking / Thank You Boys  -->  Jane's Addiction / Nothing’s Shocking / Thank You Boys
+FIXED [Album, Title, Filename, Cover] | Jane's Addiction / Nothing�s Shocking / Pig�s in Zen  -->  Jane's Addiction / Nothing’s Shocking / Pig’s in Zen
+FIXED [Title, Filename] | Jim Hall & Pat Metheny / Jim Hall & Pat Metheny / Lookin� up  -->  Jim Hall & Pat Metheny / Jim Hall & Pat Metheny / Lookin´ up
+FIXED [Title, Filename] | Jim Hall & Pat Metheny / Jim Hall & Pat Metheny / Inprovisation N�1  -->  Jim Hall & Pat Metheny / Jim Hall & Pat Metheny / Inprovisation Nº1
+FIXED [Title, Filename] | John Coltrane / Afro Blue Impressions / 2 Na�ma  -->  John Coltrane / Afro Blue Impressions / 2 Naïma
+FIXED [Album, Title, Filename, Cover] | Jorge Ben / �frica Brasil / Ponta de Lan�a Africano (Umbabarauma)  -->  Jorge Ben / África Brasil / Ponta de Lança Africano (Umbabarauma)
+FIXED [Album, Cover] | Jorge Ben / �frica Brasil / Hermes Trismegisto Escreveu  -->  Jorge Ben / África Brasil / Hermes Trismegisto Escreveu
+FIXED [Album, Title, Filename, Cover] | Jorge Ben / �frica Brasil / O Fil�sofo  -->  Jorge Ben / África Brasil / O Filósofo
+FIXED [Album, Cover] | Jorge Ben / �frica Brasil / Meus Filhos, Meu Tesouro  -->  Jorge Ben / África Brasil / Meus Filhos, Meu Tesouro
+FIXED [Album, Cover] | Jorge Ben / �frica Brasil / O Plebeu  -->  Jorge Ben / África Brasil / O Plebeu
+FIXED [Album, Cover] | Jorge Ben / �frica Brasil / Taj Mahal  -->  Jorge Ben / África Brasil / Taj Mahal
+FIXED [Album, Cover] | Jorge Ben / �frica Brasil / Xica da Silva  -->  Jorge Ben / África Brasil / Xica da Silva
+FIXED [Album, Title, Filename, Cover] | Jorge Ben / �frica Brasil / A Hist�ria de Jorge  -->  Jorge Ben / África Brasil / A História de Jorge
+FIXED [Album, Title, Filename, Cover] | Jorge Ben / �frica Brasil / Camisa 10 da G�vea  -->  Jorge Ben / África Brasil / Camisa 10 da Gávea
+FIXED [Album, Cover] | Jorge Ben / �frica Brasil / Cavaleiro do Cavalo Imaculado  -->  Jorge Ben / África Brasil / Cavaleiro do Cavalo Imaculado
+FIXED [Album, Title, Filename, Cover] | Jorge Ben / �frica Brasil / �frica Brasil (Zumbi)  -->  Jorge Ben / África Brasil / África Brasil (Zumbi)
+FIXED [Title, Filename] | Jungle Brothers / Done by the Forces of Nature / Feelin� Alright  -->  Jungle Brothers / Done by the Forces of Nature / Feelin’ Alright
+FIXED [Title, Filename] | Jungle Brothers / Done by the Forces of Nature / What �U� Waitin� 4?  -->  Jungle Brothers / Done by the Forces of Nature / What “U” Waitin’ 4 
+FIXED [Title, Filename] | Jungle Brothers / Done by the Forces of Nature / �U� Make Me Sweat  -->  Jungle Brothers / Done by the Forces of Nature / “U” Make Me Sweat
+FIXED [Title, Filename] | Jungle Brothers / Done by the Forces of Nature / Belly Dancin� Dina  -->  Jungle Brothers / Done by the Forces of Nature / Belly Dancin’ Dina
+FIXED [Title, Filename] | Jungle Brothers / Done by the Forces of Nature / Good Newz Comin�  -->  Jungle Brothers / Done by the Forces of Nature / Good Newz Comin’
+FIXED [Title, Filename] | Jungle Brothers / Done by the Forces of Nature / J. Beez Comin� Through  -->  Jungle Brothers / Done by the Forces of Nature / J. Beez Comin’ Through
+FIXED [Title, Filename] | Jungle Brothers / Done by the Forces of Nature / In Dayz �2� Come  -->  Jungle Brothers / Done by the Forces of Nature / In Dayz “2” Come
+FIXED [Title, Filename] | Jungle Brothers / Done by the Forces of Nature / Doin� Our Own Dang  -->  Jungle Brothers / Done by the Forces of Nature / Doin’ Our Own Dang
+FIXED [Title, Filename] | Jungle Brothers / Done by the Forces of Nature / Kool Accordin� �2� a Jungle Brother  -->  Jungle Brothers / Done by the Forces of Nature / Kool Accordin’ “2” a Jungle Brother
+FIXED [Album, Cover] | Kaare Norge / Guitarv�rker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Ouverture)  -->  Kaare Norge / Guitarværker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Ouverture)
+FIXED [Album, Cover] | Kaare Norge / Guitarv�rker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Allamande)  -->  Kaare Norge / Guitarværker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Allamande)
+FIXED [Album, Cover] | Kaare Norge / Guitarv�rker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Courante)  -->  Kaare Norge / Guitarværker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Courante)
+FIXED [Album, Cover] | Kaare Norge / Guitarv�rker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Aria)  -->  Kaare Norge / Guitarværker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Aria)
+FIXED [Album, Cover] | Kaare Norge / Guitarv�rker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Sarabande)  -->  Kaare Norge / Guitarværker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Sarabande)
+FIXED [Album, Cover] | Kaare Norge / Guitarv�rker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Menuet)  -->  Kaare Norge / Guitarværker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Menuet)
+FIXED [Album, Cover] | Kaare Norge / Guitarv�rker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Gigue)  -->  Kaare Norge / Guitarværker / Partita No. IV. for Harpsichord in D Major, BWV 828 (Gigue)
+FIXED [Album, Title, Filename, Cover] | Kaare Norge / Guitarv�rker / Tres Piezas Espa�olas: I. Fandango  -->  Kaare Norge / Guitarværker / Tres Piezas Españolas  I. Fandango
+FIXED [Album, Title, Filename, Cover] | Kaare Norge / Guitarv�rker / Tres Piezas Espa�olas: II. Passacalia  -->  Kaare Norge / Guitarværker / Tres Piezas Españolas  II. Passacalia
+FIXED [Album, Title, Filename, Cover] | Kaare Norge / Guitarv�rker / Tres Piezas Espa�olas: III. Zapateado  -->  Kaare Norge / Guitarværker / Tres Piezas Españolas  III. Zapateado
+FIXED [Album, Cover] | Kaare Norge / Guitarv�rker / Sonata in E Minor, Op. 3, No. 6 (Andante, Allegro Vivo e Spiritoso)  -->  Kaare Norge / Guitarværker / Sonata in E Minor, Op. 3, No. 6 (Andante, Allegro Vivo e Spiritoso)
+FIXED [Title, Filename] | Khaled / Kenza / A�lach Tloumouni  -->  Khaled / Kenza / Aâlach Tloumouni
+FIXED [Title, Filename] | Khaled / Kenza / Trigue Lyc�e  -->  Khaled / Kenza / Trigue Lycée
+FIXED [Title, Filename] | Khaled / Kenza / Ya A�chkou  -->  Khaled / Kenza / Ya Aâchkou
+FIXED [Title, Filename] | Khaled / Kenza / El A�dyene  -->  Khaled / Kenza / El Aâdyene
+FIXED [Title, Filename] | Khaled / Kenza / Le�li  -->  Khaled / Kenza / Leïli
+FIXED [Artist, Cover] | Koffi Olomid� / Haut De Gamme / Papa Bonheur  -->  Koffi Olomidé / Haut De Gamme / Papa Bonheur
+FIXED [Artist, Title, Filename, Cover] | Koffi Olomid� / Haut De Gamme / D�sespor  -->  Koffi Olomidé / Haut De Gamme / Désespor
+FIXED [Artist, Cover] | Koffi Olomid� / Haut De Gamme / Koweit Rive Gauche  -->  Koffi Olomidé / Haut De Gamme / Koweit Rive Gauche
+FIXED [Artist, Cover] | Koffi Olomid� / Haut De Gamme / Qui Cherche Trouve  -->  Koffi Olomidé / Haut De Gamme / Qui Cherche Trouve
+FIXED [Artist, Cover] | Koffi Olomid� / Haut De Gamme / Elixir  -->  Koffi Olomidé / Haut De Gamme / Elixir
+FIXED [Artist, Cover] | Koffi Olomid� / Haut De Gamme / Porte Monnaie  -->  Koffi Olomidé / Haut De Gamme / Porte Monnaie
+FIXED [Artist, Title, Filename, Cover] | Koffi Olomid� / Haut De Gamme / Conte De F�es  -->  Koffi Olomidé / Haut De Gamme / Conte De Fées
+FIXED [Artist, Cover] | Koffi Olomid� / Haut De Gamme / Ohrigade  -->  Koffi Olomidé / Haut De Gamme / Ohrigade
+FIXED [Artist, Cover] | Koffi Olomid� / Haut De Gamme / Dil Jeannot  -->  Koffi Olomidé / Haut De Gamme / Dil Jeannot
+FIXED [Title, Filename] | Led Zeppelin / Led Zeppelin / Babe I�m Gonna Leave You  -->  Led Zeppelin / Led Zeppelin / Babe I’m Gonna Leave You
+FIXED [Title, Filename] | Led Zeppelin / Led Zeppelin / I Can�t Quit You Baby  -->  Led Zeppelin / Led Zeppelin / I Can’t Quit You Baby
+FIXED [Title, Filename] | Lenny Breau & Buddy Emmons / Minors Aloud / On A Bach Bour�e  -->  Lenny Breau & Buddy Emmons / Minors Aloud / On A Bach Bourée
+FIXED [Title, Filename] | Lenny Kravitz / Let Love Rule / It�s your life  -->  Lenny Kravitz / Let Love Rule / It´s your life
+FIXED [Album, Cover] | Lynyrd Skynyrd / (pronounced 'leh-'n�rd 'skin-'n�rd) / I Ain't the One  -->  Lynyrd Skynyrd / (pronounced 'leh-'nérd 'skin-'nérd) / I Ain't the One
+FIXED [Album, Cover] | Lynyrd Skynyrd / (pronounced 'leh-'n�rd 'skin-'n�rd) / Tuesday's Gone  -->  Lynyrd Skynyrd / (pronounced 'leh-'nérd 'skin-'nérd) / Tuesday's Gone
+FIXED [Album, Cover] | Lynyrd Skynyrd / (pronounced 'leh-'n�rd 'skin-'n�rd) / Gimme Three Steps  -->  Lynyrd Skynyrd / (pronounced 'leh-'nérd 'skin-'nérd) / Gimme Three Steps
+FIXED [Album, Cover] | Lynyrd Skynyrd / (pronounced 'leh-'n�rd 'skin-'n�rd) / Simple Man  -->  Lynyrd Skynyrd / (pronounced 'leh-'nérd 'skin-'nérd) / Simple Man
+FIXED [Album, Cover] | Lynyrd Skynyrd / (pronounced 'leh-'n�rd 'skin-'n�rd) / Things Goin' On  -->  Lynyrd Skynyrd / (pronounced 'leh-'nérd 'skin-'nérd) / Things Goin' On
+FIXED [Album, Cover] | Lynyrd Skynyrd / (pronounced 'leh-'n�rd 'skin-'n�rd) / Mississippi Kid  -->  Lynyrd Skynyrd / (pronounced 'leh-'nérd 'skin-'nérd) / Mississippi Kid
+FIXED [Album, Cover] | Lynyrd Skynyrd / (pronounced 'leh-'n�rd 'skin-'n�rd) / Poison Whiskey  -->  Lynyrd Skynyrd / (pronounced 'leh-'nérd 'skin-'nérd) / Poison Whiskey
+FIXED [Album, Cover] | Lynyrd Skynyrd / (pronounced 'leh-'n�rd 'skin-'n�rd) / Free Bird  -->  Lynyrd Skynyrd / (pronounced 'leh-'nérd 'skin-'nérd) / Free Bird
+FIXED [Title, Filename] | Marty Robbins / Gunfighter Ballads / The Master�s Call  -->  Marty Robbins / Gunfighter Ballads / The Master’s Call
+FIXED [Title, Filename] | Marty Robbins / Gunfighter Ballads / I�ll Step Aside  -->  Marty Robbins / Gunfighter Ballads / I’ll Step Aside
+FIXED [Title, Filename] | Mayer Hawthorne / Where Does This Door Go (Deluxe Edition) / Corsican Ros�  -->  Mayer Hawthorne / Where Does This Door Go (Deluxe Edition) / Corsican Rosé
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Intro  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Intro
+FIXED [Album, Title, Filename, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Qui s?me Le Vent R�colte Le Tempo  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Qui sŐme Le Vent Récolte Le Tempo
+FIXED [Album, Title, Filename, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Mati�re Grasse Contre Mati�re Grise  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Matière Grasse Contre Matière Grise
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Victime De La Mode  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Victime De La Mode
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / L'Histoire De L'Art  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / L'Histoire De L'Art
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Armand Est Mort  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Armand Est Mort
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Quartier Nord  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Quartier Nord
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Interlude  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Interlude
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / A Temps Partiel  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / A Temps Partiel
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Caroline  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Caroline
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / La Musique Adoucit Les Moeurs  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / La Musique Adoucit Les Moeurs
+FIXED [Album, Title, Filename, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Bouge De L� (Part 1)  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Bouge De Là (Part 1)
+FIXED [Album, Title, Filename, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Bouge De L� (Part 2)  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Bouge De Là (Part 2)
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / Ragga Jam  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / Ragga Jam
+FIXED [Album, Cover] | MC Solaar / Qui s?me Le Vent R�colte Le Tempo / La Devise  -->  MC Solaar / Qui sŐme Le Vent Récolte Le Tempo / La Devise
+FIXED [Artist, Album] | Michael Bubl� / Michael Bubl� / Fever  -->  Michael Bublé / Michael Bublé / Fever
+FIXED [Title, Filename] | Michael Hedges / Aerial Boundaries / M�nage a Trois  -->  Michael Hedges / Aerial Boundaries / Ménage a Trois
+FIXED [Title, Filename] | Michael Jackson / Thriller / Wanna Be Startin� Somethin�  -->  Michael Jackson / Thriller / Wanna Be Startin’ Somethin’
+FIXED [Title, Filename] | Michael Manring / Drastic Measures / D�j� Voodoo  -->  Michael Manring / Drastic Measures / Déjà Voodoo
+FIXED [Title, Filename] | Mike Ladd / Welcome to the Afterfuture / To the Moon�s Contractor  -->  Mike Ladd / Welcome to the Afterfuture / To the Moon’s Contractor
+FIXED [Title, Filename] | Mike Ladd / Welcome to the Afterfuture / Feb. 4 �99 (For All Those Killed by Cops)  -->  Mike Ladd / Welcome to the Afterfuture / Feb. 4 ’99 (For All Those Killed by Cops)
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / Nuit Sur Les Champs-�lys�es (Take 1)  -->  Miles Davis / Ascenseur Pour L'Echafaud / Nuit Sur Les Champs-Élysées (Take 1)
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / Nuit Sur Les Champs-�lys�es (Take 2)  -->  Miles Davis / Ascenseur Pour L'Echafaud / Nuit Sur Les Champs-Élysées (Take 2)
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / Nuit Sur Les Champs-�lys�es (Take 3)  -->  Miles Davis / Ascenseur Pour L'Echafaud / Nuit Sur Les Champs-Élysées (Take 3)
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / Nuit Sur Les Champs-�lys�es (Take 4)  -->  Miles Davis / Ascenseur Pour L'Echafaud / Nuit Sur Les Champs-Élysées (Take 4)
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / Motel- D�ner au Motel  -->  Miles Davis / Ascenseur Pour L'Echafaud / Motel- Dîner au Motel
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / Ascenseur- �vasion de Julien  -->  Miles Davis / Ascenseur Pour L'Echafaud / Ascenseur- Évasion de Julien
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / S�quence Voiture (Take 1)  -->  Miles Davis / Ascenseur Pour L'Echafaud / Séquence Voiture (Take 1)
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / S�quence Voiture (Take 2) Sur l'autoroute  -->  Miles Davis / Ascenseur Pour L'Echafaud / Séquence Voiture (Take 2) Sur l'autoroute
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / G�n�rique  -->  Miles Davis / Ascenseur Pour L'Echafaud / Générique
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / Florence Sur les Champs-�lys�es  -->  Miles Davis / Ascenseur Pour L'Echafaud / Florence Sur les Champs-Élysées
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / D�ner au Motel  -->  Miles Davis / Ascenseur Pour L'Echafaud / Dîner au Motel
+FIXED [Title, Filename] | Miles Davis / Ascenseur Pour L'Echafaud / �vasion de Julien  -->  Miles Davis / Ascenseur Pour L'Echafaud / Évasion de Julien
+FIXED [Artist, Title, Filename, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Tudo Que Voc� Podia Ser  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Tudo Que Você Podia Ser
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Cais  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Cais
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / O Trem Azul  -->  Milton Nascimento & Lô Borges / Clube da Esquina / O Trem Azul
+FIXED [Artist, Title, Filename, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Sa�das e Bandeiras n� 1  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Saídas e Bandeiras nº 1
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Nuvem Cigana  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Nuvem Cigana
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Cravo e Canela  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Cravo e Canela
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Dos Cruces  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Dos Cruces
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Um Girassol da Cor de Seu Cabelo  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Um Girassol da Cor de Seu Cabelo
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / San Vicente  -->  Milton Nascimento & Lô Borges / Clube da Esquina / San Vicente
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Estrelas  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Estrelas
+FIXED [Artist, Title, Filename, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Clube da Esquina n� 2  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Clube da Esquina nº 2
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Paisagem na Janela  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Paisagem na Janela
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Me Deixa em Paz  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Me Deixa em Paz
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Os Povos  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Os Povos
+FIXED [Artist, Title, Filename, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Sa�das e Bandeiras n� 2  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Saídas e Bandeiras nº 2
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Um Gosto de Sol  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Um Gosto de Sol
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Pelo Amor de Deus  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Pelo Amor de Deus
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Lilia  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Lilia
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Trem de Doido  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Trem de Doido
+FIXED [Artist, Title, Filename, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Nada Ser� Como Antes  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Nada Será Como Antes
+FIXED [Artist, Cover] | Milton Nascimento & L� Borges / Clube da Esquina / Ao Que Vai Nascer  -->  Milton Nascimento & Lô Borges / Clube da Esquina / Ao Que Vai Nascer
+FIXED [Title, Filename] | Missy Elliott / Supa Dupa Fly / Busta�s Intro  -->  Missy Elliott / Supa Dupa Fly / Busta’s Intro
+FIXED [Title, Filename] | Missy Elliott / Supa Dupa Fly / Hit �em Wit da Hee  -->  Missy Elliott / Supa Dupa Fly / Hit ’em Wit da Hee
+FIXED [Title, Filename] | Missy Elliott / Supa Dupa Fly / They Don�t Wanna Fuck Wit Me  -->  Missy Elliott / Supa Dupa Fly / They Don’t Wanna Fuck Wit Me
+FIXED [Title, Filename] | Missy Elliott / Supa Dupa Fly / Don�t Be Commin� (in My Face)  -->  Missy Elliott / Supa Dupa Fly / Don’t Be Commin’ (in My Face)
+FIXED [Title, Filename] | Missy Elliott / Supa Dupa Fly / I�m Talkin�  -->  Missy Elliott / Supa Dupa Fly / I’m Talkin’
+FIXED [Title, Filename] | Missy Elliott / Supa Dupa Fly / Busta�s Outro  -->  Missy Elliott / Supa Dupa Fly / Busta’s Outro
+FIXED [Title, Filename] | Missy Elliott / Supa Dupa Fly / Missy�s Finale  -->  Missy Elliott / Supa Dupa Fly / Missy’s Finale
+FIXED [Title, Filename] | Morrissey / Viva Hate / Dial-A-Clich�  -->  Morrissey / Viva Hate / Dial-A-Cliché
+FIXED [Title, Filename] | Napalm Death / Scum / Caught� in a Dream  -->  Napalm Death / Scum / Caught… in a Dream
+FIXED [Title, Filename] | Nick Cave & the Bad Seeds / Abattoir Blues / Cannibal�s Hymn  -->  Nick Cave & the Bad Seeds / Abattoir Blues / Cannibal’s Hymn
+FIXED [Artist] | Ni�o Josele / Paz / Peace Piece  -->  Niño Josele / Paz / Peace Piece
+FIXED [Artist] | Ni�o Josele / Paz / Waltz for Debby  -->  Niño Josele / Paz / Waltz for Debby
+FIXED [Artist] | Ni�o Josele / Paz / The Peacocks  -->  Niño Josele / Paz / The Peacocks
+FIXED [Artist] | Ni�o Josele / Paz / I Do It For Your Love  -->  Niño Josele / Paz / I Do It For Your Love
+FIXED [Artist] | Ni�o Josele / Paz / My Foolish Heart  -->  Niño Josele / Paz / My Foolish Heart
+FIXED [Artist] | Ni�o Josele / Paz / The Dolphin  -->  Niño Josele / Paz / The Dolphin
+FIXED [Artist] | Ni�o Josele / Paz / Hullo Bolinas  -->  Niño Josele / Paz / Hullo Bolinas
+FIXED [Artist] | Ni�o Josele / Paz / Minha  -->  Niño Josele / Paz / Minha
+FIXED [Artist] | Ni�o Josele / Paz / Never Let Me Go  -->  Niño Josele / Paz / Never Let Me Go
+FIXED [Artist] | Ni�o Josele / Paz / Turn Out The Stars  -->  Niño Josele / Paz / Turn Out The Stars
+FIXED [Artist] | Ni�o Josele / Paz / When I Fall In Love  -->  Niño Josele / Paz / When I Fall In Love
+FIXED [Title, Filename] | Pavement / Slanted & Enchanted / Z�rich Is Stained  -->  Pavement / Slanted & Enchanted / Zürich Is Stained
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / Penguin Cafe Single  -->  Penguin Cafe Orchestra / Music From the Penguin Café / Penguin Cafe Single
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / From the Colonies  -->  Penguin Cafe Orchestra / Music From the Penguin Café / From the Colonies
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / In a Sydney Motel  -->  Penguin Cafe Orchestra / Music From the Penguin Café / In a Sydney Motel
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / Surface Tension  -->  Penguin Cafe Orchestra / Music From the Penguin Café / Surface Tension
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / Milk  -->  Penguin Cafe Orchestra / Music From the Penguin Café / Milk
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / Coronation  -->  Penguin Cafe Orchestra / Music From the Penguin Café / Coronation
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / Giles Farnbay's Dream  -->  Penguin Cafe Orchestra / Music From the Penguin Café / Giles Farnbay's Dream
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / Pigtail  -->  Penguin Cafe Orchestra / Music From the Penguin Café / Pigtail
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / The Sound of Someone You Love Who's Going Away and It Doesn't Matter  -->  Penguin Cafe Orchestra / Music From the Penguin Café / The Sound of Someone You Love Who's Going Away and It Doesn't Matter
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / Hugebaby  -->  Penguin Cafe Orchestra / Music From the Penguin Café / Hugebaby
+FIXED [Album, Cover] | Penguin Cafe Orchestra / Music From the Penguin Caf� / Chartered Flight  -->  Penguin Cafe Orchestra / Music From the Penguin Café / Chartered Flight
+FIXED [Artist, Album] | Peter Erskine, Nguy�n L�, Michel Benita / ACT: E L B / Zigzag  -->  Peter Erskine, Nguyên Lê, Michel Benita / ACT  E L B / Zigzag
+FIXED [Artist, Album] | Peter Erskine, Nguy�n L�, Michel Benita / ACT: E L B / Autumn Rose  -->  Peter Erskine, Nguyên Lê, Michel Benita / ACT  E L B / Autumn Rose
+FIXED [Artist, Album] | Peter Erskine, Nguy�n L�, Michel Benita / ACT: E L B / Pong  -->  Peter Erskine, Nguyên Lê, Michel Benita / ACT  E L B / Pong
+FIXED [Artist, Album] | Peter Erskine, Nguy�n L�, Michel Benita / ACT: E L B / Country Boy  -->  Peter Erskine, Nguyên Lê, Michel Benita / ACT  E L B / Country Boy
+FIXED [Artist, Album] | Peter Erskine, Nguy�n L�, Michel Benita / ACT: E L B / Now Or Never  -->  Peter Erskine, Nguyên Lê, Michel Benita / ACT  E L B / Now Or Never
+FIXED [Artist, Album] | Peter Erskine, Nguy�n L�, Michel Benita / ACT: E L B / Sao Sen  -->  Peter Erskine, Nguyên Lê, Michel Benita / ACT  E L B / Sao Sen
+FIXED [Artist, Album] | Peter Erskine, Nguy�n L�, Michel Benita / ACT: E L B / Pirates  -->  Peter Erskine, Nguyên Lê, Michel Benita / ACT  E L B / Pirates
+FIXED [Artist, Album] | Peter Erskine, Nguy�n L�, Michel Benita / ACT: E L B / Meanwhile  -->  Peter Erskine, Nguyên Lê, Michel Benita / ACT  E L B / Meanwhile
+FIXED [Title, Filename, Cover] | Peter Gabriel / 3 / I Don�t Remember  -->  Peter Gabriel / 3 / I Don’t Remember
+FIXED [Title, Filename] | Primal Scream / Vanishing Point / Mot�rhead  -->  Primal Scream / Vanishing Point / Motörhead
+FIXED [Title, Filename] | Public Enemy / Apocalypse 91 / Can�t Truss It  -->  Public Enemy / Apocalypse 91 / Can’t Truss It
+FIXED [Title, Filename] | Public Enemy / Apocalypse 91 / I Don�t Wanna Be Called Yo Niga  -->  Public Enemy / Apocalypse 91 / I Don’t Wanna Be Called Yo Niga
+FIXED [Title, Filename] | Ralph Towner / Ana / Seven Pieces for Twelve Strings � Between The Clouds  -->  Ralph Towner / Ana / Seven Pieces for Twelve Strings – Between The Clouds
+FIXED [Title, Filename] | Ralph Towner / Ana / Seven Pieces for Twelve Strings � Child On The Porch  -->  Ralph Towner / Ana / Seven Pieces for Twelve Strings – Child On The Porch
+FIXED [Title, Filename] | Ralph Towner / Ana / Seven Pieces for Twelve Strings � Carib Crib  -->  Ralph Towner / Ana / Seven Pieces for Twelve Strings – Carib Crib
+FIXED [Title, Filename] | Ralph Towner / Ana / Seven Pieces for Twelve Strings � Slavic Mood  -->  Ralph Towner / Ana / Seven Pieces for Twelve Strings – Slavic Mood
+FIXED [Title, Filename] | Ralph Towner / Ana / Seven Pieces for Twelve Strings � Carib Crib  -->  Ralph Towner / Ana / Seven Pieces for Twelve Strings – Carib Crib
+FIXED [Title, Filename] | Ralph Towner / Ana / Seven Pieces for Twelve Strings � Toru  -->  Ralph Towner / Ana / Seven Pieces for Twelve Strings – Toru
+FIXED [Title, Filename] | Ralph Towner / Ana / Seven Pieces for Twelve Strings � Sage Brush Rider  -->  Ralph Towner / Ana / Seven Pieces for Twelve Strings – Sage Brush Rider
+FIXED [Title, Filename] | Ray Charles / Modern Sounds in Country and Western Music / You Don�t Know Me  -->  Ray Charles / Modern Sounds in Country and Western Music / You Don’t Know Me
+FIXED [Title, Filename] | Ray Charles / Modern Sounds in Country and Western Music / Just a Little Lovin�  -->  Ray Charles / Modern Sounds in Country and Western Music / Just a Little Lovin’
+FIXED [Title, Filename] | Ray Charles / Modern Sounds in Country and Western Music / I Can�t Stop Loving You  -->  Ray Charles / Modern Sounds in Country and Western Music / I Can’t Stop Loving You
+FIXED [Title, Filename] | Ray Charles / Modern Sounds in Country and Western Music / Hey, Good Lookin�  -->  Ray Charles / Modern Sounds in Country and Western Music / Hey, Good Lookin’
+FIXED [Album, Title, Filename] | Richard Wagner / Leningrad Philharmonic: Orchestral Excerpts / Overture To Tannh�user  -->  Richard Wagner / Leningrad Philharmonic  Orchestral Excerpts / Overture To Tannhäuser
+FIXED [Album, Title, Filename] | Richard Wagner / Leningrad Philharmonic: Orchestral Excerpts / Siegfried's Funeral March From G�tterd�mmerung  -->  Richard Wagner / Leningrad Philharmonic  Orchestral Excerpts / Siegfried's Funeral March From Götterdämmerung
+FIXED [Album, Title, Filename] | Richard Wagner / Leningrad Philharmonic: Orchestral Excerpts / Ride Of The Valkyries From Die Walk�re  -->  Richard Wagner / Leningrad Philharmonic  Orchestral Excerpts / Ride Of The Valkyries From Die Walküre
+FIXED [Title, Filename] | Shivkumar Sharma-Brijbushan Kabra-Hariprasad Chaurasia / Call Of The Valley / R�g Des  -->  Shivkumar Sharma-Brijbushan Kabra-Hariprasad Chaurasia / Call Of The Valley / Rãg Des
+FIXED [Artist, Album, Cover] | Sigur R�s / �g�tis Byrjun / Intro  -->  Sigur Rós / Ágætis Byrjun / Intro
+FIXED [Artist, Album, Cover] | Sigur R�s / �g�tis Byrjun / Svefn-G-Englar  -->  Sigur Rós / Ágætis Byrjun / Svefn-G-Englar
+FIXED [Artist, Album, Title, Filename, Cover] | Sigur R�s / �g�tis Byrjun / Star�lfur  -->  Sigur Rós / Ágætis Byrjun / Starálfur
+FIXED [Artist, Album, Cover] | Sigur R�s / �g�tis Byrjun / Flugufelsarinn  -->  Sigur Rós / Ágætis Byrjun / Flugufelsarinn
+FIXED [Artist, Album, Title, Filename, Cover] | Sigur R�s / �g�tis Byrjun / N� Batter�  -->  Sigur Rós / Ágætis Byrjun / Ný Batterí
+FIXED [Artist, Album, Title, Filename, Cover] | Sigur R�s / �g�tis Byrjun / Hjarta� Hamast (Bamm Bamm Bamm  -->  Sigur Rós / Ágætis Byrjun / Hjartaõ Hamast (Bamm Bamm Bamm
+FIXED [Artist, Album, Title, Filename, Cover] | Sigur R�s / �g�tis Byrjun / Vi�rar Vel Til Loft�rasa  -->  Sigur Rós / Ágætis Byrjun / Viõrar Vel Til Loftárasa
+FIXED [Artist, Album, Cover] | Sigur R�s / �g�tis Byrjun / Olsen Olsen  -->  Sigur Rós / Ágætis Byrjun / Olsen Olsen
+FIXED [Artist, Album, Title, Filename, Cover] | Sigur R�s / �g�tis Byrjun / �g�tis Byrjun  -->  Sigur Rós / Ágætis Byrjun / Ágætis Byrjun
+FIXED [Artist, Album, Cover] | Sigur R�s / �g�tis Byrjun / Avalon  -->  Sigur Rós / Ágætis Byrjun / Avalon
+FIXED [Artist, Cover] | Sin�ad O'Connor / I Do Not Want What I Haven't Got / Feel So Different  -->  Sinéad O'Connor / I Do Not Want What I Haven't Got / Feel So Different
+FIXED [Artist, Cover] | Sin�ad O'Connor / I Do Not Want What I Haven't Got / I Am Stretched On Your Grave  -->  Sinéad O'Connor / I Do Not Want What I Haven't Got / I Am Stretched On Your Grave
+FIXED [Artist, Cover] | Sin�ad O'Connor / I Do Not Want What I Haven't Got / Three Babies  -->  Sinéad O'Connor / I Do Not Want What I Haven't Got / Three Babies
+FIXED [Artist, Cover] | Sin�ad O'Connor / I Do Not Want What I Haven't Got / The Emperor's New Clothes  -->  Sinéad O'Connor / I Do Not Want What I Haven't Got / The Emperor's New Clothes
+FIXED [Artist, Cover] | Sin�ad O'Connor / I Do Not Want What I Haven't Got / Black Boys On Mopeds  -->  Sinéad O'Connor / I Do Not Want What I Haven't Got / Black Boys On Mopeds
+FIXED [Artist, Cover] | Sin�ad O'Connor / I Do Not Want What I Haven't Got / Nothing Compares 2 U  -->  Sinéad O'Connor / I Do Not Want What I Haven't Got / Nothing Compares 2 U
+FIXED [Artist, Cover] | Sin�ad O'Connor / I Do Not Want What I Haven't Got / Jump In The River  -->  Sinéad O'Connor / I Do Not Want What I Haven't Got / Jump In The River
+FIXED [Artist, Cover] | Sin�ad O'Connor / I Do Not Want What I Haven't Got / You Cause As Much Sorrow  -->  Sinéad O'Connor / I Do Not Want What I Haven't Got / You Cause As Much Sorrow
+FIXED [Artist, Cover] | Sin�ad O'Connor / I Do Not Want What I Haven't Got / The Last Day Of Our Acquaintan  -->  Sinéad O'Connor / I Do Not Want What I Haven't Got / The Last Day Of Our Acquaintan
+FIXED [Artist, Cover] | Sin�ad O'Connor / I Do Not Want What I Haven't Got / I Do Not Want What I Haven't Got  -->  Sinéad O'Connor / I Do Not Want What I Haven't Got / I Do Not Want What I Haven't Got
+FIXED [Title, Filename] | Sonic Youth / Dirty / Cr�me Br�l�e  -->  Sonic Youth / Dirty / Créme Brûlèe
+FIXED [Title, Filename] | Spirit / Twelve Dreams of Dr. Sardonicus / Prelude / Nothin� to Hide  -->  Spirit / Twelve Dreams of Dr. Sardonicus / Prelude   Nothin’ to Hide
+FIXED [Title, Filename] | Spirit / Twelve Dreams of Dr. Sardonicus / Nature�s Way  -->  Spirit / Twelve Dreams of Dr. Sardonicus / Nature’s Way
+FIXED [Title, Filename] | Spirit / Twelve Dreams of Dr. Sardonicus / Why Can�t I Be Free?  -->  Spirit / Twelve Dreams of Dr. Sardonicus / Why Can’t I Be Free 
+FIXED [Artist, Album, Cover] | Stan Getz/Jo�o Gilberto / Getz-Gilberto / The Girl From Ipanema  -->  Stan Getz João Gilberto / Getz Gilberto / The Girl From Ipanema
+FIXED [Artist, Album, Cover] | Stan Getz/Jo�o Gilberto / Getz-Gilberto / Doralice  -->  Stan Getz João Gilberto / Getz Gilberto / Doralice
+FIXED [Artist, Album, Title, Filename, Cover] | Stan Getz/Jo�o Gilberto / Getz-Gilberto / Pra Machucar Meu Cora��o  -->  Stan Getz João Gilberto / Getz Gilberto / Pra Machucar Meu Coração
+FIXED [Artist, Album, Cover] | Stan Getz/Jo�o Gilberto / Getz-Gilberto / Corcovado (Quiet Nights of Qui  -->  Stan Getz João Gilberto / Getz Gilberto / Corcovado (Quiet Nights of Qui
+FIXED [Artist, Album, Title, Filename, Cover] | Stan Getz/Jo�o Gilberto / Getz-Gilberto / So Dan�o Samba (I Only Dance S  -->  Stan Getz João Gilberto / Getz Gilberto / So Danço Samba (I Only Dance S
+FIXED [Artist, Album, Cover] | Stan Getz/Jo�o Gilberto / Getz-Gilberto / O Grande Amor  -->  Stan Getz João Gilberto / Getz Gilberto / O Grande Amor
+FIXED [Artist, Album, Cover] | Stan Getz/Jo�o Gilberto / Getz-Gilberto / Vivo Sonhando (Dreamer)  -->  Stan Getz João Gilberto / Getz Gilberto / Vivo Sonhando (Dreamer)
+FIXED [Artist, Album, Cover] | Stan Getz/Jo�o Gilberto / Getz-Gilberto / Garota de Ipanema  -->  Stan Getz João Gilberto / Getz Gilberto / Garota de Ipanema
+FIXED [Artist, Album, Cover] | Stan Getz/Jo�o Gilberto / Getz-Gilberto / Corcovado (Quiet Nights of Qui  -->  Stan Getz João Gilberto / Getz Gilberto / Corcovado (Quiet Nights of Qui
+FIXED [Album, Cover] | Steely Dan / Can�t Buy a Thrill / Do It Again  -->  Steely Dan / Can’t Buy a Thrill / Do It Again
+FIXED [Album, Cover] | Steely Dan / Can�t Buy a Thrill / Dirty Work  -->  Steely Dan / Can’t Buy a Thrill / Dirty Work
+FIXED [Album, Cover] | Steely Dan / Can�t Buy a Thrill / Kings  -->  Steely Dan / Can’t Buy a Thrill / Kings
+FIXED [Album, Cover] | Steely Dan / Can�t Buy a Thrill / Midnight Cruiser  -->  Steely Dan / Can’t Buy a Thrill / Midnight Cruiser
+FIXED [Album, Cover] | Steely Dan / Can�t Buy a Thrill / Only a Fool Would Say That  -->  Steely Dan / Can’t Buy a Thrill / Only a Fool Would Say That
+FIXED [Album, Title, Filename, Cover] | Steely Dan / Can�t Buy a Thrill / Reelin� In the Years  -->  Steely Dan / Can’t Buy a Thrill / Reelin’ In the Years
+FIXED [Album, Cover] | Steely Dan / Can�t Buy a Thrill / Fire in the Hole  -->  Steely Dan / Can’t Buy a Thrill / Fire in the Hole
+FIXED [Album, Cover] | Steely Dan / Can�t Buy a Thrill / Brooklyn (Owes the Charmer Under Me)  -->  Steely Dan / Can’t Buy a Thrill / Brooklyn (Owes the Charmer Under Me)
+FIXED [Album, Cover] | Steely Dan / Can�t Buy a Thrill / Change of the Guard  -->  Steely Dan / Can’t Buy a Thrill / Change of the Guard
+FIXED [Album, Cover] | Steely Dan / Can�t Buy a Thrill / Turn That Heartbeat Over Again  -->  Steely Dan / Can’t Buy a Thrill / Turn That Heartbeat Over Again
+FIXED [Title, Filename] | Suba / Sao Paulo Confessions / Voc� Gosta  -->  Suba / Sao Paulo Confessions / Você Gosta
+FIXED [Title, Filename] | Suba / Sao Paulo Confessions / Antrop�fagos  -->  Suba / Sao Paulo Confessions / Antropòfagos
+FIXED [Title, Filename] | Suba / Sao Paulo Confessions / Abra�o  -->  Suba / Sao Paulo Confessions / Abraço
+FIXED [Title, Filename] | The Arcade Fire / Funeral / Une Ann�e Sans Lumiere  -->  The Arcade Fire / Funeral / Une Année Sans Lumiere
+FIXED [Title, Filename] | The Bad Plus / Give / Cheney Pi�ata  -->  The Bad Plus / Give / Cheney Piñata
+FIXED [Title, Filename] | The Beatles / Beatles for Sale / I�m a Loser  -->  The Beatles / Beatles for Sale / I’m a Loser
+FIXED [Title, Filename] | The Beatles / Beatles for Sale / Baby�s in Black  -->  The Beatles / Beatles for Sale / Baby’s in Black
+FIXED [Title, Filename] | The Beatles / Beatles for Sale / I�ll Follow the Sun  -->  The Beatles / Beatles for Sale / I’ll Follow the Sun
+FIXED [Title, Filename] | The Beatles / Beatles for Sale / Honey Don�t  -->  The Beatles / Beatles for Sale / Honey Don’t
+FIXED [Title, Filename] | The Beatles / Beatles for Sale / I Don�t Want to Spoil the Party  -->  The Beatles / Beatles for Sale / I Don’t Want to Spoil the Party
+FIXED [Title, Filename] | The Beatles / Beatles for Sale / What You�re Doing  -->  The Beatles / Beatles for Sale / What You’re Doing
+FIXED [Title, Filename] | The Beatles / Beatles for Sale / Everybody�s Trying to Be My Baby  -->  The Beatles / Beatles for Sale / Everybody’s Trying to Be My Baby
+FIXED [Album, Title, Filename, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / Sgt. Pepper�s Lonely Hearts Club Band  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / Sgt. Pepper’s Lonely Hearts Club Band
+FIXED [Album, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / With a Little Help From My Friends  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / With a Little Help From My Friends
+FIXED [Album, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / Lucy in the Sky With Diamonds  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / Lucy in the Sky With Diamonds
+FIXED [Album, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / Getting Better  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / Getting Better
+FIXED [Album, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / Fixing a Hole  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / Fixing a Hole
+FIXED [Album, Title, Filename, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / She�s Leaving Home  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / She’s Leaving Home
+FIXED [Album, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / Being for the Benefit of Mr. Kite!  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / Being for the Benefit of Mr. Kite!
+FIXED [Album, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / Within You Without You  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / Within You Without You
+FIXED [Album, Title, Filename, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / When I�m Sixty-Four  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / When I’m Sixty‐Four
+FIXED [Album, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / Lovely Rita  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / Lovely Rita
+FIXED [Album, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / Good Morning Good Morning  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / Good Morning Good Morning
+FIXED [Album, Title, Filename, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / Sgt. Pepper�s Lonely Hearts Club Band (reprise)  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / Sgt. Pepper’s Lonely Hearts Club Band (reprise)
+FIXED [Album, Cover] | The Beatles / Sgt. Pepper�s Lonely Hearts Club Band / A Day in the Life  -->  The Beatles / Sgt. Pepper’s Lonely Hearts Club Band / A Day in the Life
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Up Against the Wall Motherfuckers  -->  The Icarus Line / Penance Soirée / Up Against the Wall Motherfuckers
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Spit on It  -->  The Icarus Line / Penance Soirée / Spit on It
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / On the Lash  -->  The Icarus Line / Penance Soirée / On the Lash
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Caviar  -->  The Icarus Line / Penance Soirée / Caviar
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Spike Island  -->  The Icarus Line / Penance Soirée / Spike Island
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Kiss Like Lizards  -->  The Icarus Line / Penance Soirée / Kiss Like Lizards
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Getting Bright at Night  -->  The Icarus Line / Penance Soirée / Getting Bright at Night
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Big Sleep  -->  The Icarus Line / Penance Soirée / Big Sleep
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / White Devil  -->  The Icarus Line / Penance Soirée / White Devil
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Meatmaker  -->  The Icarus Line / Penance Soirée / Meatmaker
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Virgin Velcro  -->  The Icarus Line / Penance Soirée / Virgin Velcro
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Sea Sick  -->  The Icarus Line / Penance Soirée / Sea Sick
+FIXED [Album, Cover] | The Icarus Line / Penance Soir�e / Party the Baby Off  -->  The Icarus Line / Penance Soirée / Party the Baby Off
+FIXED [Album, Cover] | The Incredible String Band / The Hangman�s Beautiful Daughter / Koeeoaddi There  -->  The Incredible String Band / The Hangman’s Beautiful Daughter / Koeeoaddi There
+FIXED [Album, Title, Filename, Cover] | The Incredible String Band / The Hangman�s Beautiful Daughter / The Minotaur�s Song  -->  The Incredible String Band / The Hangman’s Beautiful Daughter / The Minotaur’s Song
+FIXED [Album, Cover] | The Incredible String Band / The Hangman�s Beautiful Daughter / Witches Hat  -->  The Incredible String Band / The Hangman’s Beautiful Daughter / Witches Hat
+FIXED [Album, Cover] | The Incredible String Band / The Hangman�s Beautiful Daughter / A Very Cellular Song  -->  The Incredible String Band / The Hangman’s Beautiful Daughter / A Very Cellular Song
+FIXED [Album, Cover] | The Incredible String Band / The Hangman�s Beautiful Daughter / Mercy I Cry City  -->  The Incredible String Band / The Hangman’s Beautiful Daughter / Mercy I Cry City
+FIXED [Album, Cover] | The Incredible String Band / The Hangman�s Beautiful Daughter / Waltz of the New Moon  -->  The Incredible String Band / The Hangman’s Beautiful Daughter / Waltz of the New Moon
+FIXED [Album, Cover] | The Incredible String Band / The Hangman�s Beautiful Daughter / The Water Song  -->  The Incredible String Band / The Hangman’s Beautiful Daughter / The Water Song
+FIXED [Album, Cover] | The Incredible String Band / The Hangman�s Beautiful Daughter / Three Is a Green Crown  -->  The Incredible String Band / The Hangman’s Beautiful Daughter / Three Is a Green Crown
+FIXED [Album, Cover] | The Incredible String Band / The Hangman�s Beautiful Daughter / Swift as the Wind  -->  The Incredible String Band / The Hangman’s Beautiful Daughter / Swift as the Wind
+FIXED [Album, Cover] | The Incredible String Band / The Hangman�s Beautiful Daughter / Nightfall  -->  The Incredible String Band / The Hangman’s Beautiful Daughter / Nightfall
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / I Don�t Believe in the Sun  -->  The Magnetic Fields / 69 Love Songs / I Don’t Believe in the Sun
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / It�s a Crime  -->  The Magnetic Fields / 69 Love Songs / It’s a Crime
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / Time Enough for Rocking When We�re Old  -->  The Magnetic Fields / 69 Love Songs / Time Enough for Rocking When We’re Old
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / I�m Sorry I Love You  -->  The Magnetic Fields / 69 Love Songs / I’m Sorry I Love You
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / I Don�t Want to Get Over You  -->  The Magnetic Fields / 69 Love Songs / I Don’t Want to Get Over You
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / If You Don�t Cry  -->  The Magnetic Fields / 69 Love Songs / If You Don’t Cry
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / Let�s Pretend We�re Bunny Rabbits  -->  The Magnetic Fields / 69 Love Songs / Let’s Pretend We’re Bunny Rabbits
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / You�re My Only Home  -->  The Magnetic Fields / 69 Love Songs / You’re My Only Home
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / Wi� Nae Wee Bairn Ye�ll Me Beget  -->  The Magnetic Fields / 69 Love Songs / Wi’ Nae Wee Bairn Ye’ll Me Beget
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / I Can�t Touch You Anymore  -->  The Magnetic Fields / 69 Love Songs / I Can’t Touch You Anymore
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / A Pretty Girl Is Like�  -->  The Magnetic Fields / 69 Love Songs / A Pretty Girl Is Like…
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / The Night You Can�t Remember  -->  The Magnetic Fields / 69 Love Songs / The Night You Can’t Remember
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / Nothing Matters When We�re Dancing  -->  The Magnetic Fields / 69 Love Songs / Nothing Matters When We’re Dancing
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / Sweet-Lovin� Man  -->  The Magnetic Fields / 69 Love Songs / Sweet‐Lovin’ Man
+FIXED [Title, Filename] | The Magnetic Fields / 69 Love Songs / The Things We Did and Didn�t Do  -->  The Magnetic Fields / 69 Love Songs / The Things We Did and Didn’t Do
+FIXED [Title, Filename] | The Mars Volta / De-Loused In The Comatorium / Tira Me A Las Ara�as  -->  The Mars Volta / De-Loused In The Comatorium / Tira Me A Las Arañas
+FIXED [Title, Filename] | The Style Council / Cafe Bleu / Blue Caf�  -->  The Style Council / Cafe Bleu / Blue Café
+FIXED [Title, Filename] | The Temptations / Cloud Nine / Love Is a Hurtin� Thing  -->  The Temptations / Cloud Nine / Love Is a Hurtin’ Thing
+FIXED [Title, Filename] | The Temptations / Cloud Nine / I Need Your Lovin�  -->  The Temptations / Cloud Nine / I Need Your Lovin’
+FIXED [Title, Filename] | The Temptations / Cloud Nine / Don�t Let Him Take Your Love From Me  -->  The Temptations / Cloud Nine / Don’t Let Him Take Your Love From Me
+FIXED [Title, Filename] | The Temptations / Cloud Nine / Gonna Keep On Tryin� Till I Win Your Love  -->  The Temptations / Cloud Nine / Gonna Keep On Tryin’ Till I Win Your Love
+FIXED [Title, Filename] | The Velvet Underground / The Velvet Underground / I�m Set Free  -->  The Velvet Underground / The Velvet Underground / I’m Set Free
+FIXED [Title, Filename] | The Velvet Underground / The Velvet Underground / That�s the Story of My Life  -->  The Velvet Underground / The Velvet Underground / That’s the Story of My Life
+FIXED [Title, Filename] | The Young Rascals / Groovin / Sue�o  -->  The Young Rascals / Groovin / Sueño
+FIXED [Title, Filename] | Tom Tom Club / Tom Tom Club / L'�l�phant  -->  Tom Tom Club / Tom Tom Club / L'éléphant
+FIXED [Album] | Tool / �nima / stinkfist  -->  Tool / ænima / stinkfist
+FIXED [Album] | Tool / �nima / eulogy  -->  Tool / ænima / eulogy
+FIXED [Album] | Tool / �nima / h.  -->  Tool / ænima / h.
+FIXED [Album] | Tool / �nima / useful idiot  -->  Tool / ænima / useful idiot
+FIXED [Album] | Tool / �nima / forty six & 2  -->  Tool / ænima / forty six & 2
+FIXED [Album] | Tool / �nima / message to harry manback  -->  Tool / ænima / message to harry manback
+FIXED [Album, Cover] | U2 / All That You Can�t Leave Behind / Beautiful Day  -->  U2 / All That You Can’t Leave Behind / Beautiful Day
+FIXED [Album, Title, Filename, Cover] | U2 / All That You Can�t Leave Behind / Stuck in a Moment You Can�t Get Out Of  -->  U2 / All That You Can’t Leave Behind / Stuck in a Moment You Can’t Get Out Of
+FIXED [Album, Cover] | U2 / All That You Can�t Leave Behind / Elevation  -->  U2 / All That You Can’t Leave Behind / Elevation
+FIXED [Album, Cover] | U2 / All That You Can�t Leave Behind / Walk On  -->  U2 / All That You Can’t Leave Behind / Walk On
+FIXED [Album, Cover] | U2 / All That You Can�t Leave Behind / Kite  -->  U2 / All That You Can’t Leave Behind / Kite
+FIXED [Album, Cover] | U2 / All That You Can�t Leave Behind / In a Little While  -->  U2 / All That You Can’t Leave Behind / In a Little While
+FIXED [Album, Cover] | U2 / All That You Can�t Leave Behind / Wild Honey  -->  U2 / All That You Can’t Leave Behind / Wild Honey
+FIXED [Album, Cover] | U2 / All That You Can�t Leave Behind / Peace on Earth  -->  U2 / All That You Can’t Leave Behind / Peace on Earth
+FIXED [Album, Cover] | U2 / All That You Can�t Leave Behind / When I Look at the World  -->  U2 / All That You Can’t Leave Behind / When I Look at the World
+FIXED [Album, Cover] | U2 / All That You Can�t Leave Behind / New York  -->  U2 / All That You Can’t Leave Behind / New York
+FIXED [Album, Cover] | U2 / All That You Can�t Leave Behind / Grace  -->  U2 / All That You Can’t Leave Behind / Grace
+FIXED [Artist, Cover] | Willie Col�n & Rub�n Blades / Siembra / Plastico  -->  Willie Colón & Rubén Blades / Siembra / Plastico
+FIXED [Artist, Cover] | Willie Col�n & Rub�n Blades / Siembra / Buscando Guayaba  -->  Willie Colón & Rubén Blades / Siembra / Buscando Guayaba
+FIXED [Artist, Cover] | Willie Col�n & Rub�n Blades / Siembra / Pedro Navaja  -->  Willie Colón & Rubén Blades / Siembra / Pedro Navaja
+FIXED [Artist, Cover] | Willie Col�n & Rub�n Blades / Siembra / Maria Lionza  -->  Willie Colón & Rubén Blades / Siembra / Maria Lionza
+FIXED [Artist, Cover] | Willie Col�n & Rub�n Blades / Siembra / Ojos  -->  Willie Colón & Rubén Blades / Siembra / Ojos
+FIXED [Artist, Cover] | Willie Col�n & Rub�n Blades / Siembra / Dime  -->  Willie Colón & Rubén Blades / Siembra / Dime
+FIXED [Artist, Cover] | Willie Col�n & Rub�n Blades / Siembra / Siembra  -->  Willie Colón & Rubén Blades / Siembra / Siembra
+FIXED [Artist, Title, Filename, Cover] | X-Ray Spex / Germfree Adolescents / Let�s Submerge  -->  X‐Ray Spex / Germfree Adolescents / Let’s Submerge
+FIXED [Artist, Title, Filename, Cover] | X-Ray Spex / Germfree Adolescents / I Can�t Do Anything  -->  X‐Ray Spex / Germfree Adolescents / I Can’t Do Anything
+FIXED [Album, Title, Filename] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / J'y Suis Jamais All�  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / J'y Suis Jamais Allé
+FIXED [Album] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / Les Jours Tristes (Instrumental)  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / Les Jours Tristes (Instrumental)
+FIXED [Album, Title, Filename] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / La Valse d'Am�lie  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / La Valse d'Amélie
+FIXED [Album, Title, Filename] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / Comptine D'un Autre �t�: L'apr�s Midi  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / Comptine D'un Autre Été  L'après Midi
+FIXED [Album, Title, Filename] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / La Noy�e  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / La Noyée
+FIXED [Album, Title, Filename] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / L'autre Valse d'Am�lie  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / L'autre Valse d'Amélie
+FIXED [Album] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / Guilty  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / Guilty
+FIXED [Album] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / A Quai  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / A Quai
+FIXED [Album] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / Le Moulin  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / Le Moulin
+FIXED [Album] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / Pas Si Simple  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / Pas Si Simple
+FIXED [Album, Title, Filename] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / La Valse d'Am�lie (Version Orchestre)  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / La Valse d'Amélie (Version Orchestre)
+FIXED [Album] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / La Valse Des Vieux Os  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / La Valse Des Vieux Os
+FIXED [Album] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / La Dispute  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / La Dispute
+FIXED [Album, Title, Filename] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / Si Tu N'�tais Pas L� (Fr�bel)  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / Si Tu N'étais Pas Là (Frébel)
+FIXED [Album, Title, Filename] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / Soir De F�te  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / Soir De Fête
+FIXED [Album, Title, Filename] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / La Red�couverte  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / La Redécouverte
+FIXED [Album] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / Sur Le Fil  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / Sur Le Fil
+FIXED [Album] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / Le Banquet  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / Le Banquet
+FIXED [Album, Title, Filename] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / La Valse d'Am�lie (Version Piano)  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / La Valse d'Amélie (Version Piano)
+FIXED [Album] | Yann Tiersen / Le Fabuleux Destin d'Am�lie Poulain / La Valse Des Montres  -->  Yann Tiersen / Le Fabuleux Destin d'Amélie Poulain / La Valse Des Montres
+FIXED [Title, Filename] | Yes / Close to the Edge / Siberia (studio run-through of �Siberian Khatru�)  -->  Yes / Close to the Edge / Siberia (studio run‐through of “Siberian Khatru”)
+FIXED [Artist, Album, Title, Filename, Cover] | Youssou N�Dour / Immigr�s / Immigr�s / Bitim Rew  -->  Youssou N’Dour / Immigrés / Immigrés   Bitim Rew
+FIXED [Artist, Album, Cover] | Youssou N�Dour / Immigr�s / Pitche Mi  -->  Youssou N’Dour / Immigrés / Pitche Mi
+FIXED [Artist, Album, Cover] | Youssou N�Dour / Immigr�s / Taaw  -->  Youssou N’Dour / Immigrés / Taaw
+FIXED [Artist, Album, Cover] | Youssou N�Dour / Immigr�s / Badou  -->  Youssou N’Dour / Immigrés / Badou
+
+── Unresolved rows (left as-is — needs manual review, or is already unplayable regardless of encoding) ──
+UNRESOLVED ARTIST | Gling Gl� | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | Luktar-Gvendur | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | Kata Rokkar | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | Pabbi Minn | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | Brestir Og Brak | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | �start�frar | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | Bella S�mam�r | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | Litli T�nlistarmadurinn | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | �ad S�st Ekki S�tari Mey | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | B�lav�sur | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | Tondeleyo | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | �g Veit el Hvad Skal Segja | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | � Dansi Med ��r | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | B�rnin Vid Tj�rnina | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | Ruby Baby | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ARTIST | Can't Help Lovin' Dat Man | Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir | Gling-Gl�
+UNRESOLVED ALBUM | Fuga. Allegro | Johann Sebastian Bach | Sonata �1 in G-moll
+UNRESOLVED ALBUM | Round & Round (It Won�t Be Long) | Neil Young | Everybody Knows This Is Nowhere
+UNRESOLVED ALBUM | The Losing End (When You�re On) | Neil Young | Everybody Knows This Is Nowhere
+UNRESOLVED TITLE | The Girl From Ipanema (45 rpm | Stan Getz João Gilberto | Getz Gilberto
+UNRESOLVED ALBUM | Rue des Temp�tes | The Young Gods | L'Eau Rouge
+UNRESOLVED ALBUM | Ville N�tre | The Young Gods | L'Eau Rouge
+UNRESOLVED ALBUM | Complicaci�n | Tito Puente & His Orchestra | Dance Mania
+UNRESOLVED ALBUM | Lleg� Mij�n | Tito Puente & His Orchestra | Dance Mania
+UNRESOLVED ALBUM | Mambo goz�n | Tito Puente & His Orchestra | Dance Mania
+UNRESOLVED ALBUM | Mi chiquita quiere bemb� | Tito Puente & His Orchestra | Dance Mania

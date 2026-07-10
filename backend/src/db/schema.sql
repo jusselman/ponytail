@@ -64,13 +64,21 @@ CREATE TABLE playlists (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- NOTE: denormalized against seed_tracks (title, artist), not a tracks(id) FK — see
+-- migrations/002_playlist_tracks_denormalized.sql for why. seed_tracks is the app's
+-- real catalog right now and every other feature identifies a track by (title, artist).
 CREATE TABLE playlist_tracks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     playlist_id UUID NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
-    track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+    track_title VARCHAR(255) NOT NULL,
+    artist VARCHAR(255) NOT NULL,
+    album VARCHAR(255),
+    genre VARCHAR(100),
+    cover_url TEXT,
+    audio_url TEXT,
     position INT NOT NULL,
     added_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(playlist_id, track_id)
+    UNIQUE(playlist_id, track_title, artist)
 );
 
 CREATE TABLE follows (

@@ -220,6 +220,14 @@ export function PlayerProvider({ children }) {
     });
   }, []);
 
+  // ── Append tracks to the end of the existing queue without touching current
+  // playback (e.g. "Add to Queue" from a playlist) ──
+  const addTracksToQueue = useCallback((newTracks) => {
+    if (!newTracks || newTracks.length === 0) return;
+    const tagged = newTracks.map(t => ({ ...t, source: 'manual' }));
+    setQueue(prev => [...prev, ...tagged]);
+  }, []);
+
   const openPlayer = useCallback(() => setIsPlayerOpen(true), []);
   const closePlayer = useCallback(() => setIsPlayerOpen(false), []);
 
@@ -229,10 +237,12 @@ const playerValue = useMemo(() => ({
   isPlayerOpen, playHistory,
   audioRef, playTrack, playStandaloneTrack, togglePlay, nextTrack,
   prevTrack, openPlayer, closePlayer, seekTo, jumpToQueueIndex, reorderQueue,
+  addTracksToQueue,
 }), [
   currentTrack, isPlaying, queue, queueIndex,
   isPlayerOpen, playHistory, playTrack, playStandaloneTrack, togglePlay, nextTrack,
   prevTrack, openPlayer, closePlayer, seekTo, jumpToQueueIndex, reorderQueue,
+  addTracksToQueue,
 ]);
 
   // ── Fast-changing context: progress/currentTime/duration, isolated so only progress-bar consumers re-render on ticks ──

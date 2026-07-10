@@ -42,12 +42,22 @@ const MusicNoteIcon = () => (
   </svg>
 );
 
-const PlayingBars = () => (
-  <div style={{ display: "flex", gap: "2px", alignItems: "flex-end", height: "14px" }}>
-    {[0.4, 1, 0.6].map((h, i) => (
-      <div key={i} style={{
-        width: 2.5, height: `${h * 14}px`, backgroundColor: colors.teal, borderRadius: 1,
-      }} />
+// ─── Waveform Animation — same as HomeScreen.jsx's, self-contained via the
+// @keyframes wave rule declared in this component's own <style> block below ──
+const WaveformIcon = ({ playing }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: "2px", height: "16px" }}>
+    {[1, 2, 3, 4, 5].map((i) => (
+      <div
+        key={i}
+        style={{
+          width: "2px",
+          borderRadius: "2px",
+          backgroundColor: colors.teal,
+          animation: playing ? `wave ${0.4 + i * 0.1}s ease-in-out infinite alternate` : "none",
+          height: playing ? "100%" : "4px",
+          transition: "height 0.2s ease",
+        }}
+      />
     ))}
   </div>
 );
@@ -64,7 +74,7 @@ const DragHandle = () => (
 );
 
 // ─── Queue Track Row content (drag wiring is applied by SortableRow) ──
-const QueueTrackRow = ({ track, isActive, onTap, isBeingDragged }) => (
+const QueueTrackRow = ({ track, isActive, isPlaying = false, onTap, isBeingDragged }) => (
   <div
     onClick={onTap}
     style={{
@@ -103,7 +113,7 @@ const QueueTrackRow = ({ track, isActive, onTap, isBeingDragged }) => (
         {track.artist}
       </div>
     </div>
-    {isActive && <PlayingBars />}
+    {isActive && <WaveformIcon playing={isPlaying} />}
     <DragHandle />
   </div>
 );
@@ -216,6 +226,10 @@ function QueuePanel({ isOpen, onClose }) {
           from { transform: translateY(0); opacity: 1; }
           to { transform: translateY(-100%); opacity: 0; }
         }
+        @keyframes wave {
+          from { transform: scaleY(0.3); }
+          to { transform: scaleY(1); }
+        }
       `}</style>
 
       {/* Backdrop */}
@@ -286,7 +300,7 @@ function QueuePanel({ isOpen, onClose }) {
                     animation: outgoingTrack ? "slideUpIn 0.35s cubic-bezier(0.32, 0.72, 0, 1)" : "none",
                   }}
                 >
-                  <QueueTrackRow track={currentTrack} isActive={true} onTap={() => {}} />
+                  <QueueTrackRow track={currentTrack} isActive={true} isPlaying={isPlaying} onTap={() => {}} />
                 </div>
               )}
             </div>

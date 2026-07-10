@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { getMe } from '../services/authService';
+import { getMyPlaylists } from '../services/playlistService';
 import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
+import PlaylistPanel from '../components/PlaylistPanel';
 import { usePlayer } from '../context/PlayerContext';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
@@ -23,13 +25,22 @@ const colors = {
   gold: "#f5cf00",
 };
 
-// ─── Mock user playlists — hardcoded for now, same shape as ProfilePanel's MOCK_PLAYLISTS ──
-const MOCK_USER_PLAYLISTS = [
-  { id: "pl1", name: "Late Night Drives", tracks: 24, hue: 220 },
-  { id: "pl2", name: "Morning Jazz", tracks: 18, hue: 40 },
-  { id: "pl3", name: "Focus Mode", tracks: 31, hue: 160 },
-  { id: "pl4", name: "Weekend Vibes", tracks: 12, hue: 300 },
-];
+// ─── Derive a stable hue for a playlist's gradient art from its id/title ──
+const hueFromString = (str) => {
+  if (!str) return 200;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return Math.abs(hash) % 360;
+};
+
+// ─── Map a playlist row from the API into the shape PlaylistCard expects ──
+const mapPlaylist = (playlist) => ({
+  id: playlist.id,
+  name: playlist.title,
+  tracks: playlist.track_count ?? 0,
+  hue: hueFromString(playlist.id || playlist.title),
+  coverUrl: playlist.cover_art_url || null,
+});
 
 // ─── Album Card ───────────────────────────────────────────────────────────────
 const AlbumCard = ({ track, onPlay, size = 120, currentTrack, isPlaying }) => {
@@ -136,12 +147,13 @@ const AlbumCard = ({ track, onPlay, size = 120, currentTrack, isPlaying }) => {
 };
 
 // ─── Playlist Card — same visual language as AlbumCard, but title/track-count instead of title/artist ──
-const PlaylistCard = ({ playlist, onPlay, size = 120 }) => {
+const PlaylistCard = ({ playlist, onTap, size = 120 }) => {
   const [hovered, setHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div
-      onClick={() => onPlay(playlist)}
+      onClick={() => onTap(playlist)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -162,42 +174,29 @@ const PlaylistCard = ({ playlist, onPlay, size = 120 }) => {
         transition: "box-shadow 0.2s ease",
         position: "relative",
       }}>
-        <div style={{
-          width: "100%", height: "100%",
-          background: `linear-gradient(135deg, hsl(${playlist.hue}, 50%, 30%), hsl(${playlist.hue + 40}, 40%, 20%))`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-            <path d="M9 18V6l12-2v12" stroke={colors.teal} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="6" cy="18" r="3" stroke={colors.teal} strokeWidth="1.5" />
-            <circle cx="18" cy="16" r="3" stroke={colors.teal} strokeWidth="1.5" />
-          </svg>
-        </div>
-
-        {hovered && (
+        {playlist.coverUrl && !imgError ? (
+          <img
+            src={playlist.coverUrl}
+            alt={playlist.name}
+            onError={() => setImgError(true)}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
           <div style={{
-            position: "absolute", inset: 0,
-            backgroundColor: "rgba(0,0,0,0.4)",
+            width: "100%", height: "100%",
+            background: `linear-gradient(135deg, hsl(${playlist.hue}, 50%, 30%), hsl(${playlist.hue + 40}, 40%, 20%))`,
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: "50%",
-              backgroundColor: colors.teal,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <div style={{
-                width: 0, height: 0,
-                borderTop: "7px solid transparent",
-                borderBottom: "7px solid transparent",
-                borderLeft: "12px solid #1a1a1a",
-                marginLeft: 3,
-              }} />
-            </div>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18V6l12-2v12" stroke={colors.teal} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="6" cy="18" r="3" stroke={colors.teal} strokeWidth="1.5" />
+              <circle cx="18" cy="16" r="3" stroke={colors.teal} strokeWidth="1.5" />
+            </svg>
           </div>
         )}
       </div>
 
-      {/* Playlist info */}
+      {/* Playlist info — tapping opens the playlist panel, so no play affordance here */}
       <div style={{
         fontSize: "12px", fontWeight: "600", color: colors.text,
         fontFamily: "'Kanit', sans-serif",
@@ -217,21 +216,43 @@ const PlaylistCard = ({ playlist, onPlay, size = 120 }) => {
   );
 };
 
-// ─── Section Header ───────────────────────────────────────────────────────────
-const SectionHeader = ({ title, subtitle, index = 0 }) => (
+// ─── Section Header — optional `action` renders on the right (e.g. "+ New") ──
+const SectionHeader = ({ title, subtitle, index = 0, action }) => (
   <div style={{
     marginBottom: "14px",
+    display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
     animation: `fadeSlideUp 0.4s ease ${index * 0.1}s forwards`,
     opacity: 0,
   }}>
-    <div style={{ fontSize: "16px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.2px" }}>
-      {title}
-    </div>
-    {subtitle && (
-      <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
-        {subtitle}
+    <div style={{ minWidth: 0 }}>
+      <div style={{ fontSize: "16px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.2px" }}>
+        {title}
       </div>
-    )}
+      {subtitle && (
+        <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
+          {subtitle}
+        </div>
+      )}
+    </div>
+    {action}
+  </div>
+);
+
+// ─── "+ New" pill — used to open the playlist creation panel ──────────────────
+const NewPlaylistButton = ({ onPress }) => (
+  <div
+    onClick={onPress}
+    style={{
+      display: "flex", alignItems: "center", gap: "4px", flexShrink: 0,
+      cursor: "pointer", padding: "5px 10px",
+      borderRadius: "20px", border: `1px solid ${colors.teal}`,
+      backgroundColor: colors.tealGlow,
+    }}
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path d="M12 5v14M5 12h14" stroke={colors.teal} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+    <span style={{ fontSize: "11px", fontWeight: "600", color: colors.teal, fontFamily: "'Kanit', sans-serif" }}>New</span>
   </div>
 );
 
@@ -273,7 +294,10 @@ export default function MyMusicScreen({ setScreen }) {
   const [activeNav, setActiveNav] = useState("mymusic");
   const [loadingSuggested, setLoadingSuggested] = useState(true);
   const [loadingNew, setLoadingNew] = useState(true);
-  const [playlists, setPlaylists] = useState(MOCK_USER_PLAYLISTS);
+  const [playlists, setPlaylists] = useState([]);
+  const [loadingPlaylists, setLoadingPlaylists] = useState(true);
+  const [isPlaylistPanelOpen, setIsPlaylistPanelOpen] = useState(false);
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
 
   const { playTrack, playHistory, currentTrack, isPlaying } = usePlayer();
   const [frozenHistory, setFrozenHistory] = useState([]);
@@ -293,6 +317,24 @@ export default function MyMusicScreen({ setScreen }) {
       }
     };
     loadUser();
+  }, []);
+
+  // ── Fetch the user's real playlists — on mount, and again whenever the playlist
+  // panel closes, so track counts/covers stay current after editing ──
+  const fetchPlaylists = async () => {
+    setLoadingPlaylists(true);
+    try {
+      const data = await getMyPlaylists();
+      setPlaylists((data || []).map(mapPlaylist));
+    } catch (err) {
+      console.log('Failed to fetch playlists:', err);
+    } finally {
+      setLoadingPlaylists(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlaylists();
   }, []);
 
   // ── Fetch suggested tracks once on mount ──
@@ -339,9 +381,21 @@ useEffect(() => {
     );
   };
 
-  // ── Placeholder — will open the playlist detail view once that exists ──
+  // ── Tapping a playlist opens the panel straight into search-and-build mode ──
   const handlePlaylistTap = (playlist) => {
-    console.log('Playlist tapped:', playlist.name);
+    setSelectedPlaylist(playlist);
+    setIsPlaylistPanelOpen(true);
+  };
+
+  const handleNewPlaylist = () => {
+    setSelectedPlaylist(null);
+    setIsPlaylistPanelOpen(true);
+  };
+
+  const handleClosePlaylistPanel = () => {
+    setIsPlaylistPanelOpen(false);
+    setSelectedPlaylist(null);
+    fetchPlaylists(); // pick up any track/count/cover changes made while the panel was open
   };
 
   return (
@@ -386,13 +440,14 @@ useEffect(() => {
               title="Your Playlists"
               subtitle={playlists.length === 0 ? null : `${playlists.length} playlist${playlists.length === 1 ? '' : 's'}`}
               index={0}
+              action={<NewPlaylistButton onPress={handleNewPlaylist} />}
             />
             <ScrollRow
-              items={playlists}
+              items={loadingPlaylists ? [] : playlists}
               renderItem={(playlist, i) => (
-                <PlaylistCard key={playlist.id} playlist={playlist} onPlay={handlePlaylistTap} />
+                <PlaylistCard key={playlist.id} playlist={playlist} onTap={handlePlaylistTap} />
               )}
-              emptyMessage="Create a playlist to see it here"
+              emptyMessage={loadingPlaylists ? "Loading..." : "Create a playlist to see it here"}
               index={0}
             />
 
@@ -462,6 +517,14 @@ useEffect(() => {
 
            {/* ── Profile Panel ── */}
            <ProfilePanel />
+
+          {/* ── Playlist Creation / Build Panel ── */}
+          <PlaylistPanel
+            isOpen={isPlaylistPanelOpen}
+            playlist={selectedPlaylist}
+            onClose={handleClosePlaylistPanel}
+            onCreated={(playlist) => setPlaylists(prev => [mapPlaylist(playlist), ...prev])}
+          />
 
         </div>
       </div>

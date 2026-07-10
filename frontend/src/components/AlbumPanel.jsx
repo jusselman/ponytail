@@ -34,6 +34,12 @@ const MusicNoteIcon = ({ size = 64 }) => (
   </svg>
 );
 
+const AddIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <path d="M12 5v14M5 12h14" stroke={colors.teal} strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
 // ─── Format seconds as m:ss ───────────────────────────────────────────────────
 const formatLength = (seconds) => {
   if (!seconds) return "--:--";
@@ -42,8 +48,9 @@ const formatLength = (seconds) => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
-// ─── Track Row ────────────────────────────────────────────────────────────────
-const TrackRow = ({ track, index, onPlay, currentTrack, isPlaying }) => {
+// ─── Track Row — `onAdd`, if provided, shows a small teal Add button so the row can
+// also be used to add a track to a playlist (opt-in; unused consumers see no change) ──
+const TrackRow = ({ track, index, onPlay, currentTrack, isPlaying, onAdd }) => {
   const [hovered, setHovered] = useState(false);
   const isActive = currentTrack?.title === track.title && currentTrack?.album === track.albumName;
   const showPause = isActive && isPlaying;
@@ -92,12 +99,25 @@ const TrackRow = ({ track, index, onPlay, currentTrack, isPlaying }) => {
       <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif", flexShrink: 0 }}>
         {formatLength(track.lengthSeconds)}
       </div>
+      {onAdd && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onAdd(); }}
+          style={{
+            marginLeft: "4px", width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+            border: `1.5px solid ${colors.teal}`, backgroundColor: colors.tealGlow,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+          }}
+        >
+          <AddIcon />
+        </button>
+      )}
     </div>
   );
 };
 
 // ─── Album Panel ──────────────────────────────────────────────────────────────
-export default function AlbumPanel({ artistName, albumName, isOpen, onClose, onArtistTap, zIndexOverride }) {
+export default function AlbumPanel({ artistName, albumName, isOpen, onClose, onArtistTap, zIndexOverride, onAddTrack }) {
   const [animateIn, setAnimateIn] = useState(false);
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -253,6 +273,14 @@ export default function AlbumPanel({ artistName, albumName, isOpen, onClose, onA
                 onPlay={handlePlayTrack}
                 currentTrack={currentTrack}
                 isPlaying={isPlaying}
+                onAdd={onAddTrack ? () => onAddTrack({
+                  title: track.title,
+                  artist: artistName,
+                  album: detail.album,
+                  genre: detail.genre,
+                  coverUrl: track.coverUrl,
+                  audioUrl: track.audioUrl,
+                }) : undefined}
               />
             ))}
           </div>
