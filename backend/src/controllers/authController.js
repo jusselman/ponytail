@@ -75,7 +75,10 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, email, username, display_name, favorite_artists, profile_picture FROM users WHERE id = $1',
+      `SELECT id, email, username, display_name, favorite_artists, profile_picture,
+              (SELECT COUNT(*)::int FROM user_follows WHERE followed_id = users.id) AS followers_count,
+              (SELECT COUNT(*)::int FROM user_follows WHERE follower_id = users.id) AS following_count
+       FROM users WHERE id = $1`,
       [req.user.id]
     );
     res.json(result.rows[0]);

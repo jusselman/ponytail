@@ -110,6 +110,8 @@ export function PlayerProvider({ children }) {
         const filtered = prev.filter(t => `${t.title}|${t.artist}` !== `${track.title}|${track.artist}`);
         return [track, ...filtered].slice(0, 20);
       });
+      recordPlayHistory(track); // ← persists to the backend so "Recently Played" survives a reload
+
       return { ...track, source: 'manual' };
     });
   }, []);
@@ -195,11 +197,17 @@ export function PlayerProvider({ children }) {
   const jumpToQueueIndex = useCallback((index) => {
     setQueue(currentQueue => {
       if (index < 0 || index >= currentQueue.length) return currentQueue;
+      const track = currentQueue[index];
       setQueueIndex(index);
-      setCurrentTrack(currentQueue[index]);
+      setCurrentTrack(track);
       setIsPlaying(true);
       setProgress(0);
       setCurrentTime(0);
+      setPlayHistory(prev => {
+        const filtered = prev.filter(t => `${t.title}|${t.artist}` !== `${track.title}|${track.artist}`);
+        return [track, ...filtered].slice(0, 20);
+      });
+      recordPlayHistory(track); // ← a deliberate tap-to-jump in the queue counts as "playing" a track
       ensureQueueDepth(currentQueue, index);
       return currentQueue;
     });

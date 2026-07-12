@@ -7,6 +7,7 @@ import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 import { usePlayer } from '../context/PlayerContext';
 import ProfilePanel from '../components/ProfilePanel';
+import UserProfilePanel from '../components/UserProfilePanel';
 import FullPlayer from '../components/FullPlayer';
 import ArtistPanel from '../components/ArtistPanel';
 import AlbumPanel from '../components/AlbumPanel';
@@ -131,7 +132,7 @@ const XIcon = ({ size = 28, color = "#ff4444" }) => (
 );
 
 // ─── Standard Search Tab ──────────────────────────────────────────────────────
-const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onToggleGenre }) => {
+const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGenres, onToggleGenre }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -154,6 +155,7 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onTogg
       genre: r.genre,
       artist: r.artist_name,
       album: r.album,
+      username: r.username || null,
       coverUrl: r.coverUrl || null,
       audioUrl: r.audioUrl || null,
     }));
@@ -253,12 +255,14 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onTogg
             onArtistTap(result.name);
           } else if (result.type === "album") {
             onAlbumTap({ artist: result.artist, album: result.name });
+          } else if (result.type === "musician" || result.type === "user") {
+            onUserTap(result.username);
           }
         }}
               style={{
                 display: "flex", alignItems: "center", gap: "12px",
                 padding: "10px 0", borderBottom: `1px solid ${colors.border}`,
-                cursor: result.type === "track" ? "pointer" : "default",
+                cursor: "pointer",
               }}
             >
               <Avatar name={result.name} size={38} coverUrl={result.coverUrl} />
@@ -269,6 +273,10 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, selectedGenres, onTogg
                 <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
                   {result.type === "track"
                     ? `${result.artist ? `by ${result.artist}` : ""}${result.album ? ` · ${result.album}` : ""}`
+                    : result.type === "musician"
+                    ? "Musician"
+                    : result.type === "user"
+                    ? "Ponytail user"
                     : result.genre}
                 </div>
               </div>
@@ -804,7 +812,7 @@ export default function SearchScreen({ setScreen }) {
   const [activeTab, setActiveTab] = useState("search");
   const [user, setUser] = useState(null);
   const [activeNav, setActiveNav] = useState("search");
-  const { openProfile, profileImage } = useUI();
+  const { openProfile, openUserProfile, profileImage } = useUI();
   const { isPlayerOpen, isPlaying, togglePlay } = usePlayer();
   const [panelStack, setPanelStack] = useState([]); 
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -832,6 +840,16 @@ export default function SearchScreen({ setScreen }) {
 
   const closeTopPanel = () => {
     setPanelStack(prev => prev.slice(0, -1));
+  };
+
+  // ── Tapping a musician/person result opens their public profile — unless it's
+  // you, in which case open the real (editable) profile instead ──
+  const handleUserTap = (username) => {
+    if (user?.username && username === user.username) {
+      openProfile();
+    } else {
+      openUserProfile(username);
+    }
   };
 
   useEffect(() => {
@@ -960,6 +978,7 @@ export default function SearchScreen({ setScreen }) {
               user={user}
               onArtistTap={openArtist}
               onAlbumTap={(albumObj) => openAlbum(albumObj.artist, albumObj.album)}
+              onUserTap={handleUserTap}
               selectedGenres={selectedGenres}
               onToggleGenre={(genre) => {
                 setSelectedGenres(prev => {
@@ -993,6 +1012,9 @@ export default function SearchScreen({ setScreen }) {
 
           {/* ── Profile Panel ── */}
           <ProfilePanel />
+
+          {/* ── Another user's public profile ── */}
+          <UserProfilePanel />
 
           {/* ── Artist Panel & Album Panel ── */}
           {panelStack.map((panel, index) => {

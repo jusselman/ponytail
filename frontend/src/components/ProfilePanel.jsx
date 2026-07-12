@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { getMe } from '../services/authService';
+import { getMyPlaylists } from '../services/playlistService';
 import { useUI } from '../context/UIContext';
 import SettingsPanel from './SettingsPanel';
+import PlaylistPanel from './PlaylistPanel';
 
 
 const colors = {
@@ -39,30 +41,24 @@ const CameraIcon = () => (
 );
 
 const MusicNoteIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
     <path d="M9 18V6l12-2v12" stroke={colors.muted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     <circle cx="6" cy="18" r="3" stroke={colors.muted} strokeWidth="1.8" />
     <circle cx="18" cy="16" r="3" stroke={colors.muted} strokeWidth="1.8" />
   </svg>
 );
 
-const PlusIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-    <path d="M12 5v14M5 12h14" stroke={colors.teal} strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
-
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 const Avatar = ({ name, size = 80 }) => {
-  const initials = name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
-  const hue = name.charCodeAt(0) * 37 % 360;
+  const initials = (name || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+  const hue = (name || "?").charCodeAt(0) * 37 % 360;
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
       background: `linear-gradient(135deg, hsl(${hue}, 60%, 45%), hsl(${hue + 40}, 70%, 35%))`,
       display: "flex", alignItems: "center", justifyContent: "center",
       fontSize: size * 0.35, fontWeight: "700", color: "#fff",
-      fontFamily: "'Kanit', sans-serif",
+      fontFamily: "'Kanit', sans-serif", flexShrink: 0,
     }}>
       {initials}
     </div>
@@ -81,54 +77,177 @@ const StatBlock = ({ value, label }) => (
   </div>
 );
 
-// ─── Playlist Card ────────────────────────────────────────────────────────────
-const PlaylistCard = ({ playlist, index }) => {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "flex", alignItems: "center", gap: "12px",
-        padding: "10px 0",
-        borderBottom: `1px solid ${colors.border}`,
-        cursor: "pointer", transition: "opacity 0.2s ease",
-        opacity: hovered ? 0.75 : 1,
-      }}
-    >
+// ─── Section header — plain title + optional subtitle, no action (rows below are either
+// real data or explicitly-mocked placeholders, so there's nothing to trigger from here) ──
+const SectionHeader = ({ title, subtitle }) => (
+  <div style={{ marginBottom: "10px" }}>
+    <div style={{ fontSize: "11px", fontWeight: "600", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase" }}>
+      {title}
+    </div>
+    {subtitle && (
+      <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
+        {subtitle}
+      </div>
+    )}
+  </div>
+);
+
+// ─── Horizontal scroll row — shared by all four rows below ──
+const ScrollRow = ({ items, renderItem, emptyMessage }) => {
+  if (!items || items.length === 0) {
+    return (
       <div style={{
-        width: 48, height: 48, borderRadius: "8px", flexShrink: 0,
-        background: `linear-gradient(135deg, hsl(${playlist.hue}, 45%, 28%), hsl(${playlist.hue + 40}, 35%, 20%))`,
-        display: "flex", alignItems: "center", justifyContent: "center",
+        height: "110px", display: "flex", alignItems: "center", justifyContent: "center",
+        backgroundColor: colors.bgCard, borderRadius: "12px", marginBottom: "24px",
       }}>
-        <MusicNoteIcon />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {playlist.name}
-        </div>
-        <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
-          {playlist.tracks} tracks · {playlist.updated}
+        <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center", padding: "0 20px" }}>
+          {emptyMessage}
         </div>
       </div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-        <path d="M9 18l6-6-6-6" stroke={colors.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+    );
+  }
+
+  return (
+    <div style={{
+      display: "flex", gap: "14px",
+      overflowX: "auto", paddingBottom: "8px",
+      marginBottom: "24px",
+      scrollbarWidth: "none",
+    }}>
+      {items.map((item, i) => renderItem(item, i))}
     </div>
   );
 };
 
-// ─── Mock playlists ───────────────────────────────────────────────────────────
-const MOCK_PLAYLISTS = [
-  { id: "pl1", name: "Late Night Drives", tracks: 24, updated: "2 days ago", hue: 220 },
-  { id: "pl2", name: "Morning Jazz", tracks: 18, updated: "1 week ago", hue: 40 },
-  { id: "pl3", name: "Focus Mode", tracks: 31, updated: "3 days ago", hue: 160 },
-  { id: "pl4", name: "Weekend Vibes", tracks: 12, updated: "2 weeks ago", hue: 300 },
+// ─── Playlist tile — square cover art (real or gradient fallback) + name + subtitle.
+// Used for both the user's own playlists and the mocked "playlists you follow" row.
+// `onTap`, if provided, makes the tile clickable (only the user's real playlists are
+// wired up — the mocked follow rows stay inert since that functionality doesn't exist yet). ──
+const PlaylistTile = ({ playlist, subtitle, size = 110, onTap }) => {
+  const [imgError, setImgError] = useState(false);
+  return (
+    <div
+      onClick={onTap ? () => onTap(playlist) : undefined}
+      style={{ flexShrink: 0, width: size, cursor: onTap ? "pointer" : "default" }}
+    >
+      <div style={{
+        width: size, height: size,
+        borderRadius: "10px", overflow: "hidden",
+        backgroundColor: colors.bgCard,
+        marginBottom: "8px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+      }}>
+        {playlist.coverUrl && !imgError ? (
+          <img
+            src={playlist.coverUrl}
+            alt={playlist.name}
+            onError={() => setImgError(true)}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <div style={{
+            width: "100%", height: "100%",
+            background: `linear-gradient(135deg, hsl(${playlist.hue}, 45%, 28%), hsl(${playlist.hue + 40}, 35%, 20%))`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <MusicNoteIcon />
+          </div>
+        )}
+      </div>
+      <div style={{
+        fontSize: "12px", fontWeight: "600", color: colors.text,
+        fontFamily: "'Kanit', sans-serif",
+        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+        marginBottom: "2px",
+      }}>
+        {playlist.name}
+      </div>
+      <div style={{
+        fontSize: "11px", color: colors.muted,
+        fontFamily: "'Kanit', sans-serif",
+        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+      }}>
+        {subtitle}
+      </div>
+    </div>
+  );
+};
+
+// ─── Person tile — circular avatar + name + optional secondary line.
+// Used for both the mocked "musicians you follow" and "people you follow" rows. ──
+const PersonTile = ({ name, subtitle, size = 72 }) => (
+  <div style={{ flexShrink: 0, width: size + 16, textAlign: "center" }}>
+    <div style={{ marginBottom: "8px", display: "flex", justifyContent: "center" }}>
+      <Avatar name={name} size={size} />
+    </div>
+    <div style={{
+      fontSize: "12px", fontWeight: "600", color: colors.text,
+      fontFamily: "'Kanit', sans-serif",
+      whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+      marginBottom: "2px",
+    }}>
+      {name}
+    </div>
+    {subtitle && (
+      <div style={{
+        fontSize: "10px", color: colors.muted,
+        fontFamily: "'Kanit', sans-serif",
+        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+      }}>
+        {subtitle}
+      </div>
+    )}
+  </div>
+);
+
+// ─── Derive a stable hue from any string (playlist id/title) for the gradient fallback ──
+const hueFromString = (str) => {
+  if (!str) return 200;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return Math.abs(hash) % 360;
+};
+
+// ─── Map a playlist row from the API into the shape PlaylistTile expects — same
+// mapping MyMusicScreen.jsx uses, kept in sync with it ──
+const mapPlaylist = (playlist) => ({
+  id: playlist.id,
+  name: playlist.title,
+  tracks: playlist.track_count ?? 0,
+  hue: hueFromString(playlist.id || playlist.title),
+  coverUrl: playlist.cover_art_url || null,
+});
+
+// ─── Mock data — playlists, musicians, and other users you follow. None of this is
+// wired to a real backend yet since following isn't built; these rows exist purely
+// to show the intended layout and will be swapped for real data later. ──
+const MOCK_FOLLOWED_PLAYLISTS = [
+  { id: "fpl1", name: "Sunday Coffee", creator: "mara_j", tracks: 19, hue: 190 },
+  { id: "fpl2", name: "Gym Pump", creator: "dtrain", tracks: 27, hue: 10 },
+  { id: "fpl3", name: "Rainy Day Jazz", creator: "coltraner", tracks: 14, hue: 260 },
+  { id: "fpl4", name: "Road Trip 2025", creator: "wanderlust", tracks: 42, hue: 90 },
+];
+
+const MOCK_FOLLOWED_ARTISTS = [
+  { id: "art1", name: "Nova Reyes", genre: "Indie Pop" },
+  { id: "art2", name: "The Low Keys", genre: "Jazz" },
+  { id: "art3", name: "Marcus Lane", genre: "R&B" },
+  { id: "art4", name: "Echo Bloom", genre: "Electronic" },
+];
+
+const MOCK_FOLLOWED_USERS = [
+  { id: "usr1", name: "Priya S" },
+  { id: "usr2", name: "Jordan K" },
+  { id: "usr3", name: "Aiko T" },
+  { id: "usr4", name: "Devon M" },
 ];
 
 // ─── Profile Panel ────────────────────────────────────────────────────────────
 export default function ProfilePanel() {
   const { isProfileOpen, closeProfile, openSettings, profileImage, setProfileImage, user, setUser } = useUI();
+  const [playlists, setPlaylists] = useState([]);
+  const [isPlaylistPanelOpen, setIsPlaylistPanelOpen] = useState(false);
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
 
  useEffect(() => {
   const loadUser = async () => {
@@ -144,6 +263,35 @@ export default function ProfilePanel() {
   };
   loadUser();
 }, []);
+
+  // ── Fetch the user's real playlists so the stat and the row above reflect actual data.
+  // Extracted so it can also be re-run after the playlist panel closes, picking up any
+  // track/cover edits made while it was open — same pattern as MyMusicScreen.jsx. ──
+  const fetchPlaylists = async () => {
+    try {
+      const data = await getMyPlaylists();
+      setPlaylists((data || []).map(mapPlaylist));
+    } catch (err) {
+      console.log('Failed to fetch playlists:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlaylists();
+  }, []);
+
+  // ── Tapping one of the user's own playlists opens the same build-mode panel used in
+  // My Music ──
+  const handlePlaylistTap = (playlist) => {
+    setSelectedPlaylist(playlist);
+    setIsPlaylistPanelOpen(true);
+  };
+
+  const handleClosePlaylistPanel = () => {
+    setIsPlaylistPanelOpen(false);
+    setSelectedPlaylist(null);
+    fetchPlaylists();
+  };
 
 const fileInputRef = useRef(null);
 
@@ -264,9 +412,9 @@ const handleImageChange = async (e) => {
                 {user?.username || ""}
               </div>
               <div style={{ display: "flex", gap: "20px" }}>
-                <StatBlock value="0" label="Followers" />
-                <StatBlock value="0" label="Following" />
-                <StatBlock value={MOCK_PLAYLISTS.length} label="Playlists" />
+                <StatBlock value={user?.followers_count ?? 0} label="Followers" />
+                <StatBlock value={user?.following_count ?? 0} label="Following" />
+                <StatBlock value={playlists.length} label="Playlists" />
               </div>
             </div>
           </div>
@@ -292,41 +440,69 @@ const handleImageChange = async (e) => {
             </div>
           )}
 
-          {/* ── Playlists ── */}
-          <div style={{ marginBottom: "24px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-              <div style={{ fontSize: "11px", fontWeight: "600", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase" }}>
-                Playlists
-              </div>
-              <div style={{
-                display: "flex", alignItems: "center", gap: "4px",
-                cursor: "pointer", padding: "4px 8px",
-                borderRadius: "20px", border: `1px solid ${colors.teal}`,
-                backgroundColor: colors.tealGlow,
-              }}>
-                <PlusIcon />
-                <span style={{ fontSize: "11px", fontWeight: "600", color: colors.teal, fontFamily: "'Kanit', sans-serif" }}>New</span>
-              </div>
-            </div>
+          {/* ── Your Playlists — real data, row layout, no add action (creating a
+          playlist already lives in My Music) ── */}
+          <SectionHeader title="Your Playlists" />
+          <ScrollRow
+            items={playlists}
+            renderItem={(playlist) => (
+              <PlaylistTile
+                key={playlist.id}
+                playlist={playlist}
+                subtitle={`${playlist.tracks} track${playlist.tracks === 1 ? '' : 's'}`}
+                onTap={handlePlaylistTap}
+              />
+            )}
+            emptyMessage="Create a playlist in My Music to see it here"
+          />
 
-            {MOCK_PLAYLISTS.map((playlist, i) => (
-              <PlaylistCard key={playlist.id} playlist={playlist} index={i} />
-            ))}
+          {/* ── Playlists You Follow — mocked, following isn't built yet ── */}
+          <SectionHeader title="Playlists You Follow" />
+          <ScrollRow
+            items={MOCK_FOLLOWED_PLAYLISTS}
+            renderItem={(playlist) => (
+              <PlaylistTile
+                key={playlist.id}
+                playlist={playlist}
+                subtitle={`by ${playlist.creator}`}
+              />
+            )}
+            emptyMessage="Playlists you follow will appear here"
+          />
 
-            <div style={{
-              textAlign: "center", padding: "16px 0",
-              fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif",
-              fontStyle: "italic",
-            }}>
-              Playlist functionality coming soon
-            </div>
-          </div>
+          {/* ── Musicians You Follow — mocked, following isn't built yet ── */}
+          <SectionHeader title="Musicians You Follow" />
+          <ScrollRow
+            items={MOCK_FOLLOWED_ARTISTS}
+            renderItem={(artist) => (
+              <PersonTile key={artist.id} name={artist.name} subtitle={artist.genre} />
+            )}
+            emptyMessage="Musicians you follow will appear here"
+          />
+
+          {/* ── People You Follow — mocked, following isn't built yet ── */}
+          <SectionHeader title="People You Follow" />
+          <ScrollRow
+            items={MOCK_FOLLOWED_USERS}
+            renderItem={(person) => (
+              <PersonTile key={person.id} name={person.name} />
+            )}
+            emptyMessage="People you follow will appear here"
+          />
 
           <div style={{ height: "20px" }} />
         </div>
 
         {/* ── Settings panel renders inside profile ── */}
         <SettingsPanel />
+
+        {/* ── Playlist build-mode panel — same component My Music opens ── */}
+        <PlaylistPanel
+          isOpen={isPlaylistPanelOpen}
+          playlist={selectedPlaylist}
+          onClose={handleClosePlaylistPanel}
+          onCreated={(playlist) => setPlaylists(prev => [mapPlaylist(playlist), ...prev])}
+        />
 
       </div>
     </>

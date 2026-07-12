@@ -48,6 +48,33 @@ export const getMe = async () => {
   return response.data;
 };
 
+// Get another user's public profile (username, avatar, taste, public playlists)
+export const getPublicProfile = async (username) => {
+  const token = await getToken();
+  const response = await axios.get(`${API_URL}/auth/users/${encodeURIComponent(username)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+// Follow another user
+export const followUser = async (username) => {
+  const token = await getToken();
+  const response = await axios.post(`${API_URL}/auth/users/${encodeURIComponent(username)}/follow`, {}, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+// Unfollow another user
+export const unfollowUser = async (username) => {
+  const token = await getToken();
+  const response = await axios.delete(`${API_URL}/auth/users/${encodeURIComponent(username)}/follow`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 // Update profile with favorite artists
 export const updateProfile = async (data) => {
   const token = await getToken();

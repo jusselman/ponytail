@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMe } from '../services/authService';
+import { getMe, getToken } from '../services/authService';
 import { getMyPlaylists } from '../services/playlistService';
 import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
@@ -300,11 +300,25 @@ export default function MyMusicScreen({ setScreen }) {
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
 
   const { playTrack, playHistory, currentTrack, isPlaying } = usePlayer();
-  const [frozenHistory, setFrozenHistory] = useState([]);
+  const [recentlyPlayed, setRecentlyPlayed] = useState([]);
 
-   // ── Snapshot play history on mount ──
+  // ── Fetch recently played tracks from the user's persisted history — capped at 15,
+  // most-recent-first, deduplicated by track. This survives app reloads (unlike the
+  // in-memory playHistory from PlayerContext, which resets on every launch). ──
   useEffect(() => {
-    setFrozenHistory([...playHistory]);
+    const fetchRecentlyPlayed = async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch('http://localhost:5000/api/auth/history/recent?limit=15', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setRecentlyPlayed(data.tracks || []);
+      } catch (err) {
+        console.log('Failed to fetch recently played:', err);
+      }
+    };
+    fetchRecentlyPlayed();
   }, []);
 
   useEffect(() => {
@@ -454,11 +468,11 @@ useEffect(() => {
             {/* ── Recently Played ── */}
             <SectionHeader
               title="Recently Played"
-              subtitle={frozenHistory.length === 0 ? null : `${frozenHistory.length} track${frozenHistory.length === 1 ? '' : 's'}`}
+              subtitle={recentlyPlayed.length === 0 ? null : `${recentlyPlayed.length} track${recentlyPlayed.length === 1 ? '' : 's'}`}
               index={1}
             />
             <ScrollRow
-                items={frozenHistory}
+                items={recentlyPlayed}
                 renderItem={(track, i) => (
                   <AlbumCard key={i} track={track} onPlay={handlePlay} currentTrack={currentTrack} isPlaying={isPlaying} />
                 )}

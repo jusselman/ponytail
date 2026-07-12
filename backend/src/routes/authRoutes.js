@@ -277,6 +277,9 @@ router.get('/search', async (req, res) => {
         NULL as artist_name,
         cover,
         NULL as filename,
+        NULL::uuid as user_id,
+        NULL as username,
+        NULL as profile_picture,
         GREATEST(
           similarity(LOWER(artist), $1),
           similarity(LOWER(artist), $2)
@@ -299,6 +302,9 @@ router.get('/search', async (req, res) => {
         artist as artist_name,
         cover,
         NULL as filename,
+        NULL::uuid as user_id,
+        NULL as username,
+        NULL as profile_picture,
         GREATEST(
           similarity(LOWER(album), $1),
           similarity(LOWER(album), $2)
@@ -324,6 +330,9 @@ router.get('/search', async (req, res) => {
         artist as artist_name,
         cover,
         filename,
+        NULL::uuid as user_id,
+        NULL as username,
+        NULL as profile_picture,
         GREATEST(
           similarity(LOWER(title), $1),
           similarity(LOWER(title), $2)
@@ -336,6 +345,64 @@ router.get('/search', async (req, res) => {
       ORDER BY score DESC
       LIMIT 5
     )
+    UNION ALL
+    (
+      SELECT
+        'musician' as type,
+        COALESCE(display_name, username) as name,
+        NULL as genre,
+        NULL as album,
+        NULL as artist_name,
+        NULL as cover,
+        NULL as filename,
+        id as user_id,
+        username,
+        profile_picture,
+        GREATEST(
+          similarity(LOWER(username), $1),
+          similarity(LOWER(COALESCE(display_name, '')), $1)
+        ) as score
+      FROM users
+      WHERE
+        is_artist = true
+        AND (
+          similarity(LOWER(username), $1) > $3
+          OR similarity(LOWER(COALESCE(display_name, '')), $1) > $3
+          OR LOWER(username) LIKE '%' || $2 || '%'
+          OR LOWER(COALESCE(display_name, '')) LIKE '%' || $2 || '%'
+        )
+      ORDER BY score DESC
+      LIMIT 5
+    )
+    UNION ALL
+    (
+      SELECT
+        'user' as type,
+        COALESCE(display_name, username) as name,
+        NULL as genre,
+        NULL as album,
+        NULL as artist_name,
+        NULL as cover,
+        NULL as filename,
+        id as user_id,
+        username,
+        profile_picture,
+        GREATEST(
+          similarity(LOWER(username), $1),
+          similarity(LOWER(COALESCE(display_name, '')), $1)
+        ) as score
+      FROM users
+      WHERE
+        is_artist = false
+        AND (
+          similarity(LOWER(username), $1) > $3
+          OR similarity(LOWER(COALESCE(display_name, '')), $1) > $3
+          OR LOWER(username) LIKE '%' || $2 || '%'
+          OR LOWER(COALESCE(display_name, '')) LIKE '%' || $2 || '%'
+        )
+      ORDER BY score DESC
+      LIMIT 5
+    )
     ORDER BY score DESC
     LIMIT 15
   `;
@@ -343,19 +410,134 @@ router.get('/search', async (req, res) => {
     }
 
     const result = await pool.query(query, params);
-    const mapped = result.rows.map(r => ({
-      ...r,
-      coverUrl: resolveCover(r.cover)
-        ? `http://localhost:5000/covers/${encodeURIComponent(resolveCover(r.cover))}`
-        : null,
-      audioUrl: resolveAudio(r.artist_name, r.album, r.filename)
-        ? `http://localhost:5000/audio/${resolveAudio(r.artist_name, r.album, r.filename).split('/').map(encodeURIComponent).join('/')}`
-        : null,
-    }));
+    const mapped = result.rows.map(r => {
+      if (r.type === 'musician' || r.type === 'user') {
+        return {
+          ...r,
+          coverUrl: r.profile_picture || null,
+          audioUrl: null,
+        };
+      }
+      return {
+        ...r,
+        coverUrl: resolveCover(r.cover)
+          ? `http://localhost:5000/covers/${encodeURIComponent(resolveCover(r.cover))}`
+          : null,
+        audioUrl: resolveAudio(r.artist_name, r.album, r.filename)
+          ? `http://localhost:5000/audio/${resolveAudio(r.artist_name, r.album, r.filename).split('/').map(encodeURIComponent).join('/')}`
+          : null,
+      };
+    });
     res.json({ results: mapped });
   } catch (err) {
     console.error('Search error:', err);
     res.status(500).json({ error: 'Search failed' });
+  }
+});
+
+// Get another user's public profile — username, display name, avatar, taste, and
+// only their PUBLIC playlists (private ones stay private to everyone but the owner).
+router.get('/users/:username', requireAuth, async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const userResult = await pool.query(
+      `SELECT id, username, display_name, profile_picture, favorite_artists, is_artist,
+              (SELECT COUNT(*)::int FROM user_follows WHERE followed_id = users.id) AS followers_count,
+              (SELECT COUNT(*)::int FROM user_follows WHERE follower_id = users.id) AS following_count,
+              EXISTS(
+                SELECT 1 FROM user_follows
+                WHERE follower_id = $2 AND followed_id = users.id
+              ) AS is_following
+       FROM users WHERE username = $1`,
+      [username, req.user.id]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const profile = userResult.rows[0];
+
+    const playlistsResult = await pool.query(
+      `SELECT p.id, p.title, p.description, p.cover_art_url, p.is_public,
+              p.created_at, p.updated_at,
+              COUNT(pt.id)::int AS track_count
+       FROM playlists p
+       LEFT JOIN playlist_tracks pt ON pt.playlist_id = p.id
+       WHERE p.user_id = $1 AND p.is_public = true
+       GROUP BY p.id
+       ORDER BY p.updated_at DESC`,
+      [profile.id]
+    );
+
+    res.json({
+      user: {
+        username: profile.username,
+        display_name: profile.display_name,
+        profile_picture: profile.profile_picture,
+        favorite_artists: profile.favorite_artists,
+        is_artist: profile.is_artist,
+        followers_count: profile.followers_count,
+        following_count: profile.following_count,
+        is_following: profile.is_following,
+      },
+      playlists: playlistsResult.rows,
+    });
+  } catch (err) {
+    console.error('Get public profile error:', err);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+// Follow another user
+router.post('/users/:username/follow', requireAuth, async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const targetResult = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+    if (targetResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    const targetId = targetResult.rows[0].id;
+
+    if (targetId === req.user.id) {
+      return res.status(400).json({ error: "You can't follow yourself." });
+    }
+
+    await pool.query(
+      `INSERT INTO user_follows (follower_id, followed_id) VALUES ($1, $2)
+       ON CONFLICT (follower_id, followed_id) DO NOTHING`,
+      [req.user.id, targetId]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Follow user error:', err);
+    res.status(500).json({ error: 'Failed to follow user' });
+  }
+});
+
+// Unfollow another user
+router.delete('/users/:username/follow', requireAuth, async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const targetResult = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+    if (targetResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    const targetId = targetResult.rows[0].id;
+
+    await pool.query(
+      'DELETE FROM user_follows WHERE follower_id = $1 AND followed_id = $2',
+      [req.user.id, targetId]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Unfollow user error:', err);
+    res.status(500).json({ error: 'Failed to unfollow user' });
   }
 });
 
