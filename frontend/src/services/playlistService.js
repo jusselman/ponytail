@@ -99,6 +99,31 @@ export const deletePlaylist = async (playlistId) => {
   });
 };
 
+// Get playlists the current user follows (other users' public playlists)
+export const getFollowedPlaylists = async () => {
+  const token = await getToken();
+  const response = await axios.get(`${API_URL}/playlists/followed`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data.playlists;
+};
+
+// Follow another user's public playlist
+export const followPlaylist = async (playlistId) => {
+  const token = await getToken();
+  await axios.post(`${API_URL}/playlists/${playlistId}/follow`, null, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+// Unfollow a playlist
+export const unfollowPlaylist = async (playlistId) => {
+  const token = await getToken();
+  await axios.delete(`${API_URL}/playlists/${playlistId}/follow`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
 // Search tracks only (not artists/albums), for adding songs to a playlist.
 // Deliberately hits the unified /search endpoint (no `type` param) rather than
 // `type=track` — that dedicated branch doesn't select cover/filename, so it can't

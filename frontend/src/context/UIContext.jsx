@@ -13,6 +13,10 @@ export function UIProvider({ children }) {
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
   const [viewedUsername, setViewedUsername] = useState(null);
 
+  // ── Viewing a playlist read-only (someone else's public playlist, or one you follow) ──
+  const [isPublicPlaylistOpen, setIsPublicPlaylistOpen] = useState(false);
+  const [viewedPlaylistId, setViewedPlaylistId] = useState(null);
+
   const openProfile = useCallback(() => setIsProfileOpen(true), []);
   const closeProfile = useCallback(() => setIsProfileOpen(false), []);
   const openSettings = useCallback(() => setIsSettingsOpen(true), []);
@@ -27,6 +31,15 @@ export function UIProvider({ children }) {
     setViewedUsername(null);
   }, []);
 
+  const openPublicPlaylist = useCallback((playlistId) => {
+    setViewedPlaylistId(playlistId);
+    setIsPublicPlaylistOpen(true);
+  }, []);
+  const closePublicPlaylist = useCallback(() => {
+    setIsPublicPlaylistOpen(false);
+    setViewedPlaylistId(null);
+  }, []);
+
   return (
     <UIContext.Provider value={{
       isProfileOpen, openProfile, closeProfile,
@@ -34,6 +47,7 @@ export function UIProvider({ children }) {
       profileImage, setProfileImage,
       user, setUser,
       isUserProfileOpen, viewedUsername, openUserProfile, closeUserProfile,
+      isPublicPlaylistOpen, viewedPlaylistId, openPublicPlaylist, closePublicPlaylist,
     }}>
       {children}
     </UIContext.Provider>

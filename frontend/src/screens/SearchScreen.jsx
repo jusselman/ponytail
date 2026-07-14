@@ -8,6 +8,7 @@ import FooterNav from '../components/FooterNav';
 import { usePlayer } from '../context/PlayerContext';
 import ProfilePanel from '../components/ProfilePanel';
 import UserProfilePanel from '../components/UserProfilePanel';
+import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
 import FullPlayer from '../components/FullPlayer';
 import ArtistPanel from '../components/ArtistPanel';
 import AlbumPanel from '../components/AlbumPanel';
@@ -1015,6 +1016,9 @@ export default function SearchScreen({ setScreen }) {
 
           {/* ── Another user's public profile ── */}
           <UserProfilePanel />
+
+          {/* ── Read-only viewer for a playlist you don't own ── */}
+          <PublicPlaylistPanel />
 
           {/* ── Artist Panel & Album Panel ── */}
           {panelStack.map((panel, index) => {

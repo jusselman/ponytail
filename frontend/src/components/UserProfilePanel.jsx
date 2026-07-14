@@ -125,11 +125,15 @@ const ScrollRow = ({ items, renderItem, emptyMessage }) => {
 };
 
 // ─── Playlist tile — square cover art (real or gradient fallback) + name + subtitle.
-// Not tappable here — playlist detail viewing for other users' playlists isn't built yet. ──
-const PlaylistTile = ({ playlist, subtitle, size = 110 }) => {
+// `onTap`, if provided, makes the tile clickable — used for this user's real public
+// playlists, which open in the read-only PublicPlaylistPanel. ──
+const PlaylistTile = ({ playlist, subtitle, size = 110, onTap }) => {
   const [imgError, setImgError] = useState(false);
   return (
-    <div style={{ flexShrink: 0, width: size }}>
+    <div
+      onClick={onTap ? () => onTap(playlist) : undefined}
+      style={{ flexShrink: 0, width: size, cursor: onTap ? "pointer" : "default" }}
+    >
       <div style={{
         width: size, height: size,
         borderRadius: "10px", overflow: "hidden",
@@ -243,7 +247,7 @@ const MOCK_FOLLOWED_USERS = [
 // Unlike ProfilePanel.jsx: no photo upload, no add-playlist affordance, section
 // labels are possessive ("Andrew's Playlists"), and there's a Follow button. ──
 export default function UserProfilePanel() {
-  const { isUserProfileOpen, viewedUsername, closeUserProfile } = useUI();
+  const { isUserProfileOpen, viewedUsername, closeUserProfile, openPublicPlaylist } = useUI();
   const [profile, setProfile] = useState(null);
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -411,7 +415,8 @@ export default function UserProfilePanel() {
                 </div>
               )}
 
-              {/* ── {Name}'s Playlists — real, public playlists only, not tappable yet ── */}
+              {/* ── {Name}'s Playlists — real, public playlists only, tap opens the
+              read-only viewer ── */}
               <SectionHeader title={`${possessive} Playlists`} />
               <ScrollRow
                 items={playlists}
@@ -420,6 +425,7 @@ export default function UserProfilePanel() {
                     key={playlist.id}
                     playlist={playlist}
                     subtitle={`${playlist.tracks} track${playlist.tracks === 1 ? '' : 's'}`}
+                    onTap={(p) => openPublicPlaylist(p.id)}
                   />
                 )}
                 emptyMessage={`${possessive} public playlists will appear here`}

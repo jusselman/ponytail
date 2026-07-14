@@ -5,6 +5,7 @@ import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
+import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
 import { usePlayer } from '../context/PlayerContext';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
@@ -477,6 +478,7 @@ export default function HomeScreen({ setScreen }) {
 
           <FullPlayer />
           <ProfilePanel />
+          <PublicPlaylistPanel />
 
         </div>
       </div>

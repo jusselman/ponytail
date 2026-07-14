@@ -590,7 +590,12 @@ router.get('/albums/discover', requireAuth, async (req, res) => {
         `SELECT favorite_artists FROM users WHERE id = $1`,
         [req.user.id]
       );
-      const favoriteArtists = userResult.rows[0]?.favorite_artists || [];
+      // favorite_artists is stored as an array of {name, coverUrl, ...} objects from the
+      // MusicBrainz autocomplete picked during onboarding, not plain strings — normalize
+      // to names before using it to match seed_tracks.artist.
+      const favoriteArtists = (userResult.rows[0]?.favorite_artists || [])
+        .map(a => (typeof a === 'string' ? a : a?.name))
+        .filter(Boolean);
 
       const historyResult = await pool.query(
         `SELECT DISTINCT artist, genre FROM user_play_history WHERE user_id = $1`,
@@ -1121,7 +1126,11 @@ router.get('/home/feed', requireAuth, async (req, res) => {
         `SELECT favorite_artists FROM users WHERE id = $1`,
         [req.user.id]
       );
-      const favoriteArtists = userResult.rows[0]?.favorite_artists || [];
+      // Same normalization as the discovery-feed query above — favorite_artists holds
+      // {name, coverUrl, ...} objects, not plain strings.
+      const favoriteArtists = (userResult.rows[0]?.favorite_artists || [])
+        .map(a => (typeof a === 'string' ? a : a?.name))
+        .filter(Boolean);
 
       let fallbackResult;
       if (favoriteArtists.length > 0) {

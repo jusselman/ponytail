@@ -7,6 +7,7 @@ import FooterNav from '../components/FooterNav';
 import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
 import PlaylistPanel from '../components/PlaylistPanel';
+import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
 import { usePlayer } from '../context/PlayerContext';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
@@ -531,6 +532,9 @@ useEffect(() => {
 
            {/* ── Profile Panel ── */}
            <ProfilePanel />
+
+          {/* ── Read-only viewer for a playlist you don't own ── */}
+          <PublicPlaylistPanel />
 
           {/* ── Playlist Creation / Build Panel ── */}
           <PlaylistPanel

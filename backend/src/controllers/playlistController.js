@@ -70,14 +70,16 @@ const getOwnedPlaylist = async (playlistId, userId) => {
   return { playlist, owned: playlist.user_id === userId };
 };
 
-// GET /api/playlists/:id — playlist details plus its tracks in play order
+// GET /api/playlists/:id — playlist details plus its tracks in play order.
+// Viewable by the owner always, and by anyone else only if it's public — a private
+// playlist stays invisible to everyone but its owner.
 const getPlaylistDetail = async (req, res) => {
   const { id } = req.params;
 
   try {
     const { playlist, owned } = await getOwnedPlaylist(id, req.user.id);
     if (!playlist) return res.status(404).json({ error: 'Playlist not found.' });
-    if (!owned) return res.status(403).json({ error: 'Not your playlist.' });
+    if (!owned && !playlist.is_public) return res.status(403).json({ error: 'This playlist is private.' });
 
     const tracksResult = await db.query(
       `SELECT id, track_title AS title, artist, album, genre, cover_url AS "coverUrl",
@@ -88,7 +90,19 @@ const getPlaylistDetail = async (req, res) => {
       [id]
     );
 
-    res.json({ playlist: { ...playlist, tracks: tracksResult.rows } });
+    const followingResult = await db.query(
+      `SELECT 1 FROM playlist_follows WHERE user_id = $1 AND playlist_id = $2`,
+      [req.user.id, id]
+    );
+
+    res.json({
+      playlist: {
+        ...playlist,
+        owned,
+        is_following: followingResult.rows.length > 0,
+        tracks: tracksResult.rows,
+      },
+    });
   } catch (err) {
     console.error('Get playlist detail error:', err);
     res.status(500).json({ error: 'Failed to fetch playlist.' });
@@ -279,6 +293,70 @@ const deletePlaylist = async (req, res) => {
   }
 };
 
+// GET /api/playlists/followed — playlists the current user follows (other users'
+// public playlists), most recently followed first, with a live track count.
+const getFollowedPlaylists = async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT p.id, p.title, p.description, p.cover_art_url, p.is_public,
+              p.created_at, p.updated_at, u.username AS creator_username,
+              COUNT(pt.id)::int AS track_count
+       FROM playlist_follows pf
+       JOIN playlists p ON p.id = pf.playlist_id
+       JOIN users u ON u.id = p.user_id
+       LEFT JOIN playlist_tracks pt ON pt.playlist_id = p.id
+       WHERE pf.user_id = $1
+       GROUP BY p.id, u.username, pf.created_at
+       ORDER BY pf.created_at DESC`,
+      [req.user.id]
+    );
+    res.json({ playlists: result.rows });
+  } catch (err) {
+    console.error('Get followed playlists error:', err);
+    res.status(500).json({ error: 'Failed to fetch followed playlists.' });
+  }
+};
+
+// POST /api/playlists/:id/follow — follow another user's public playlist.
+// Must be public, and you can't follow your own playlist.
+const followPlaylist = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { playlist, owned } = await getOwnedPlaylist(id, req.user.id);
+    if (!playlist) return res.status(404).json({ error: 'Playlist not found.' });
+    if (owned) return res.status(400).json({ error: "You can't follow your own playlist." });
+    if (!playlist.is_public) return res.status(403).json({ error: 'This playlist is private.' });
+
+    await db.query(
+      `INSERT INTO playlist_follows (user_id, playlist_id) VALUES ($1, $2)
+       ON CONFLICT (user_id, playlist_id) DO NOTHING`,
+      [req.user.id, id]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Follow playlist error:', err);
+    res.status(500).json({ error: 'Failed to follow playlist.' });
+  }
+};
+
+// DELETE /api/playlists/:id/follow — unfollow a playlist
+const unfollowPlaylist = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await db.query(
+      `DELETE FROM playlist_follows WHERE user_id = $1 AND playlist_id = $2`,
+      [req.user.id, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Unfollow playlist error:', err);
+    res.status(500).json({ error: 'Failed to unfollow playlist.' });
+  }
+};
+
 module.exports = {
   createPlaylist,
   getMyPlaylists,
@@ -288,4 +366,7 @@ module.exports = {
   reorderPlaylistTracks,
   updatePlaylist,
   deletePlaylist,
+  getFollowedPlaylists,
+  followPlaylist,
+  unfollowPlaylist,
 };

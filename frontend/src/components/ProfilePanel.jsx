@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getMe } from '../services/authService';
-import { getMyPlaylists } from '../services/playlistService';
+import { getMyPlaylists, getFollowedPlaylists } from '../services/playlistService';
 import { useUI } from '../context/UIContext';
 import SettingsPanel from './SettingsPanel';
 import PlaylistPanel from './PlaylistPanel';
@@ -218,16 +218,20 @@ const mapPlaylist = (playlist) => ({
   coverUrl: playlist.cover_art_url || null,
 });
 
-// ─── Mock data — playlists, musicians, and other users you follow. None of this is
-// wired to a real backend yet since following isn't built; these rows exist purely
-// to show the intended layout and will be swapped for real data later. ──
-const MOCK_FOLLOWED_PLAYLISTS = [
-  { id: "fpl1", name: "Sunday Coffee", creator: "mara_j", tracks: 19, hue: 190 },
-  { id: "fpl2", name: "Gym Pump", creator: "dtrain", tracks: 27, hue: 10 },
-  { id: "fpl3", name: "Rainy Day Jazz", creator: "coltraner", tracks: 14, hue: 260 },
-  { id: "fpl4", name: "Road Trip 2025", creator: "wanderlust", tracks: 42, hue: 90 },
-];
+// ─── Map a followed-playlist row (from GET /playlists/followed) into PlaylistTile's
+// shape, keeping the creator's username around for the "by {creator}" subtitle ──
+const mapFollowedPlaylist = (playlist) => ({
+  id: playlist.id,
+  name: playlist.title,
+  creator: playlist.creator_username,
+  tracks: playlist.track_count ?? 0,
+  hue: hueFromString(playlist.id || playlist.title),
+  coverUrl: playlist.cover_art_url || null,
+});
 
+// ─── Mock data — musicians and other users you follow. Playlist-follow is real
+// (see followedPlaylists state below); these two rows are still placeholders since
+// artist/user following-list display isn't built yet. ──
 const MOCK_FOLLOWED_ARTISTS = [
   { id: "art1", name: "Nova Reyes", genre: "Indie Pop" },
   { id: "art2", name: "The Low Keys", genre: "Jazz" },
@@ -244,8 +248,9 @@ const MOCK_FOLLOWED_USERS = [
 
 // ─── Profile Panel ────────────────────────────────────────────────────────────
 export default function ProfilePanel() {
-  const { isProfileOpen, closeProfile, openSettings, profileImage, setProfileImage, user, setUser } = useUI();
+  const { isProfileOpen, closeProfile, openSettings, profileImage, setProfileImage, user, setUser, openPublicPlaylist } = useUI();
   const [playlists, setPlaylists] = useState([]);
+  const [followedPlaylists, setFollowedPlaylists] = useState([]);
   const [isPlaylistPanelOpen, setIsPlaylistPanelOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
 
@@ -280,11 +285,31 @@ export default function ProfilePanel() {
     fetchPlaylists();
   }, []);
 
+  // ── Fetch playlists you follow — re-run whenever the panel opens so a follow/unfollow
+  // toggled in PublicPlaylistPanel (mounted alongside this one) is reflected on return ──
+  const fetchFollowedPlaylists = async () => {
+    try {
+      const data = await getFollowedPlaylists();
+      setFollowedPlaylists((data || []).map(mapFollowedPlaylist));
+    } catch (err) {
+      console.log('Failed to fetch followed playlists:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (isProfileOpen) fetchFollowedPlaylists();
+  }, [isProfileOpen]);
+
   // ── Tapping one of the user's own playlists opens the same build-mode panel used in
   // My Music ──
   const handlePlaylistTap = (playlist) => {
     setSelectedPlaylist(playlist);
     setIsPlaylistPanelOpen(true);
+  };
+
+  // ── Tapping a followed playlist opens the read-only public viewer ──
+  const handleFollowedPlaylistTap = (playlist) => {
+    openPublicPlaylist(playlist.id);
   };
 
   const handleClosePlaylistPanel = () => {
@@ -456,15 +481,16 @@ const handleImageChange = async (e) => {
             emptyMessage="Create a playlist in My Music to see it here"
           />
 
-          {/* ── Playlists You Follow — mocked, following isn't built yet ── */}
+          {/* ── Playlists You Follow — real data, tap opens the read-only viewer ── */}
           <SectionHeader title="Playlists You Follow" />
           <ScrollRow
-            items={MOCK_FOLLOWED_PLAYLISTS}
+            items={followedPlaylists}
             renderItem={(playlist) => (
               <PlaylistTile
                 key={playlist.id}
                 playlist={playlist}
                 subtitle={`by ${playlist.creator}`}
+                onTap={handleFollowedPlaylistTap}
               />
             )}
             emptyMessage="Playlists you follow will appear here"

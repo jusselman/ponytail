@@ -13,6 +13,9 @@ const {
   reorderPlaylistTracks,
   updatePlaylist,
   deletePlaylist,
+  getFollowedPlaylists,
+  followPlaylist,
+  unfollowPlaylist,
 } = require('../controllers/playlistController');
 
 // ── Ensure uploads directory exists (shared with avatar uploads) ──
@@ -45,6 +48,10 @@ router.post('/', requireAuth, upload.single('cover'), createPlaylist);
 // List the current user's playlists
 router.get('/', requireAuth, getMyPlaylists);
 
+// List playlists the current user follows — must come before /:id so
+// 'followed' isn't swallowed as a playlist id param
+router.get('/followed', requireAuth, getFollowedPlaylists);
+
 // Get a single playlist's details + ordered tracks
 router.get('/:id', requireAuth, getPlaylistDetail);
 
@@ -62,5 +69,9 @@ router.put('/:id/tracks/reorder', requireAuth, reorderPlaylistTracks);
 
 // Remove a track from a playlist
 router.delete('/:id/tracks/:trackRowId', requireAuth, removeTrackFromPlaylist);
+
+// Follow / unfollow another user's public playlist
+router.post('/:id/follow', requireAuth, followPlaylist);
+router.delete('/:id/follow', requireAuth, unfollowPlaylist);
 
 module.exports = router;
