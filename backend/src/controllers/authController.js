@@ -12,7 +12,10 @@ const generateToken = (user) => {
 
 // POST /api/auth/register
 const register = async (req, res) => {
-  const { email, username, password, display_name } = req.body;
+  // is_artist is self-declared at signup by the separate musician registration flow —
+  // instant, no approval step, per product decision. Regular/listener signup never
+  // sends this field, so it defaults to false exactly as before.
+  const { email, username, password, display_name, is_artist } = req.body;
 
   try {
     // Check if email already exists
@@ -39,10 +42,10 @@ const register = async (req, res) => {
 
     // Insert user
     const result = await db.query(
-      `INSERT INTO users (email, username, display_name, password_hash)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, email, username, display_name, created_at`,
-      [email, username, display_name || username, password_hash]
+      `INSERT INTO users (email, username, display_name, password_hash, is_artist)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, email, username, display_name, is_artist, created_at`,
+      [email, username, display_name || username, password_hash, Boolean(is_artist)]
     );
 
     const user = result.rows[0];
@@ -67,6 +70,7 @@ const login = async (req, res) => {
       email: req.user.email,
       username: req.user.username,
       display_name: req.user.display_name,
+      is_artist: req.user.is_artist,
     }
   });
 };
@@ -75,7 +79,7 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT id, email, username, display_name, favorite_artists, profile_picture,
+      `SELECT id, email, username, display_name, favorite_artists, profile_picture, is_artist,
               (SELECT COUNT(*)::int FROM user_follows WHERE followed_id = users.id) AS followers_count,
               (SELECT COUNT(*)::int FROM user_follows WHERE follower_id = users.id) AS following_count
        FROM users WHERE id = $1`,

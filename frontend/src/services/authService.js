@@ -18,12 +18,17 @@ export const logout = async () => {
   await AsyncStorage.removeItem('ponytail_token');
 };
 
-// Register
-export const register = async (email, username, password) => {
+// Register. `is_artist` and `display_name` are optional — `is_artist` is only ever
+// sent true by the separate musician signup flow (regular listener signup never
+// passes it, so it defaults to false server-side exactly as before), and
+// `display_name` becomes the musician's public artist/stage name.
+export const register = async (email, username, password, is_artist = false, display_name = null) => {
   const response = await axios.post(`${API_URL}/auth/register`, {
     email,
     username,
     password,
+    is_artist,
+    display_name,
   });
   await storeToken(response.data.token);
   return response.data;
@@ -73,6 +78,59 @@ export const unfollowUser = async (username) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
+};
+
+// Upload a track — musician accounts only (enforced server-side via is_artist).
+// `audioFile`/`coverFile` are File/Blob objects from <input type="file">; coverFile is optional.
+export const uploadTrack = async ({ title, album, genre, audioFile, coverFile }) => {
+  const token = await getToken();
+
+  const formData = new FormData();
+  formData.append('title', title);
+  if (album) formData.append('album', album);
+  if (genre) formData.append('genre', genre);
+  formData.append('audio', audioFile);
+  if (coverFile) formData.append('cover', coverFile);
+
+  const response = await axios.post(`${API_URL}/auth/tracks/upload`, formData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data.track;
+};
+
+// Get the current musician's own uploaded tracks
+export const getMyUploads = async () => {
+  const token = await getToken();
+  const response = await axios.get(`${API_URL}/auth/tracks/mine`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data.tracks;
+};
+
+// Update one of the current musician's own uploaded tracks — title/album/genre,
+// plus an optional replacement cover image. `coverFile`, if provided, is a
+// File/Blob from an <input type="file">.
+export const updateMyUpload = async (trackId, { title, album, genre, coverFile }) => {
+  const token = await getToken();
+
+  const formData = new FormData();
+  formData.append('title', title);
+  if (album) formData.append('album', album);
+  if (genre) formData.append('genre', genre);
+  if (coverFile) formData.append('cover', coverFile);
+
+  const response = await axios.put(`${API_URL}/auth/tracks/${trackId}`, formData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data.track;
+};
+
+// Delete one of the current musician's own uploaded tracks
+export const deleteMyUpload = async (trackId) => {
+  const token = await getToken();
+  await axios.delete(`${API_URL}/auth/tracks/${trackId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 };
 
 // Update profile with favorite artists

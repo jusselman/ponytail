@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AuthScreen from './src/screens/LoginScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
+import MusicianOnboardingScreen from './src/screens/MusicianOnboardingScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import { PlayerProvider } from './src/context/PlayerContext';
@@ -17,6 +18,7 @@ return (
     <UIProvider>
       {screen === "login" && <AuthScreen setScreen={setScreen} />}
       {screen === "onboarding" && <OnboardingScreen setScreen={setScreen} />}
+      {screen === "musician-onboarding" && <MusicianOnboardingScreen setScreen={setScreen} />}
       {screen === "search" && <SearchScreen setScreen={setScreen} />}
       {screen === "home" && <HomeScreen setScreen={setScreen} />}
       {screen === "mymusic" && <MyMusicScreen setScreen={setScreen} />}

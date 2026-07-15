@@ -1,28 +1,24 @@
-feat: playlists, playlist sharing, and social features across the app
+feat: musician accounts, track uploads, and playlist cover art fixes
 
-Playlists
+Musician Accounts
 
-Built playlist creation with optional cover art upload and public or private visibility toggle
-Added build mode UI for adding tracks via unified search across tracks, artists, and albums with artist and album drill down
-Implemented drag and drop track reordering, Play, Shuffle, and Add to Queue for a playlist
-Added Edit Details, visibility toggle, and Delete Playlist via a slide up action sheet
-Denormalized playlist tracks for fast ordered playback and persistent track state
+Added a separate signup path letting a new user choose listener or musician at registration, keeping the existing listener onboarding completely untouched
+Built a streamlined musician onboarding flow collecting email, password, and artist name, skipping the favorite artists picker since it does not apply to an upload focused account
+Added an is_artist flag to registration and to the current user endpoint so the frontend can gate musician only features
 
-Playlist Sharing
+Track Uploads
 
-Fixed playlist detail endpoint to allow non owners to view public playlists, previously blocked everyone but the owner
-Added playlist follow and unfollow backend with a new playlist_follows table and a read only panel for viewing another user's public playlist
-Wired Playlists You Follow in the Profile Panel to real followed playlist data, replacing the mocked row
-Mounted the public playlist viewer across all five screens that support it, Search, My Music, Home, Radio, and Bulletin
+Added a track upload endpoint restricted to musician accounts, storing audio and optional cover art and inserting directly into the shared track catalog so uploads are searchable and playable everywhere else in the app
+Added a Your Uploads row in My Music with an upload button opening a panel to submit title, album, genre, audio file, and cover art
 
-Social and Discovery
+Track Management
 
-Extended unified search to surface musicians and users alongside tracks, artists, and albums
-Built public user profile viewing with real playlist, follower, and following counts
-Added follow and unfollow for other users, with optimistic UI updates and real counts on your own profile
+Replaced tap to play on your own uploaded tracks with a bottom rising panel matching the rest of the app rather than browser popups, letting a musician edit title, album, genre, and cover art, or delete the track
+Delete and edit both enforce ownership server side and clean up the old audio or cover file from disk
+Removed the play button overlay from the Your Uploads row since tapping now opens the edit panel instead of playing
 
-Library and Playback Fixes
+Playback and Cover Art Fixes
 
-Diagnosed and repaired CSV encoding corruption that was breaking fuzzy audio matching for a subset of tracks
-Fixed Recently Played to persist correctly, backend driven and capped at 15
-Fixed home feed personalization, onboarding selected artists were not populating suggestions due to a favorite_artists object versus string mismatch in the query
+Extended cover and audio URL resolution to branch correctly for uploaded tracks across every remaining endpoint that still used the old catalog only lookup, including album browsing, artist pages, and discovery
+Extracted the shared cover and audio resolution logic into its own module so it is defined once instead of duplicated across files
+Fixed playlist tracks showing a blank cover image by adding a self healing check that repairs stale stored cover and audio URLs the first time an affected playlist is opened, without disturbing playlists whose original track was later removed

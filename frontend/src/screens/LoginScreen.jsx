@@ -223,7 +223,7 @@ const LandingScreen = ({ setLocalScreen, setAppScreen }) => {
           }}
           onMouseEnter={() => setHovered("signup")}
           onMouseLeave={() => setHovered(null)}
-          onClick={() => setAppScreen("onboarding")}
+          onClick={() => setLocalScreen("choose-account-type")}
         >
           Sign up
         </button>
@@ -263,6 +263,65 @@ const LandingScreen = ({ setLocalScreen, setAppScreen }) => {
         </button>
       </div>
     </>
+  );
+};
+
+// ─── Account Type Chooser — sits between Landing's "Sign up" and the real signup
+// flow, so listener onboarding is completely untouched and musicians get routed to
+// their own dedicated onboarding instead. ──
+const ChooseAccountTypeScreen = ({ setLocalScreen, setAppScreen }) => {
+  const [hovered, setHovered] = useState(null);
+
+  const optionStyle = (key) => ({
+    width: "100%", padding: "20px", borderRadius: "18px", textAlign: "left",
+    border: `1.5px solid ${hovered === key ? colors.teal : "rgba(255,255,255,0.12)"}`,
+    backgroundColor: hovered === key ? "rgba(93,235,215,0.08)" : "transparent",
+    cursor: "pointer", transition: "all 0.2s ease",
+    display: "flex", flexDirection: "column", gap: "4px",
+  });
+
+  return (
+    <div style={baseStyles.formContainer}>
+      <div style={{ marginTop: "20px" }}>
+        <div style={baseStyles.formTitle}>Join Ponytail</div>
+        <div style={baseStyles.formSubtitle}>How will you be using the app?</div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <button
+            style={optionStyle("listener")}
+            onMouseEnter={() => setHovered("listener")}
+            onMouseLeave={() => setHovered(null)}
+            onClick={() => setAppScreen("onboarding")}
+          >
+            <span style={{ fontSize: "16px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+              I'm a listener
+            </span>
+            <span style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
+              Discover music, build playlists, and follow other listeners
+            </span>
+          </button>
+
+          <button
+            style={optionStyle("musician")}
+            onMouseEnter={() => setHovered("musician")}
+            onMouseLeave={() => setHovered(null)}
+            onClick={() => setAppScreen("musician-onboarding")}
+          >
+            <span style={{ fontSize: "16px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+              I'm a musician
+            </span>
+            <span style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
+              Everything a listener can do, plus upload and share your own music
+            </span>
+          </button>
+        </div>
+
+        <div style={baseStyles.switchText}>
+          Already have an account?{" "}
+          <button style={baseStyles.switchLink} onClick={() => setLocalScreen("login")}>Log in</button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -465,7 +524,7 @@ const LoginScreen = ({ setLocalScreen, setAppScreen }) => {
 
         <div style={baseStyles.switchText}>
           Don't have an account?{" "}
-          <button style={baseStyles.switchLink} onClick={() => setAppScreen("onboarding")}>Sign up</button>
+          <button style={baseStyles.switchLink} onClick={() => setLocalScreen("choose-account-type")}>Sign up</button>
         </div>
       </div>
     </div>
@@ -502,6 +561,12 @@ export default function AuthScreen({ setScreen: setAppScreen }) {
           )}
           {localScreen === "login" && (
             <LoginScreen
+              setLocalScreen={setLocalScreen}
+              setAppScreen={setAppScreen}
+            />
+          )}
+          {localScreen === "choose-account-type" && (
+            <ChooseAccountTypeScreen
               setLocalScreen={setLocalScreen}
               setAppScreen={setAppScreen}
             />

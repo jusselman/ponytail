@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { getCoverUrl, getAudioUrl } = require('../utils/trackUrls');
 
 // POST /api/playlists — create a new playlist owned by the current user.
 // Sent as multipart/form-data so an optional cover image ('cover' field) can ride along.
@@ -90,6 +91,36 @@ const getPlaylistDetail = async (req, res) => {
       [id]
     );
 
+    // ── Self-heal stale/missing cover or audio URLs — these get baked into
+    // playlist_tracks at add-time, so a track added before a resolution fix (or one
+    // whose cover just never resolved back then) stays broken forever unless we
+    // patch it up here. Only touches tracks missing a URL; never overwrites one
+    // that's already set, so a playlist still shows the last-known cover/audio even
+    // after its source track is edited or deleted from seed_tracks. ──
+    const tracks = await Promise.all(tracksResult.rows.map(async (track) => {
+      if (track.coverUrl && track.audioUrl) return track;
+
+      const seedResult = await db.query(
+        `SELECT cover, filename, is_user_upload, uploaded_audio_url, uploaded_cover_url
+         FROM seed_tracks WHERE title = $1 AND artist = $2 LIMIT 1`,
+        [track.title, track.artist]
+      );
+      const seedRow = seedResult.rows[0];
+      if (!seedRow) return track;
+
+      const freshCoverUrl = track.coverUrl || getCoverUrl(seedRow);
+      const freshAudioUrl = track.audioUrl || getAudioUrl({ ...seedRow, artist: track.artist, album: track.album });
+
+      if (freshCoverUrl !== track.coverUrl || freshAudioUrl !== track.audioUrl) {
+        await db.query(
+          `UPDATE playlist_tracks SET cover_url = $1, audio_url = $2 WHERE id = $3`,
+          [freshCoverUrl, freshAudioUrl, track.id]
+        );
+      }
+
+      return { ...track, coverUrl: freshCoverUrl, audioUrl: freshAudioUrl };
+    }));
+
     const followingResult = await db.query(
       `SELECT 1 FROM playlist_follows WHERE user_id = $1 AND playlist_id = $2`,
       [req.user.id, id]
@@ -100,7 +131,7 @@ const getPlaylistDetail = async (req, res) => {
         ...playlist,
         owned,
         is_following: followingResult.rows.length > 0,
-        tracks: tracksResult.rows,
+        tracks,
       },
     });
   } catch (err) {

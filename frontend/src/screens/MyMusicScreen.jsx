@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMe, getToken } from '../services/authService';
+import { getMe, getToken, getMyUploads } from '../services/authService';
 import { getMyPlaylists } from '../services/playlistService';
 import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
@@ -8,6 +8,8 @@ import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
 import PlaylistPanel from '../components/PlaylistPanel';
 import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
+import UploadTrackPanel from '../components/UploadTrackPanel';
+import SongPanel from '../components/SongPanel';
 import { usePlayer } from '../context/PlayerContext';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
@@ -43,9 +45,11 @@ const mapPlaylist = (playlist) => ({
   coverUrl: playlist.cover_art_url || null,
 });
 
-// ─── Album Card ───────────────────────────────────────────────────────────────
-const AlbumCard = ({ track, onPlay, size = 120, currentTrack, isPlaying }) => {
-  const isCurrentTrack = currentTrack && 
+// ─── Album Card — `showPlayOverlay` (default true) hides the hover play button
+// for rows where tapping doesn't play (currently just Your Uploads, which opens
+// SongPanel instead). ──
+const AlbumCard = ({ track, onPlay, size = 120, currentTrack, isPlaying, showPlayOverlay = true }) => {
+  const isCurrentTrack = currentTrack &&
     `${currentTrack.title}|${currentTrack.artist}` === `${track.title}|${track.artist}`;
   const showPause = isCurrentTrack && isPlaying;
   const [hovered, setHovered] = useState(false);
@@ -97,7 +101,7 @@ const AlbumCard = ({ track, onPlay, size = 120, currentTrack, isPlaying }) => {
         )}
 
         {/* Play overlay on hover */}
-        {(hovered || isCurrentTrack) && (
+        {showPlayOverlay && (hovered || isCurrentTrack) && (
             <div style={{
                 position: "absolute", inset: 0,
                 backgroundColor: "rgba(0,0,0,0.4)",
@@ -257,6 +261,25 @@ const NewPlaylistButton = ({ onPress }) => (
   </div>
 );
 
+// ─── "+ Upload" pill — same visual language as NewPlaylistButton, opens the
+// upload panel instead. Only ever rendered for is_artist accounts. ──
+const UploadTrackButton = ({ onPress }) => (
+  <div
+    onClick={onPress}
+    style={{
+      display: "flex", alignItems: "center", gap: "4px", flexShrink: 0,
+      cursor: "pointer", padding: "5px 10px",
+      borderRadius: "20px", border: `1px solid ${colors.gold}`,
+      backgroundColor: "rgba(245,207,0,0.12)",
+    }}
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path d="M12 5v14M5 12h14" stroke={colors.gold} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+    <span style={{ fontSize: "11px", fontWeight: "600", color: colors.gold, fontFamily: "'Kanit', sans-serif" }}>Upload</span>
+  </div>
+);
+
 // ─── Horizontal Scroll Row ────────────────────────────────────────────────────
 const ScrollRow = ({ items, renderItem, emptyMessage, index = 0 }) => {
   if (!items || items.length === 0) {
@@ -299,6 +322,11 @@ export default function MyMusicScreen({ setScreen }) {
   const [loadingPlaylists, setLoadingPlaylists] = useState(true);
   const [isPlaylistPanelOpen, setIsPlaylistPanelOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  const [myUploads, setMyUploads] = useState([]);
+  const [loadingUploads, setLoadingUploads] = useState(true);
+  const [isUploadPanelOpen, setIsUploadPanelOpen] = useState(false);
+  const [isSongPanelOpen, setIsSongPanelOpen] = useState(false);
+  const [selectedUpload, setSelectedUpload] = useState(null);
 
   const { playTrack, playHistory, currentTrack, isPlaying } = usePlayer();
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
@@ -333,6 +361,46 @@ export default function MyMusicScreen({ setScreen }) {
     };
     loadUser();
   }, []);
+
+  // ── Fetch the musician's own uploaded tracks — only meaningful for is_artist
+  // accounts, so it waits until `user` has loaded to check that flag ──
+  const fetchMyUploads = async () => {
+    setLoadingUploads(true);
+    try {
+      const data = await getMyUploads();
+      setMyUploads(data || []);
+    } catch (err) {
+      console.log('Failed to fetch uploads:', err);
+    } finally {
+      setLoadingUploads(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.is_artist) fetchMyUploads();
+  }, [user?.is_artist]);
+
+  // ── Tapping a tile in Your Uploads opens the edit/delete panel instead of
+  // playing it, per product decision — managing your own catalog takes priority
+  // over playback here. Tracks are still playable normally everywhere else
+  // (search, playlists, recently played, etc.) via the regular AlbumCard tap. ──
+  const handleUploadTap = (track) => {
+    setSelectedUpload(track);
+    setIsSongPanelOpen(true);
+  };
+
+  const handleCloseSongPanel = () => {
+    setIsSongPanelOpen(false);
+    setSelectedUpload(null);
+  };
+
+  const handleUploadSaved = (updated) => {
+    setMyUploads(prev => prev.map(t => (t.id === updated.id ? { ...t, ...updated } : t)));
+  };
+
+  const handleUploadDeleted = (deleted) => {
+    setMyUploads(prev => prev.filter(t => t.id !== deleted.id));
+  };
 
   // ── Fetch the user's real playlists — on mount, and again whenever the playlist
   // panel closes, so track counts/covers stay current after editing ──
@@ -466,6 +534,26 @@ useEffect(() => {
               index={0}
             />
 
+            {/* ── Your Uploads — musician accounts only ── */}
+            {user?.is_artist && (
+              <>
+                <SectionHeader
+                  title="Your Uploads"
+                  subtitle={myUploads.length === 0 ? null : `${myUploads.length} track${myUploads.length === 1 ? '' : 's'}`}
+                  index={0}
+                  action={<UploadTrackButton onPress={() => setIsUploadPanelOpen(true)} />}
+                />
+                <ScrollRow
+                  items={loadingUploads ? [] : myUploads}
+                  renderItem={(track, i) => (
+                    <AlbumCard key={track.id ?? i} track={track} onPlay={handleUploadTap} currentTrack={currentTrack} isPlaying={isPlaying} showPlayOverlay={false} />
+                  )}
+                  emptyMessage={loadingUploads ? "Loading..." : "Upload your first track to see it here"}
+                  index={0}
+                />
+              </>
+            )}
+
             {/* ── Recently Played ── */}
             <SectionHeader
               title="Recently Played"
@@ -542,6 +630,23 @@ useEffect(() => {
             playlist={selectedPlaylist}
             onClose={handleClosePlaylistPanel}
             onCreated={(playlist) => setPlaylists(prev => [mapPlaylist(playlist), ...prev])}
+          />
+
+          {/* ── Track Upload Panel — musician accounts only ── */}
+          <UploadTrackPanel
+            isOpen={isUploadPanelOpen}
+            onClose={() => setIsUploadPanelOpen(false)}
+            onUploaded={() => fetchMyUploads()}
+          />
+
+          {/* ── Song Panel — edit or delete one of your own uploads, opened by
+          tapping a tile in the Your Uploads row instead of playing it ── */}
+          <SongPanel
+            isOpen={isSongPanelOpen}
+            track={selectedUpload}
+            onClose={handleCloseSongPanel}
+            onSaved={handleUploadSaved}
+            onDeleted={handleUploadDeleted}
           />
 
         </div>

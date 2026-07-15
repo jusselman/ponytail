@@ -9,124 +9,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// ── Cache directory listings at startup for fast fuzzy matching ──
-const COVERS_ROOT = path.join(__dirname, '../../assets/dev_seed/covers');
-const MP3_ROOT = path.join(__dirname, '../../assets/dev_seed/mp3');
-
-const normalize = (s) => s
-  .toLowerCase()
-  .replace(/\b(and|feat|ft|with|vs)\b/g, '') // strip common connector words
-  .replace(/[^a-z0-9]/g, '');
-
-// ── Build a normalized lookup map once: normalized name -> real filename ──
-const buildNormalizedMap = (files) => {
-  const map = new Map();
-  for (const f of files) {
-    map.set(normalize(f), f);
-  }
-  return map;
-};
-
-let coversMap = new Map();
-let artistFoldersMap = new Map(); // normalized artist name -> real folder name
-
-try {
-  const coverFiles = fs.readdirSync(COVERS_ROOT);
-  coversMap = buildNormalizedMap(coverFiles);
-  console.log(`Cached ${coversMap.size} cover filenames for fuzzy matching.`);
-} catch (err) {
-  console.error('Failed to read covers directory:', err.message);
-}
-
-try {
-  const artistFolders = fs.readdirSync(MP3_ROOT);
-  artistFoldersMap = buildNormalizedMap(artistFolders);
-  console.log(`Cached ${artistFoldersMap.size} artist folders for fuzzy matching.`);
-} catch (err) {
-  console.error('Failed to read mp3 directory:', err.message);
-}
-
-// ── Cache album folders per artist, built lazily on first access ──
-const albumFoldersCache = new Map(); // realArtistFolder -> Map(normalized album -> real folder)
-
-const getAlbumMap = (realArtistFolder) => {
-  if (albumFoldersCache.has(realArtistFolder)) {
-    return albumFoldersCache.get(realArtistFolder);
-  }
-  try {
-    const albums = fs.readdirSync(path.join(MP3_ROOT, realArtistFolder));
-    const map = buildNormalizedMap(albums);
-    albumFoldersCache.set(realArtistFolder, map);
-    return map;
-  } catch {
-    const empty = new Map();
-    albumFoldersCache.set(realArtistFolder, empty);
-    return empty;
-  }
-};
-
-// ── Cache track filenames per album, built lazily on first access ──
-const trackFilesCache = new Map(); // "artistFolder/albumFolder" -> Map(normalized filename -> real filename)
-
-const getTrackMap = (realArtistFolder, realAlbumFolder) => {
-  const key = `${realArtistFolder}/${realAlbumFolder}`;
-  if (trackFilesCache.has(key)) {
-    return trackFilesCache.get(key);
-  }
-  try {
-    const tracks = fs.readdirSync(path.join(MP3_ROOT, realArtistFolder, realAlbumFolder));
-    const map = buildNormalizedMap(tracks);
-    trackFilesCache.set(key, map);
-    return map;
-  } catch {
-    const empty = new Map();
-    trackFilesCache.set(key, empty);
-    return empty;
-  }
-};
-
-// ── Resolve a cover path using the cached normalized map ──
-const resolveCover = (coverPath) => {
-  if (!coverPath) return null;
-  const filename = coverPath.replace(/^\/?bin\/covers\//, '');
-  const real = coversMap.get(normalize(filename));
-  return real || null;
-};
-
-// ── Resolve an audio path using cached normalized maps, lazily built ──
-const resolveAudio = (artist, album, filename) => {
-  if (!artist || !album || !filename) return null;
-  const bareFilename = filename.replace(/^bin\/mp3\//, '');
-
-  const realArtistFolder = artistFoldersMap.get(normalize(artist));
-  if (!realArtistFolder) return null;
-
-  const albumMap = getAlbumMap(realArtistFolder);
-  const realAlbumFolder = albumMap.get(normalize(album));
-  if (!realAlbumFolder) return null;
-
-  const trackMap = getTrackMap(realArtistFolder, realAlbumFolder);
-  const realTrackFile = trackMap.get(normalize(bareFilename));
-  if (!realTrackFile) return null;
-
-  return `${realArtistFolder}/${realAlbumFolder}/${realTrackFile}`;
-};
-
-// ── Build full coverUrl and audioUrl using cached fuzzy resolution ──
-const buildTrackUrls = (track) => {
-  const realCover = resolveCover(track.cover);
-  const realAudioPath = resolveAudio(track.artist, track.album, track.filename);
-
-  return {
-    ...track,
-    coverUrl: realCover
-      ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
-      : null,
-    audioUrl: realAudioPath
-      ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
-      : `http://localhost:5000/audio/dummy.mp3`,
-  };
-};
+// ── Cover/audio URL resolution — shared with playlistController.js, see
+// utils/trackUrls.js for the fuzzy-filesystem-match + upload-branching logic. ──
+const { getCoverUrl, getAudioUrl, buildTrackUrls } = require('../utils/trackUrls');
 
 // ── Ensure uploads directory exists ──
 const uploadDir = path.join(__dirname, '../../assets/uploads');
@@ -165,6 +50,212 @@ router.post('/upload-avatar', requireAuth, upload.single('avatar'), async (req, 
   } catch (err) {
     console.error('Avatar upload error:', err);
     res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+// ── Multer config for musician track uploads — audio required, cover optional.
+// Separate from the avatar `upload` instance above since it needs two named fields
+// and a much larger size limit for audio files. ──
+const trackStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const prefix = file.fieldname === 'audio' ? 'track-audio' : 'track-cover';
+    cb(null, `${prefix}-${req.user.id}-${Date.now()}${ext}`);
+  },
+});
+
+const trackUpload = multer({
+  storage: trackStorage,
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB max — comfortably covers a full track at high bitrate
+  fileFilter: (req, file, cb) => {
+    const allowedAudio = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/aac', 'audio/ogg'];
+    const allowedImage = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (file.fieldname === 'audio') {
+      allowedAudio.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid audio file type'));
+    } else if (file.fieldname === 'cover') {
+      allowedImage.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid cover image type'));
+    } else {
+      cb(new Error('Unexpected field'));
+    }
+  },
+});
+
+// Musician track upload — only accounts with is_artist=true can publish tracks.
+// Inserted straight into seed_tracks so uploads flow through every existing
+// search/discovery/playback path exactly like Andrew's imported catalog, just
+// flagged is_user_upload so URL resolution skips the fuzzy filesystem match
+// (see getCoverUrl/getAudioUrl above) in favor of these tracks' own stored URLs.
+router.post(
+  '/tracks/upload',
+  requireAuth,
+  trackUpload.fields([{ name: 'audio', maxCount: 1 }, { name: 'cover', maxCount: 1 }]),
+  async (req, res) => {
+    try {
+      const artistCheck = await pool.query('SELECT is_artist, display_name, username FROM users WHERE id = $1', [req.user.id]);
+      const account = artistCheck.rows[0];
+      if (!account?.is_artist) {
+        return res.status(403).json({ error: 'Only musician accounts can upload tracks.' });
+      }
+
+      const audioFile = req.files?.audio?.[0];
+      if (!audioFile) return res.status(400).json({ error: 'An audio file is required.' });
+
+      const { title, album, genre } = req.body;
+      if (!title || !title.trim()) return res.status(400).json({ error: 'Title is required.' });
+
+      const artistName = account.display_name || account.username;
+      const uploadedAudioUrl = `http://localhost:5000/uploads/${audioFile.filename}`;
+      const coverFile = req.files?.cover?.[0];
+      const uploadedCoverUrl = coverFile ? `http://localhost:5000/uploads/${coverFile.filename}` : null;
+
+      const result = await pool.query(
+        `INSERT INTO seed_tracks
+           (title, artist, album, genre, uploader_user_id, is_user_upload, uploaded_audio_url, uploaded_cover_url)
+         VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7)
+         ON CONFLICT (title, artist) DO UPDATE SET
+           album = EXCLUDED.album,
+           genre = EXCLUDED.genre,
+           uploaded_audio_url = EXCLUDED.uploaded_audio_url,
+           uploaded_cover_url = EXCLUDED.uploaded_cover_url
+         RETURNING id, title, artist, album, genre`,
+        [title.trim(), artistName, album || null, genre || null, req.user.id, uploadedAudioUrl, uploadedCoverUrl]
+      );
+
+      const track = result.rows[0];
+      res.status(201).json({
+        track: {
+          ...track,
+          coverUrl: uploadedCoverUrl,
+          audioUrl: uploadedAudioUrl,
+        },
+      });
+    } catch (err) {
+      console.error('Track upload error:', err);
+      res.status(500).json({ error: 'Upload failed.' });
+    }
+  }
+);
+
+// A musician's own uploaded tracks — powers a "Your Uploads" row in My Music.
+router.get('/tracks/mine', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, title, artist, album, genre, is_user_upload, uploaded_audio_url, uploaded_cover_url, created_at
+       FROM seed_tracks
+       WHERE uploader_user_id = $1
+       ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+    const tracks = result.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      artist: row.artist,
+      album: row.album,
+      genre: row.genre,
+      coverUrl: getCoverUrl(row),
+      audioUrl: getAudioUrl(row),
+    }));
+    res.json({ tracks });
+  } catch (err) {
+    console.error('Get my uploads error:', err);
+    res.status(500).json({ error: 'Failed to fetch your uploads.' });
+  }
+});
+
+// ── Best-effort removal of a locally-stored upload file from assets/uploads,
+// given its public URL. Never throws — a missing/already-deleted file shouldn't
+// block the DB delete from succeeding. ──
+const deleteUploadedFile = (publicUrl) => {
+  if (!publicUrl) return;
+  try {
+    const filename = publicUrl.split('/uploads/')[1];
+    if (!filename) return;
+    const filePath = path.join(uploadDir, decodeURIComponent(filename));
+    fs.unlink(filePath, (err) => {
+      if (err && err.code !== 'ENOENT') console.error('Failed to delete upload file:', filePath, err.message);
+    });
+  } catch (err) {
+    console.error('Failed to resolve upload file path for deletion:', err.message);
+  }
+};
+
+// Delete one of the current musician's own uploaded tracks. Ownership is checked
+// via uploader_user_id so a musician can't delete another account's upload, and
+// is_user_upload=true so this can never touch Andrew's imported catalog rows.
+router.delete('/tracks/:id', requireAuth, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `DELETE FROM seed_tracks
+       WHERE id = $1 AND uploader_user_id = $2 AND is_user_upload = TRUE
+       RETURNING uploaded_audio_url, uploaded_cover_url`,
+      [id, req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Upload not found.' });
+    }
+
+    const { uploaded_audio_url, uploaded_cover_url } = result.rows[0];
+    deleteUploadedFile(uploaded_audio_url);
+    deleteUploadedFile(uploaded_cover_url);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete upload error:', err);
+    res.status(500).json({ error: 'Failed to delete upload.' });
+  }
+});
+
+// Update one of the current musician's own uploaded tracks — title/album/genre
+// and optionally a replacement cover image. Audio itself isn't replaceable here;
+// re-uploading a fresh version is the path for that. Reuses the `upload` multer
+// instance from the avatar endpoint above (images only, 5MB) with a 'cover' field,
+// same pattern playlistRoutes.js uses for playlist covers.
+router.put('/tracks/:id', requireAuth, upload.single('cover'), async (req, res) => {
+  const { id } = req.params;
+  const { title, album, genre } = req.body;
+
+  try {
+    if (!title || !title.trim()) return res.status(400).json({ error: 'Title is required.' });
+
+    const ownCheck = await pool.query(
+      `SELECT uploaded_cover_url FROM seed_tracks
+       WHERE id = $1 AND uploader_user_id = $2 AND is_user_upload = TRUE`,
+      [id, req.user.id]
+    );
+    if (ownCheck.rows.length === 0) return res.status(404).json({ error: 'Upload not found.' });
+
+    let uploadedCoverUrl = ownCheck.rows[0].uploaded_cover_url;
+    if (req.file) {
+      deleteUploadedFile(uploadedCoverUrl); // replace, not accumulate — remove the old cover file
+      uploadedCoverUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    }
+
+    const result = await pool.query(
+      `UPDATE seed_tracks
+       SET title = $1, album = $2, genre = $3, uploaded_cover_url = $4
+       WHERE id = $5 AND uploader_user_id = $6 AND is_user_upload = TRUE
+       RETURNING id, title, artist, album, genre, is_user_upload, uploaded_audio_url, uploaded_cover_url`,
+      [title.trim(), album || null, genre || null, uploadedCoverUrl, id, req.user.id]
+    );
+
+    const track = result.rows[0];
+    res.json({
+      track: {
+        ...track,
+        coverUrl: getCoverUrl(track),
+        audioUrl: getAudioUrl(track),
+      },
+    });
+  } catch (err) {
+    if (err.code === '23505') { // unique_violation on seed_tracks(title, artist)
+      return res.status(409).json({ error: 'You already have a track with that title.' });
+    }
+    console.error('Update upload error:', err);
+    res.status(500).json({ error: 'Failed to update track.' });
   }
 });
 
@@ -277,6 +368,9 @@ router.get('/search', async (req, res) => {
         NULL as artist_name,
         cover,
         NULL as filename,
+        is_user_upload,
+        uploaded_audio_url,
+        uploaded_cover_url,
         NULL::uuid as user_id,
         NULL as username,
         NULL as profile_picture,
@@ -302,6 +396,9 @@ router.get('/search', async (req, res) => {
         artist as artist_name,
         cover,
         NULL as filename,
+        is_user_upload,
+        uploaded_audio_url,
+        uploaded_cover_url,
         NULL::uuid as user_id,
         NULL as username,
         NULL as profile_picture,
@@ -330,6 +427,9 @@ router.get('/search', async (req, res) => {
         artist as artist_name,
         cover,
         filename,
+        is_user_upload,
+        uploaded_audio_url,
+        uploaded_cover_url,
         NULL::uuid as user_id,
         NULL as username,
         NULL as profile_picture,
@@ -355,6 +455,9 @@ router.get('/search', async (req, res) => {
         NULL as artist_name,
         NULL as cover,
         NULL as filename,
+        NULL::boolean as is_user_upload,
+        NULL as uploaded_audio_url,
+        NULL as uploaded_cover_url,
         id as user_id,
         username,
         profile_picture,
@@ -384,6 +487,9 @@ router.get('/search', async (req, res) => {
         NULL as artist_name,
         NULL as cover,
         NULL as filename,
+        NULL::boolean as is_user_upload,
+        NULL as uploaded_audio_url,
+        NULL as uploaded_cover_url,
         id as user_id,
         username,
         profile_picture,
@@ -420,12 +526,8 @@ router.get('/search', async (req, res) => {
       }
       return {
         ...r,
-        coverUrl: resolveCover(r.cover)
-          ? `http://localhost:5000/covers/${encodeURIComponent(resolveCover(r.cover))}`
-          : null,
-        audioUrl: resolveAudio(r.artist_name, r.album, r.filename)
-          ? `http://localhost:5000/audio/${resolveAudio(r.artist_name, r.album, r.filename).split('/').map(encodeURIComponent).join('/')}`
-          : null,
+        coverUrl: getCoverUrl({ ...r, artist: r.artist_name }),
+        audioUrl: getAudioUrl({ ...r, artist: r.artist_name }),
       };
     });
     res.json({ results: mapped });
@@ -573,7 +675,7 @@ router.get('/albums/discover', requireAuth, async (req, res) => {
 
      result = await pool.query(
         `SELECT DISTINCT ON (artist, album)
-          artist, album, genre, cover, filename
+          artist, album, genre, cover, filename, is_user_upload, uploaded_audio_url, uploaded_cover_url
         FROM (
           SELECT * FROM seed_tracks
           WHERE album IS NOT NULL AND album != ''
@@ -608,7 +710,7 @@ router.get('/albums/discover', requireAuth, async (req, res) => {
         // ── Brand new user, no signal at all yet — fall back to fully random ──
         result = await pool.query(
           `SELECT DISTINCT ON (artist, album)
-            artist, album, genre, cover, filename
+            artist, album, genre, cover, filename, is_user_upload, uploaded_audio_url, uploaded_cover_url
           FROM (
             SELECT * FROM seed_tracks
             WHERE album IS NOT NULL AND album != ''
@@ -624,7 +726,7 @@ router.get('/albums/discover', requireAuth, async (req, res) => {
           `SELECT * FROM (
             (
               SELECT DISTINCT ON (artist, album)
-                artist, album, genre, cover, filename, 2 as weight
+                artist, album, genre, cover, filename, is_user_upload, uploaded_audio_url, uploaded_cover_url, 2 as weight
               FROM (
                 SELECT * FROM seed_tracks
                 WHERE album IS NOT NULL AND album != ''
@@ -637,7 +739,7 @@ router.get('/albums/discover', requireAuth, async (req, res) => {
             UNION ALL
             (
               SELECT DISTINCT ON (artist, album)
-                artist, album, genre, cover, filename, 1 as weight
+                artist, album, genre, cover, filename, is_user_upload, uploaded_audio_url, uploaded_cover_url, 1 as weight
               FROM (
                 SELECT * FROM seed_tracks
                 WHERE album IS NOT NULL AND album != ''
@@ -659,21 +761,13 @@ router.get('/albums/discover', requireAuth, async (req, res) => {
     // ── Shuffle and trim to requested limit, resolve real cover/audio URLs ──
     const shuffled = result.rows.sort(() => Math.random() - 0.5).slice(0, parseInt(limit));
 
-    const albums = shuffled.map(row => {
-      const realCover = resolveCover(row.cover);
-      const realAudioPath = resolveAudio(row.artist, row.album, row.filename);
-      return {
-        artist: row.artist,
-        album: row.album,
-        genre: row.genre,
-        coverUrl: realCover
-          ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
-          : null,
-        audioUrl: realAudioPath
-          ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
-          : `http://localhost:5000/audio/dummy.mp3`,
-      };
-    });
+    const albums = shuffled.map(row => ({
+      artist: row.artist,
+      album: row.album,
+      genre: row.genre,
+      coverUrl: getCoverUrl(row),
+      audioUrl: getAudioUrl(row),
+    }));
 
     res.json({ albums });
   } catch (err) {
@@ -691,7 +785,8 @@ router.get('/artists/detail', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT title, album, genre, subgenre, similar_artist, mood, cover, filename
+      `SELECT title, album, genre, subgenre, similar_artist, mood, cover, filename,
+              is_user_upload, uploaded_audio_url, uploaded_cover_url
        FROM seed_tracks
        WHERE artist = $1
        ORDER BY album`,
@@ -712,25 +807,20 @@ router.get('/artists/detail', async (req, res) => {
           trackCount: 0,
           cover: row.cover,
           filename: row.filename,
+          is_user_upload: row.is_user_upload,
+          uploaded_audio_url: row.uploaded_audio_url,
+          uploaded_cover_url: row.uploaded_cover_url,
         });
       }
       albumMap.get(row.album).trackCount += 1;
     }
 
-    const albums = Array.from(albumMap.values()).map(a => {
-      const realCover = resolveCover(a.cover);
-      const realAudioPath = resolveAudio(name, a.album, a.filename);
-      return {
-        album: a.album,
-        trackCount: a.trackCount,
-        coverUrl: realCover
-          ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
-          : null,
-        audioUrl: realAudioPath
-          ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
-          : `http://localhost:5000/audio/dummy.mp3`,
-      };
-    });
+    const albums = Array.from(albumMap.values()).map(a => ({
+      album: a.album,
+      trackCount: a.trackCount,
+      coverUrl: getCoverUrl(a),
+      audioUrl: getAudioUrl({ ...a, artist: name }),
+    }));
 
     // ── Collect unique tags across all tracks ──
     const genres = [...new Set(result.rows.map(r => r.genre).filter(Boolean))];
@@ -765,10 +855,11 @@ router.get('/albums/detail', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT title, track_number, length_seconds, genre, cover, filename
+      `SELECT title, track_number, length_seconds, genre, cover, filename,
+              is_user_upload, uploaded_audio_url, uploaded_cover_url
       FROM seed_tracks
       WHERE artist = $1 AND album = $2
-      ORDER BY 
+      ORDER BY
         CASE WHEN track_number ~ '^[0-9]+$' THEN track_number::int ELSE 999 END`,
       [artist, album]
     );
@@ -777,28 +868,22 @@ router.get('/albums/detail', async (req, res) => {
       return res.status(404).json({ error: 'Album not found.' });
     }
 
-    const realCover = resolveCover(result.rows[0].cover);
-    const coverUrl = realCover
-      ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
-      : null;
-
-    const tracks = result.rows.map((row, i) => {
-      const realAudioPath = resolveAudio(artist, album, row.filename);
-      return {
-        trackNumber: row.track_number || String(i + 1),
-        title: row.title,
-        lengthSeconds: row.length_seconds,
-        coverUrl,
-        audioUrl: realAudioPath
-          ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
-          : `http://localhost:5000/audio/dummy.mp3`,
-      };
-    });
+    // ── Per-track resolution, not one shared album-level cover — a musician's own
+    // upload carries its own uploaded_cover_url distinct from any catalog cover, and
+    // even within the catalog this is more correct than assuming every track on an
+    // album shares exactly the first row's cover. ──
+    const tracks = result.rows.map((row, i) => ({
+      trackNumber: row.track_number || String(i + 1),
+      title: row.title,
+      lengthSeconds: row.length_seconds,
+      coverUrl: getCoverUrl(row),
+      audioUrl: getAudioUrl({ ...row, artist, album }),
+    }));
 
     res.json({
       artist,
       album,
-      coverUrl,
+      coverUrl: getCoverUrl(result.rows[0]),
       genre: result.rows[0].genre,
       tracks,
     });
@@ -814,7 +899,7 @@ router.get('/albums/random', async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT DISTINCT ON (artist, album)
-        artist, album, genre, cover, filename
+        artist, album, genre, cover, filename, is_user_upload, uploaded_audio_url, uploaded_cover_url
        FROM seed_tracks
        WHERE album IS NOT NULL AND album != ''
        ORDER BY artist, album, RANDOM()
@@ -825,21 +910,13 @@ router.get('/albums/random', async (req, res) => {
     // ── Shuffle the album list and trim to requested limit ──
     const shuffled = result.rows.sort(() => Math.random() - 0.5).slice(0, parseInt(limit));
 
-    const albums = shuffled.map(row => {
-      const realCover = resolveCover(row.cover);
-      const realAudioPath = resolveAudio(row.artist, row.album, row.filename);
-      return {
-        artist: row.artist,
-        album: row.album,
-        genre: row.genre,
-        coverUrl: realCover
-          ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
-          : null,
-        audioUrl: realAudioPath
-          ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
-          : `http://localhost:5000/audio/dummy.mp3`,
-      };
-    });
+    const albums = shuffled.map(row => ({
+      artist: row.artist,
+      album: row.album,
+      genre: row.genre,
+      coverUrl: getCoverUrl(row),
+      audioUrl: getAudioUrl(row),
+    }));
 
     res.json({ albums });
   } catch (err) {
@@ -923,7 +1000,9 @@ router.get('/artists/search', async (req, res) => {
       `SELECT DISTINCT ON (artist)
         artist as name,
         genre,
-        cover
+        cover,
+        is_user_upload,
+        uploaded_cover_url
        FROM seed_tracks
        WHERE LOWER(artist) LIKE $1
        ORDER BY artist
@@ -934,9 +1013,7 @@ router.get('/artists/search', async (req, res) => {
       id: r.name,
       name: r.name,
       genre: r.genre,
-      coverUrl: resolveCover(r.cover)
-        ? `http://localhost:5000/covers/${encodeURIComponent(resolveCover(r.cover))}`
-        : null,
+      coverUrl: getCoverUrl(r),
     }));
     res.json({ artists });
   } catch (err) {
@@ -1076,25 +1153,19 @@ router.get('/history/recent', requireAuth, async (req, res) => {
     // ── Look up real cover/filename for each track from seed_tracks, then resolve real URLs ──
     const tracks = await Promise.all(trimmed.map(async (row) => {
       const seedResult = await pool.query(
-        `SELECT cover, filename FROM seed_tracks WHERE title = $1 AND artist = $2 LIMIT 1`,
+        `SELECT cover, filename, is_user_upload, uploaded_audio_url, uploaded_cover_url
+         FROM seed_tracks WHERE title = $1 AND artist = $2 LIMIT 1`,
         [row.track_title, row.artist]
       );
       const seedRow = seedResult.rows[0];
-
-      const realCover = seedRow ? resolveCover(seedRow.cover) : null;
-      const realAudioPath = seedRow ? resolveAudio(row.artist, row.album, seedRow.filename) : null;
 
       return {
         title: row.track_title,
         artist: row.artist,
         album: row.album,
         genre: row.genre,
-        coverUrl: realCover
-          ? `http://localhost:5000/covers/${encodeURIComponent(realCover)}`
-          : null,
-        audioUrl: realAudioPath
-          ? `http://localhost:5000/audio/${realAudioPath.split('/').map(encodeURIComponent).join('/')}`
-          : `http://localhost:5000/audio/dummy.mp3`,
+        coverUrl: seedRow ? getCoverUrl(seedRow) : null,
+        audioUrl: seedRow ? getAudioUrl({ ...seedRow, artist: row.artist, album: row.album }) : `http://localhost:5000/audio/dummy.mp3`,
       };
     }));
 
@@ -1135,7 +1206,8 @@ router.get('/home/feed', requireAuth, async (req, res) => {
       let fallbackResult;
       if (favoriteArtists.length > 0) {
         fallbackResult = await pool.query(
-          `SELECT title, artist, album, genre, cover, filename, length_seconds
+          `SELECT title, artist, album, genre, cover, filename, length_seconds,
+                  is_user_upload, uploaded_audio_url, uploaded_cover_url
            FROM seed_tracks
            WHERE artist = ANY($1)
            ORDER BY RANDOM()
@@ -1144,7 +1216,8 @@ router.get('/home/feed', requireAuth, async (req, res) => {
         );
       } else {
         fallbackResult = await pool.query(
-          `SELECT title, artist, album, genre, cover, filename, length_seconds
+          `SELECT title, artist, album, genre, cover, filename, length_seconds,
+                  is_user_upload, uploaded_audio_url, uploaded_cover_url
            FROM seed_tracks
            ORDER BY RANDOM()
            LIMIT $1`,
@@ -1172,7 +1245,8 @@ router.get('/home/feed', requireAuth, async (req, res) => {
 
     for (const seed of historyTracks) {
       const similar = await pool.query(
-        `SELECT title, artist, album, genre, cover, filename, length_seconds
+        `SELECT title, artist, album, genre, cover, filename, length_seconds,
+                is_user_upload, uploaded_audio_url, uploaded_cover_url
          FROM seed_tracks
          WHERE (
            artist IN (
