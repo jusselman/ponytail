@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getMe } from '../services/authService';
-import { getMyPlaylists, getFollowedPlaylists } from '../services/playlistService';
+import { getFollowedPlaylists } from '../services/playlistService';
 import { useUI } from '../context/UIContext';
 import SettingsPanel from './SettingsPanel';
 import PlaylistPanel from './PlaylistPanel';
@@ -248,8 +248,13 @@ const MOCK_FOLLOWED_USERS = [
 
 // ─── Profile Panel ────────────────────────────────────────────────────────────
 export default function ProfilePanel() {
-  const { isProfileOpen, closeProfile, openSettings, profileImage, setProfileImage, user, setUser, openPublicPlaylist } = useUI();
-  const [playlists, setPlaylists] = useState([]);
+  const {
+    isProfileOpen, closeProfile, openSettings, profileImage, setProfileImage, user, setUser, openPublicPlaylist,
+    myPlaylists, refreshMyPlaylists, addMyPlaylist,
+  } = useUI();
+  // ── Playlists live in UIContext now, shared with MyMusicScreen.jsx, so a
+  // playlist created or edited from either screen shows up in both instantly ──
+  const playlists = myPlaylists.map(mapPlaylist);
   const [followedPlaylists, setFollowedPlaylists] = useState([]);
   const [isPlaylistPanelOpen, setIsPlaylistPanelOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
@@ -269,20 +274,12 @@ export default function ProfilePanel() {
   loadUser();
 }, []);
 
-  // ── Fetch the user's real playlists so the stat and the row above reflect actual data.
-  // Extracted so it can also be re-run after the playlist panel closes, picking up any
-  // track/cover edits made while it was open — same pattern as MyMusicScreen.jsx. ──
-  const fetchPlaylists = async () => {
-    try {
-      const data = await getMyPlaylists();
-      setPlaylists((data || []).map(mapPlaylist));
-    } catch (err) {
-      console.log('Failed to fetch playlists:', err);
-    }
-  };
-
+  // ── Fetch the user's real playlists (shared UIContext state) so the stat and
+  // the row above reflect actual data. Re-run after the playlist panel closes,
+  // picking up any track/cover edits made while it was open — same pattern as
+  // MyMusicScreen.jsx, which shares this same underlying state. ──
   useEffect(() => {
-    fetchPlaylists();
+    refreshMyPlaylists();
   }, []);
 
   // ── Fetch playlists you follow — re-run whenever the panel opens so a follow/unfollow
@@ -315,7 +312,7 @@ export default function ProfilePanel() {
   const handleClosePlaylistPanel = () => {
     setIsPlaylistPanelOpen(false);
     setSelectedPlaylist(null);
-    fetchPlaylists();
+    refreshMyPlaylists();
   };
 
 const fileInputRef = useRef(null);
@@ -527,7 +524,7 @@ const handleImageChange = async (e) => {
           isOpen={isPlaylistPanelOpen}
           playlist={selectedPlaylist}
           onClose={handleClosePlaylistPanel}
-          onCreated={(playlist) => setPlaylists(prev => [mapPlaylist(playlist), ...prev])}
+          onCreated={addMyPlaylist}
         />
 
       </div>

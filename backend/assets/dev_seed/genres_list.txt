@@ -1,5 +1,5 @@
 Genre List Report
-Generated: 2026-06-28T20:27:30.434Z
+Generated: 2026-07-17T18:10:27.863Z
 Total unique genres: 32
 
 ── Genres (alphabetical, with track counts) ──

@@ -38,6 +38,46 @@ const MOCK_GENRES = [
   "Acoustic", "Chanson", "MPB", "Flamenco",
 ];
 
+// ─── Elongated genre picker ordering (Andrew's spec) — top 5 always shown,
+// the remaining 27 revealed via "Show All" in this exact order with counts ───
+const TOP_GENRES = ["Rock", "Jazz", "Pop", "Hip-Hop", "Electronic"];
+const MORE_GENRES = [
+  { name: "Folk", count: 923 },
+  { name: "Classical", count: 899 },
+  { name: "Country", count: 467 },
+  { name: "Punk", count: 459 },
+  { name: "Soul", count: 457 },
+  { name: "Metal", count: 431 },
+  { name: "R&B", count: 335 },
+  { name: "Funk", count: 218 },
+  { name: "World", count: 163 },
+  { name: "Reggae", count: 81 },
+  { name: "Soundtrack", count: 66 },
+  { name: "Latin", count: 65 },
+  { name: "Blues", count: 63 },
+  { name: "Experimental", count: 50 },
+  { name: "Acoustic", count: 44 },
+  { name: "Indie", count: 38 },
+  { name: "Dance", count: 35 },
+  { name: "Industrial", count: 35 },
+  { name: "Ska", count: 25 },
+  { name: "Vocal", count: 22 },
+  { name: "Brazilian", count: 21 },
+  { name: "Afrobeat", count: 18 },
+  { name: "Musical", count: 18 },
+  { name: "Alternative", count: 17 },
+  { name: "Chanson", count: 15 },
+  { name: "MPB", count: 13 },
+  { name: "Flamenco", count: 11 },
+];
+
+// ─── Same hue formula the Browse-by-Genre grid uses, keyed off each genre's
+// position in MOCK_GENRES — keeps a given genre the same color everywhere ───
+const genreHue = (genreName) => {
+  const idx = MOCK_GENRES.indexOf(genreName);
+  return ((idx >= 0 ? idx : 0) * 37 + 160) % 360;
+};
+
 // ─── Vinyl case overlay images ─────────────────────────────────────────────────
 const VINYL_CASES = [
   'Vinyl-Relic1.png',
@@ -132,22 +172,50 @@ const XIcon = ({ size = 28, color = "#ff4444" }) => (
   </svg>
 );
 
+// ─── Elongated genre row — full-width (matches search bar width/radius), name
+// centered, flush against its neighbors (no gap). Colored like the original
+// Browse-by-Genre chips (per-genre hue gradient), white text. The "Show All"
+// row uses a flat gray background instead of a hue gradient. ───
+const ElongatedGenreRow = ({ label, onSelect, hue = 0, isShowAll = false }) => (
+  <div
+    onMouseDown={(e) => { e.preventDefault(); onSelect(); }}
+    style={{
+      width: "100%", padding: "12px 0", borderRadius: "12px",
+      textAlign: "center", boxSizing: "border-box",
+      background: isShowAll
+        ? "#555555"
+        : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+      color: "#ffffff",
+      fontSize: "13px", fontWeight: "500",
+      fontFamily: "'Kanit', sans-serif",
+      cursor: "pointer",
+    }}
+  >
+    {label}
+  </div>
+);
+
 // ─── Standard Search Tab ──────────────────────────────────────────────────────
 const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGenres, onToggleGenre }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [showAllGenres, setShowAllGenres] = useState(false);
   const debounceRef = useRef(null);
+  const inputRef = useRef(null);
   const { playStandaloneTrack, playTrack } = usePlayer();
   const [recentActivity, setRecentActivity] = useState([]);
-  
+
 
  const searchTracks = async (q) => {
   if (!q || q.length < 2) { setResults([]); return; }
   setSearching(true);
   try {
-    const res = await fetch(`http://localhost:5000/api/auth/search?q=${encodeURIComponent(q)}`);
+    const params = new URLSearchParams();
+    params.set('q', q);
+    if (selectedGenres.length > 0) params.set('genres', selectedGenres.join(','));
+    const res = await fetch(`http://localhost:5000/api/auth/search?${params.toString()}`);
     const data = await res.json();
     const mapped = (data.results || []).map(r => ({
       type: r.type,
@@ -175,8 +243,35 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
     debounceRef.current = setTimeout(() => searchTracks(val), 350);
   };
 
+  // ── Re-run the active search whenever the genre filter changes, so selecting
+  // or removing a genre chip re-filters results without requiring a re-type ──
+  useEffect(() => {
+    if (query.length >= 2) searchTracks(query);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGenres]);
+
   const showResults = query.length >= 2;
   const showEmpty = !query;
+
+  // ── Elongated genre picker shows whenever the bar is focused and empty —
+  // picking a genre just removes it from this list (it stays open, showing
+  // whatever's left); only typing a query or hitting the search bar's X closes it ──
+  const showGenrePicker = focused && query.length === 0;
+  const visibleTopGenres = TOP_GENRES.filter(g => !selectedGenres.includes(g));
+  const visibleMoreGenres = MORE_GENRES.filter(g => !selectedGenres.includes(g.name));
+
+  // ── Collapse back to the top-5 view any time the picker closes, so it doesn't
+  // reopen already-expanded next time the user taps the search bar ──
+  useEffect(() => {
+    if (!showGenrePicker) setShowAllGenres(false);
+  }, [showGenrePicker]);
+
+  const handleClearAndClose = () => {
+    setQuery("");
+    setResults([]);
+    setFocused(false);
+    if (inputRef.current) inputRef.current.blur();
+  };
 
   useEffect(() => {
   const fetchRecent = async () => {
@@ -203,6 +298,7 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
           <SearchIcon color={focused ? colors.teal : "#666"} />
         </div>
         <input
+          ref={inputRef}
           style={{
             width: "100%", padding: "12px 40px 12px 40px",
             borderRadius: "12px", backgroundColor: colors.bgCard,
@@ -216,11 +312,11 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
           value={query}
           onChange={handleQueryChange}
           onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onBlur={() => setTimeout(() => setFocused(false), 150)}
         />
-        {query.length > 0 && (
+        {(query.length > 0 || focused) && (
           <button
-            onClick={() => { setQuery(""); setResults([]); }}
+            onClick={handleClearAndClose}
             style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "4px" }}
           >
             <ClearIcon />
@@ -229,6 +325,29 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
         {searching && (
           <div style={{ position: "absolute", right: "36px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
             searching...
+          </div>
+        )}
+
+        {/* ── Elongated genre picker — absolutely positioned, stacked above (higher
+        z-index than) the Recent/Loved/Browse-by-Genre rows below so it visually
+        covers them without removing them from the layout. No wrapping panel —
+        rows sit flush against each other, same width/radius as the search bar.
+        Tapping a row just removes that genre from this list (it stays open);
+        it only closes via the search bar's X. Rows use onMouseDown (not onClick)
+        paired with the input's delayed blur above, so taps register before the
+        input loses focus. ── */}
+        {showGenrePicker && (
+          <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0, zIndex: 50 }}>
+            {visibleTopGenres.map(genre => (
+              <ElongatedGenreRow key={genre} label={genre} hue={genreHue(genre)} onSelect={() => onToggleGenre(genre)} />
+            ))}
+            {!showAllGenres ? (
+              <ElongatedGenreRow label="Show All" isShowAll onSelect={() => setShowAllGenres(true)} />
+            ) : (
+              visibleMoreGenres.map(({ name }) => (
+                <ElongatedGenreRow key={name} label={name} hue={genreHue(name)} onSelect={() => onToggleGenre(name)} />
+              ))
+            )}
           </div>
         )}
       </div>
@@ -308,8 +427,30 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
   <div style={{ opacity: 1 }}>
     {/* Recent */}
 <div style={{ marginBottom: "6px", animation: "fadeSlideUp 0.4s ease 0.05s forwards", opacity: 0 }}>
-  <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
-    Recent
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase" }}>
+      Recent
+    </div>
+    {/* ── Selected genre filter chips — small teal chip per selected genre,
+    tap to remove. Placed beside the Recent label per spec. ── */}
+    {selectedGenres.length > 0 && (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", justifyContent: "flex-end" }}>
+        {selectedGenres.map(genre => (
+          <div
+            key={genre}
+            onClick={() => onToggleGenre(genre)}
+            style={{
+              padding: "3px 10px", borderRadius: "20px",
+              border: `1.5px solid ${colors.teal}`,
+              color: colors.teal, fontSize: "10px", fontWeight: "600",
+              fontFamily: "'Kanit', sans-serif", cursor: "pointer",
+            }}
+          >
+            {genre}
+          </div>
+        ))}
+      </div>
+    )}
   </div>
   <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px", minHeight: "70px", alignItems: "center" }}>
     {recentActivity.length > 0 ? (

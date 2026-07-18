@@ -311,10 +311,15 @@ router.put('/update-profile', async (req, res) => {
 
 // Search seed_tracks by artist or title
 router.get('/search', async (req, res) => {
-  const { q, type } = req.query;
+  const { q, type, genres } = req.query;
   if (!q || q.trim().length < 2) {
     return res.status(400).json({ error: 'Query must be at least 2 characters.' });
   }
+
+  // ── Optional genre filter, shared with Discovery's selectedGenres — applied only
+  // to the artist/album/track branches below (musician/user results have no genre
+  // and are always unaffected by this filter). ──
+  const genreList = genres ? genres.split(',').map(g => g.trim()).filter(Boolean) : null;
 
   try {
     // ── Normalize query — strip punctuation, collapse spaces, lowercase ──
@@ -380,9 +385,12 @@ router.get('/search', async (req, res) => {
         ) as score
       FROM seed_tracks
       WHERE
-        similarity(LOWER(artist), $1) > $3
-        OR similarity(LOWER(artist), $2) > $3
-        OR LOWER(artist) LIKE '%' || $2 || '%'
+        (
+          similarity(LOWER(artist), $1) > $3
+          OR similarity(LOWER(artist), $2) > $3
+          OR LOWER(artist) LIKE '%' || $2 || '%'
+        )
+        AND ($4::text[] IS NULL OR genre = ANY($4))
       ORDER BY artist, score DESC
       LIMIT 5
     )
@@ -414,6 +422,7 @@ router.get('/search', async (req, res) => {
           OR similarity(LOWER(album), $2) > $3
           OR LOWER(album) LIKE '%' || $2 || '%'
         )
+        AND ($4::text[] IS NULL OR genre = ANY($4))
       ORDER BY artist, album, score DESC
       LIMIT 5
     )
@@ -439,9 +448,12 @@ router.get('/search', async (req, res) => {
         ) as score
       FROM seed_tracks
       WHERE
-        similarity(LOWER(title), $1) > $3
-        OR similarity(LOWER(title), $2) > $3
-        OR LOWER(title) LIKE '%' || $2 || '%'
+        (
+          similarity(LOWER(title), $1) > $3
+          OR similarity(LOWER(title), $2) > $3
+          OR LOWER(title) LIKE '%' || $2 || '%'
+        )
+        AND ($4::text[] IS NULL OR genre = ANY($4))
       ORDER BY score DESC
       LIMIT 5
     )
@@ -512,7 +524,7 @@ router.get('/search', async (req, res) => {
     ORDER BY score DESC
     LIMIT 15
   `;
-  params = [normalizedQuery, stripped, SIMILARITY_THRESHOLD];
+  params = [normalizedQuery, stripped, SIMILARITY_THRESHOLD, genreList];
     }
 
     const result = await pool.query(query, params);

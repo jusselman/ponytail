@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getMe, getToken, getMyUploads } from '../services/authService';
-import { getMyPlaylists } from '../services/playlistService';
+import { useUI } from '../context/UIContext';
 import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
@@ -318,7 +318,10 @@ export default function MyMusicScreen({ setScreen }) {
   const [activeNav, setActiveNav] = useState("mymusic");
   const [loadingSuggested, setLoadingSuggested] = useState(true);
   const [loadingNew, setLoadingNew] = useState(true);
-  const [playlists, setPlaylists] = useState([]);
+  // ── Playlists live in UIContext now, shared with ProfilePanel, so creating one
+  // here shows up there instantly (and vice versa) without an app restart ──
+  const { myPlaylists, refreshMyPlaylists, addMyPlaylist } = useUI();
+  const playlists = myPlaylists.map(mapPlaylist);
   const [loadingPlaylists, setLoadingPlaylists] = useState(true);
   const [isPlaylistPanelOpen, setIsPlaylistPanelOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
@@ -402,15 +405,13 @@ export default function MyMusicScreen({ setScreen }) {
     setMyUploads(prev => prev.filter(t => t.id !== deleted.id));
   };
 
-  // ── Fetch the user's real playlists — on mount, and again whenever the playlist
-  // panel closes, so track counts/covers stay current after editing ──
+  // ── Fetch the user's real playlists (shared UIContext state) — on mount, and
+  // again whenever the playlist panel closes, so track counts/covers stay
+  // current after editing ──
   const fetchPlaylists = async () => {
     setLoadingPlaylists(true);
     try {
-      const data = await getMyPlaylists();
-      setPlaylists((data || []).map(mapPlaylist));
-    } catch (err) {
-      console.log('Failed to fetch playlists:', err);
+      await refreshMyPlaylists();
     } finally {
       setLoadingPlaylists(false);
     }
@@ -629,7 +630,7 @@ useEffect(() => {
             isOpen={isPlaylistPanelOpen}
             playlist={selectedPlaylist}
             onClose={handleClosePlaylistPanel}
-            onCreated={(playlist) => setPlaylists(prev => [mapPlaylist(playlist), ...prev])}
+            onCreated={addMyPlaylist}
           />
 
           {/* ── Track Upload Panel — musician accounts only ── */}
