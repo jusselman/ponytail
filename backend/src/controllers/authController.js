@@ -15,7 +15,16 @@ const register = async (req, res) => {
   // is_artist is self-declared at signup by the separate musician registration flow —
   // instant, no approval step, per product decision. Regular/listener signup never
   // sends this field, so it defaults to false exactly as before.
-  const { email, username, password, display_name, is_artist } = req.body;
+  //
+  // location/genre/subgenre/mood/sound_description are the musician onboarding's
+  // extra steps (city, Tag 1/2/4/5 in the enriched_db.csv vocabulary) — only sent
+  // by the musician signup flow, always null/undefined for listener signup. These
+  // seed both the personalized radio station and the track upload endpoint, which
+  // stamps every new upload with these same values instead of asking per track.
+  const {
+    email, username, password, display_name, is_artist,
+    location, genre, subgenre, mood, sound_description,
+  } = req.body;
 
   try {
     // Check if email already exists
@@ -40,12 +49,24 @@ const register = async (req, res) => {
     const saltRounds = 12;
     const password_hash = await bcrypt.hash(password, saltRounds);
 
+    // Sound description is capped at 30 characters — enforced client-side in the
+    // onboarding form and backstopped by a CHECK constraint on the column, but
+    // trim defensively here too in case a caller skips the form entirely.
+    const trimmedSoundDescription = sound_description
+      ? sound_description.trim().slice(0, 30)
+      : null;
+
     // Insert user
     const result = await db.query(
-      `INSERT INTO users (email, username, display_name, password_hash, is_artist)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, email, username, display_name, is_artist, created_at`,
-      [email, username, display_name || username, password_hash, Boolean(is_artist)]
+      `INSERT INTO users (email, username, display_name, password_hash, is_artist,
+                          location, genre, subgenre, mood, sound_description)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING id, email, username, display_name, is_artist,
+                 location, genre, subgenre, mood, sound_description, created_at`,
+      [
+        email, username, display_name || username, password_hash, Boolean(is_artist),
+        location || null, genre || null, subgenre || null, mood || null, trimmedSoundDescription,
+      ]
     );
 
     const user = result.rows[0];
@@ -80,6 +101,7 @@ const getMe = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT id, email, username, display_name, favorite_artists, profile_picture, is_artist,
+              location, genre, subgenre, mood, sound_description,
               (SELECT COUNT(*)::int FROM user_follows WHERE followed_id = users.id) AS followers_count,
               (SELECT COUNT(*)::int FROM user_follows WHERE follower_id = users.id) AS following_count
        FROM users WHERE id = $1`,

@@ -92,7 +92,11 @@ router.post(
   trackUpload.fields([{ name: 'audio', maxCount: 1 }, { name: 'cover', maxCount: 1 }]),
   async (req, res) => {
     try {
-      const artistCheck = await pool.query('SELECT is_artist, display_name, username FROM users WHERE id = $1', [req.user.id]);
+      const artistCheck = await pool.query(
+        `SELECT is_artist, display_name, username, location, genre, subgenre, mood, sound_description
+         FROM users WHERE id = $1`,
+        [req.user.id]
+      );
       const account = artistCheck.rows[0];
       if (!account?.is_artist) {
         return res.status(403).json({ error: 'Only musician accounts can upload tracks.' });
@@ -101,7 +105,7 @@ router.post(
       const audioFile = req.files?.audio?.[0];
       if (!audioFile) return res.status(400).json({ error: 'An audio file is required.' });
 
-      const { title, album, genre } = req.body;
+      const { title, album } = req.body;
       if (!title || !title.trim()) return res.status(400).json({ error: 'Title is required.' });
 
       const artistName = account.display_name || account.username;
@@ -109,17 +113,32 @@ router.post(
       const coverFile = req.files?.cover?.[0];
       const uploadedCoverUrl = coverFile ? `http://localhost:5000/uploads/${coverFile.filename}` : null;
 
+      // ── Genre/subgenre/mood/tag5/location all come from the musician's own
+      // profile (captured once during onboarding) rather than being re-asked per
+      // upload — every track this musician publishes gets the same tags, matching
+      // the enriched_db.csv vocabulary just like Andrew's imported catalog rows,
+      // and feeding the personalized radio station / Hot in Here matching. ──
       const result = await pool.query(
         `INSERT INTO seed_tracks
-           (title, artist, album, genre, uploader_user_id, is_user_upload, uploaded_audio_url, uploaded_cover_url)
-         VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7)
+           (title, artist, album, genre, subgenre, mood, tag5, location,
+            uploader_user_id, is_user_upload, uploaded_audio_url, uploaded_cover_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10, $11)
          ON CONFLICT (title, artist) DO UPDATE SET
            album = EXCLUDED.album,
            genre = EXCLUDED.genre,
+           subgenre = EXCLUDED.subgenre,
+           mood = EXCLUDED.mood,
+           tag5 = EXCLUDED.tag5,
+           location = EXCLUDED.location,
            uploaded_audio_url = EXCLUDED.uploaded_audio_url,
            uploaded_cover_url = EXCLUDED.uploaded_cover_url
-         RETURNING id, title, artist, album, genre`,
-        [title.trim(), artistName, album || null, genre || null, req.user.id, uploadedAudioUrl, uploadedCoverUrl]
+         RETURNING id, title, artist, album, genre, subgenre, mood, tag5, location`,
+        [
+          title.trim(), artistName, album || null,
+          account.genre || null, account.subgenre || null, account.mood || null,
+          account.sound_description || null, account.location || null,
+          req.user.id, uploadedAudioUrl, uploadedCoverUrl,
+        ]
       );
 
       const track = result.rows[0];
@@ -256,6 +275,124 @@ router.put('/tracks/:id', requireAuth, upload.single('cover'), async (req, res) 
     }
     console.error('Update upload error:', err);
     res.status(500).json({ error: 'Failed to update track.' });
+  }
+});
+
+// ── Hot in Here — other musicians uploading tracks "in the vicinity." For now
+// vicinity just means the same city string (case-insensitive/trimmed match) since
+// there's no geocoding or lat/long anywhere in the app yet (see migration
+// 007_musician_profile_tags.sql). Swap the WHERE clause below for a real distance
+// calculation once lat/long columns exist — nothing else here needs to change. ──
+router.get('/radio/hot-in-here', requireAuth, async (req, res) => {
+  try {
+    const meResult = await pool.query('SELECT location FROM users WHERE id = $1', [req.user.id]);
+    const myLocation = meResult.rows[0]?.location;
+
+    if (!myLocation || !myLocation.trim()) {
+      return res.json({ location: null, tracks: [] });
+    }
+
+    const result = await pool.query(
+      `SELECT st.id, st.title, st.artist, st.album, st.genre, st.location,
+              st.is_user_upload, st.uploaded_audio_url, st.uploaded_cover_url, st.cover, st.filename,
+              u.username, u.display_name
+       FROM seed_tracks st
+       JOIN users u ON u.id = st.uploader_user_id
+       WHERE st.is_user_upload = TRUE
+         AND u.is_artist = TRUE
+         AND u.id != $1
+         AND LOWER(TRIM(u.location)) = LOWER(TRIM($2))
+       ORDER BY st.created_at DESC
+       LIMIT 30`,
+      [req.user.id, myLocation]
+    );
+
+    const tracks = result.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      artist: row.artist,
+      album: row.album,
+      genre: row.genre,
+      location: row.location,
+      musicianUsername: row.username,
+      musicianDisplayName: row.display_name,
+      coverUrl: getCoverUrl(row),
+      audioUrl: getAudioUrl(row),
+    }));
+
+    res.json({ location: myLocation, tracks });
+  } catch (err) {
+    console.error('Hot in here error:', err);
+    res.status(500).json({ error: 'Failed to load Hot in Here.' });
+  }
+});
+
+// ── A musician's personalized radio station — their own uploaded tracks, plus
+// catalog tracks that match their profile's genre, subgenre, mood, or where this
+// musician is listed as the similar artist (Tag 3). Customization comes later;
+// for now this is the whole pool, unfiltered/unranked beyond the match itself. ──
+router.get('/radio/my-station', requireAuth, async (req, res) => {
+  try {
+    const profileResult = await pool.query(
+      `SELECT is_artist, display_name, username, genre, subgenre, mood
+       FROM users WHERE id = $1`,
+      [req.user.id]
+    );
+    const profile = profileResult.rows[0];
+    if (!profile?.is_artist) {
+      return res.status(403).json({ error: 'Only musician accounts have a personalized station.' });
+    }
+
+    const artistName = profile.display_name || profile.username;
+
+    const mapRow = (row) => ({
+      id: row.id,
+      title: row.title,
+      artist: row.artist,
+      album: row.album,
+      genre: row.genre,
+      subgenre: row.subgenre,
+      mood: row.mood,
+      coverUrl: getCoverUrl(row),
+      audioUrl: getAudioUrl(row),
+    });
+
+    const ownTracksResult = await pool.query(
+      `SELECT id, title, artist, album, genre, subgenre, mood,
+              is_user_upload, uploaded_audio_url, uploaded_cover_url, cover, filename
+       FROM seed_tracks
+       WHERE uploader_user_id = $1 AND is_user_upload = TRUE
+       ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+
+    const matchedResult = await pool.query(
+      `SELECT id, title, artist, album, genre, subgenre, mood,
+              is_user_upload, uploaded_audio_url, uploaded_cover_url, cover, filename
+       FROM seed_tracks
+       WHERE artist != $1
+         AND (
+           ($2::text IS NOT NULL AND genre = $2)
+           OR ($3::text IS NOT NULL AND subgenre = $3)
+           OR ($4::text IS NOT NULL AND mood = $4)
+           OR similar_artist = $1
+         )
+       ORDER BY random()
+       LIMIT 40`,
+      [artistName, profile.genre, profile.subgenre, profile.mood]
+    );
+
+    res.json({
+      artistName,
+      genre: profile.genre,
+      subgenre: profile.subgenre,
+      mood: profile.mood,
+      ownTracks: ownTracksResult.rows.map(mapRow),
+      matchedTracks: matchedResult.rows.map(mapRow),
+    });
+  } catch (err) {
+    console.error('My station error:', err);
+    res.status(500).json({ error: 'Failed to build your station.' });
   }
 });
 

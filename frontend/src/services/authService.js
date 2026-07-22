@@ -22,13 +22,23 @@ export const logout = async () => {
 // sent true by the separate musician signup flow (regular listener signup never
 // passes it, so it defaults to false server-side exactly as before), and
 // `display_name` becomes the musician's public artist/stage name.
-export const register = async (email, username, password, is_artist = false, display_name = null) => {
+//
+// `musicianProfile`, if provided, carries the extra musician-onboarding answers —
+// location (city), genre, subgenre, mood, soundDescription (Tag 5) — which seed
+// both the personalized radio station and every track that musician later
+// uploads (see uploadTrack, which no longer takes its own genre for this reason).
+export const register = async (email, username, password, is_artist = false, display_name = null, musicianProfile = null) => {
   const response = await axios.post(`${API_URL}/auth/register`, {
     email,
     username,
     password,
     is_artist,
     display_name,
+    location: musicianProfile?.location || null,
+    genre: musicianProfile?.genre || null,
+    subgenre: musicianProfile?.subgenre || null,
+    mood: musicianProfile?.mood || null,
+    sound_description: musicianProfile?.soundDescription || null,
   });
   await storeToken(response.data.token);
   return response.data;
@@ -82,13 +92,15 @@ export const unfollowUser = async (username) => {
 
 // Upload a track — musician accounts only (enforced server-side via is_artist).
 // `audioFile`/`coverFile` are File/Blob objects from <input type="file">; coverFile is optional.
-export const uploadTrack = async ({ title, album, genre, audioFile, coverFile }) => {
+// No genre field here anymore — the backend stamps genre/subgenre/mood/tag5/location
+// onto every upload from the musician's own profile (set during onboarding), so the
+// catalog row matches the same tag vocabulary without asking again per track.
+export const uploadTrack = async ({ title, album, audioFile, coverFile }) => {
   const token = await getToken();
 
   const formData = new FormData();
   formData.append('title', title);
   if (album) formData.append('album', album);
-  if (genre) formData.append('genre', genre);
   formData.append('audio', audioFile);
   if (coverFile) formData.append('cover', coverFile);
 
@@ -131,6 +143,26 @@ export const deleteMyUpload = async (trackId) => {
   await axios.delete(`${API_URL}/auth/tracks/${trackId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+};
+
+// Hot in Here — other musicians uploading tracks in the same city (interim
+// same-city match; see the backend route comment for the real-geocoding plan)
+export const getHotInHere = async () => {
+  const token = await getToken();
+  const response = await axios.get(`${API_URL}/auth/radio/hot-in-here`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+// The current musician's personalized radio station — their own uploads plus
+// catalog tracks matching their profile's genre/subgenre/mood/similar-artist
+export const getMyStation = async () => {
+  const token = await getToken();
+  const response = await axios.get(`${API_URL}/auth/radio/my-station`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
 };
 
 // Update profile with favorite artists

@@ -52,7 +52,6 @@ const CloseIcon = ({ size = 12, color = colors.text }) => (
 export default function UploadTrackPanel({ isOpen, onClose, onUploaded }) {
   const [title, setTitle] = useState("");
   const [album, setAlbum] = useState("");
-  const [genre, setGenre] = useState("");
   const [audioFile, setAudioFile] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState(null);
@@ -64,7 +63,6 @@ export default function UploadTrackPanel({ isOpen, onClose, onUploaded }) {
   const resetForm = () => {
     setTitle("");
     setAlbum("");
-    setGenre("");
     setAudioFile(null);
     setCoverFile(null);
     setCoverPreviewUrl((prev) => {
@@ -126,7 +124,6 @@ export default function UploadTrackPanel({ isOpen, onClose, onUploaded }) {
       const track = await uploadTrack({
         title: trimmedTitle,
         album: album.trim() || null,
-        genre: genre.trim() || null,
         audioFile,
         coverFile,
       });
@@ -303,25 +300,10 @@ export default function UploadTrackPanel({ isOpen, onClose, onUploaded }) {
             />
           </div>
 
-          {/* ── Genre (optional) ── */}
-          <div style={{ marginBottom: "20px" }}>
-            <div style={{ fontSize: "11px", fontWeight: "600", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "8px" }}>
-              Genre <span style={{ textTransform: "none", fontWeight: 400 }}>(optional)</span>
-            </div>
-            <input
-              type="text"
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-              placeholder="e.g. Indie Pop"
-              disabled={submitting}
-              style={{
-                width: "100%", padding: "12px 14px",
-                backgroundColor: colors.bgCard, border: `1px solid ${colors.border}`,
-                borderRadius: "10px", color: colors.text,
-                fontSize: "15px", fontFamily: "'Kanit', sans-serif",
-                outline: "none", boxSizing: "border-box",
-              }}
-            />
+          {/* ── Genre/subgenre/mood/location aren't asked here — they come from the
+          artist profile set up during onboarding, and apply to every upload. ── */}
+          <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginBottom: "16px", lineHeight: 1.5 }}>
+            Genre, mood, and location are pulled from your artist profile and applied automatically.
           </div>
 
           {error && (

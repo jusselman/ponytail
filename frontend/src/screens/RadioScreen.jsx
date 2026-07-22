@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMe } from '../services/authService';
+import { getMe, getHotInHere, getMyStation } from '../services/authService';
 import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
@@ -31,14 +31,6 @@ const MY_STATIONS = [
   { id: "s4", name: "Post-Rock Odyssey", genre: "Post-Rock", tracks: 67, hue: 340, lastPlayed: "1 week ago" },
 ];
 
-const HOT_IN_HERE = [
-  { id: "h1", artist: "Margot Veil", track: "Slow Burn City", genre: "Indie Folk", distance: "0.4 mi", location: "Mission District, SF", listeners: 142, hue: 170 },
-  { id: "h2", artist: "Dusk Relay", track: "Frequency Maps", genre: "Electronic", distance: "1.2 mi", location: "SoMa, SF", listeners: 89, hue: 220 },
-  { id: "h3", artist: "The Pelican Stairs", track: "Low Tide", genre: "Surf Rock", distance: "3.7 mi", location: "Haight-Ashbury, SF", listeners: 204, hue: 30 },
-  { id: "h4", artist: "Neon Parish", track: "Glass & Copper", genre: "Dream Pop", distance: "8.1 mi", location: "Oakland, CA", listeners: 317, hue: 280 },
-  { id: "h5", artist: "Callow Kings", track: "Borrowed Hours", genre: "Post-Rock", distance: "14.5 mi", location: "Berkeley, CA", listeners: 61, hue: 340 },
-  { id: "h6", artist: "Sable Junction", track: "The Quiet Algorithm", genre: "Jazz Fusion", distance: "22.3 mi", location: "San Jose, CA", listeners: 178, hue: 120 },
-];
 
 const COMING_SOON_STATIONS = [
   { label: "Pony Mode Radio", icon: "pony", description: "Stations built from your taste profile" },
@@ -207,12 +199,93 @@ const StationCard = ({ station, index, onPlay, currentTrack, isPlaying }) => {
   );
 };
 
-// ─── Hot Card ─────────────────────────────────────────────────────────────────
+// ─── Your Station Card — the musician's real personalized station: their own
+// uploads plus catalog tracks matched on genre/subgenre/mood/similar-artist (see
+// GET /radio/my-station). Musician accounts only; distinct from the mock
+// StationCard rows below since it's built from real data, not a placeholder. ──
+const YourStationCard = ({ myStation, onPlay, currentTrack, isPlaying }) => {
+  const [hovered, setHovered] = useState(false);
+  const allTracks = [...myStation.ownTracks, ...myStation.matchedTracks];
+  const isActive = allTracks.some(t => currentTrack &&
+    `${currentTrack.title}|${currentTrack.artist}` === `${t.title}|${t.artist}`);
+  const showPause = isActive && isPlaying;
+  const tags = [myStation.genre, myStation.subgenre, myStation.mood].filter(Boolean).join(" · ");
+
+  return (
+    <div
+      onClick={() => onPlay(allTracks)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        backgroundColor: hovered ? colors.bgCardHover : colors.bgCard,
+        borderRadius: "16px", padding: "14px", marginBottom: "16px",
+        border: `1.5px solid ${isActive ? colors.teal : colors.teal}`,
+        boxShadow: `0 0 20px rgba(93,235,215,0.12)`,
+        display: "flex", alignItems: "center", gap: "14px",
+        cursor: "pointer", transition: "all 0.2s ease",
+      }}
+    >
+      <div style={{
+        width: 56, height: 56, borderRadius: "12px", flexShrink: 0,
+        background: `linear-gradient(135deg, ${colors.teal}, ${colors.tealDark})`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        position: "relative", overflow: "hidden",
+      }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="4" stroke="#1a1a1a" strokeWidth="1.8" />
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#1a1a1a" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+        {(hovered || isActive) && (
+          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {showPause ? (
+              <div style={{ display: "flex", gap: "3px" }}>
+                <div style={{ width: 3, height: 12, backgroundColor: "#1a1a1a", borderRadius: 2 }} />
+                <div style={{ width: 3, height: 12, backgroundColor: "#1a1a1a", borderRadius: 2 }} />
+              </div>
+            ) : (
+              <div style={{ width: 0, height: 0, borderTop: "7px solid transparent", borderBottom: "7px solid transparent", borderLeft: "12px solid #1a1a1a", marginLeft: 2 }} />
+            )}
+          </div>
+        )}
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: "14px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", marginBottom: "2px" }}>
+          Your Station
+        </div>
+        <div style={{ fontSize: "12px", color: colors.teal, fontFamily: "'Kanit', sans-serif", marginBottom: "4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {tags || "Built from your uploads"}
+        </div>
+        <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
+          {allTracks.length} track{allTracks.length === 1 ? "" : "s"} · your uploads + similar artists
+        </div>
+      </div>
+
+      {isActive && (
+        <div style={{
+          fontSize: "10px", fontWeight: "700", color: colors.teal,
+          fontFamily: "'Kanit', sans-serif", backgroundColor: colors.tealGlow,
+          padding: "3px 8px", borderRadius: "20px", border: `1px solid ${colors.teal}`,
+          flexShrink: 0,
+        }}>
+          {isPlaying ? "PLAYING" : "PAUSED"}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Hot Card — a real nearby-musician track. `distance`/`listeners` from the old
+// mock version are gone since there's no geocoding or real-time listener-count
+// infra yet; location shows the same-city match instead (see the backend's
+// /radio/hot-in-here comment for the real-geocoding plan). ──
 const HotCard = ({ item, index, onPlay, currentTrack, isPlaying }) => {
   const [hovered, setHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const isCurrentTrack = currentTrack &&
     `${currentTrack.title}|${currentTrack.artist}` === `${item.track}|${item.artist}`;
   const showPause = isCurrentTrack && isPlaying;
+  const hue = item.hue ?? (item.artist ? item.artist.charCodeAt(0) * 37 % 360 : 200);
 
   return (
     <div
@@ -231,15 +304,24 @@ const HotCard = ({ item, index, onPlay, currentTrack, isPlaying }) => {
     >
       <div style={{
         width: 52, height: 52, borderRadius: "10px", flexShrink: 0,
-        background: `linear-gradient(135deg, hsl(${item.hue}, 55%, 30%), hsl(${item.hue + 40}, 45%, 20%))`,
+        background: `linear-gradient(135deg, hsl(${hue}, 55%, 30%), hsl(${hue + 40}, 45%, 20%))`,
         display: "flex", alignItems: "center", justifyContent: "center",
         position: "relative", overflow: "hidden",
       }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M9 18V6l12-2v12" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="6" cy="18" r="3" stroke={colors.teal} strokeWidth="1.8" />
-          <circle cx="18" cy="16" r="3" stroke={colors.teal} strokeWidth="1.8" />
-        </svg>
+        {item.coverUrl && !imgError ? (
+          <img
+            src={item.coverUrl}
+            alt={item.track}
+            onError={() => setImgError(true)}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18V6l12-2v12" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="6" cy="18" r="3" stroke={colors.teal} strokeWidth="1.8" />
+            <circle cx="18" cy="16" r="3" stroke={colors.teal} strokeWidth="1.8" />
+          </svg>
+        )}
         {(hovered || isCurrentTrack) && (
           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {showPause ? (
@@ -261,20 +343,13 @@ const HotCard = ({ item, index, onPlay, currentTrack, isPlaying }) => {
         <div style={{ fontSize: "12px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginBottom: "4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {item.artist}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-            <PinIcon />
-            <span style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>{item.location}</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-            <UsersIcon />
-            <span style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>{item.listeners} listening</span>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+          <PinIcon />
+          <span style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>{item.location}</span>
         </div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px", flexShrink: 0 }}>
-        <div style={{ fontSize: "11px", fontWeight: "700", color: colors.gold, fontFamily: "'Kanit', sans-serif" }}>{item.distance}</div>
         <div style={{ fontSize: "10px", color: colors.teal, fontFamily: "'Kanit', sans-serif", backgroundColor: colors.tealGlow, padding: "2px 8px", borderRadius: "20px", border: `1px solid ${colors.teal}` }}>
           {item.genre}
         </div>
@@ -303,8 +378,10 @@ const ComingSoonCard = ({ item, index }) => (
   </div>
 );
 
-// ─── My Stations Tab ──────────────────────────────────────────────────────────
-const MyStationsTab = ({ onPlay, onAddStation, currentTrack, isPlaying }) => (
+// ─── My Stations Tab — `myStation` is the musician's real personalized station
+// (own uploads + genre/subgenre/mood/similar-artist matches, see /radio/my-station);
+// null for listener accounts, or while still loading, so it just doesn't render. ──
+const MyStationsTab = ({ onPlay, onAddStation, currentTrack, isPlaying, myStation, onPlayMyStation }) => (
   <div style={{ padding: "20px 16px 0" }}>
     {/* Header row with + button */}
     <div style={{
@@ -337,6 +414,16 @@ const MyStationsTab = ({ onPlay, onAddStation, currentTrack, isPlaying }) => (
         </span>
       </div>
     </div>
+
+    {/* ── Your Station — real data, musician accounts only ── */}
+    {myStation && (myStation.ownTracks.length > 0 || myStation.matchedTracks.length > 0) && (
+      <YourStationCard
+        myStation={myStation}
+        onPlay={onPlayMyStation}
+        currentTrack={currentTrack}
+        isPlaying={isPlaying}
+      />
+    )}
 
     {/* Station list */}
     {MY_STATIONS.map((station, i) => (
@@ -449,8 +536,10 @@ const StationRow = ({ title, subtitle, stations, onPlay, currentTrack, isPlaying
   </div>
 );
 
-// ─── Discover Tab ─────────────────────────────────────────────────────────────
-const DiscoverTab = ({ onPlay, onPlayHot, currentTrack, isPlaying }) => {
+// ─── Discover Tab — `hotInHere` is real data (see /radio/hot-in-here): other
+// musicians uploading tracks in the same city as the current user. Renders
+// nothing if the user has no location set or no one else shares their city yet. ──
+const DiscoverTab = ({ onPlay, onPlayHot, currentTrack, isPlaying, hotInHere = [] }) => {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
 
@@ -492,6 +581,30 @@ const DiscoverTab = ({ onPlay, onPlayHot, currentTrack, isPlaying }) => {
           </button>
         )}
       </div>
+
+      {/* ── Hot in Here — real data, musicians uploading in your city ── */}
+      {hotInHere.length > 0 && (
+        <div style={{ marginBottom: "28px", animation: "fadeSlideUp 0.4s ease 0.05s forwards", opacity: 0 }}>
+          <div style={{ marginBottom: "12px" }}>
+            <div style={{ fontSize: "15px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.2px" }}>
+              Hot in Here
+            </div>
+            <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
+              Musicians uploading near you
+            </div>
+          </div>
+          {hotInHere.map((item, i) => (
+            <HotCard
+              key={item.id}
+              item={item}
+              index={i}
+              onPlay={onPlayHot}
+              currentTrack={currentTrack}
+              isPlaying={isPlaying}
+            />
+          ))}
+        </div>
+      )}
 
       {/* ── Suggested For You ── */}
       <StationRow
@@ -536,6 +649,8 @@ export default function RadioScreen({ setScreen }) {
   const [activeTab, setActiveTab] = useState("mystations");
   const [activeNav, setActiveNav] = useState("radio");
   const [user, setUser] = useState(null);
+  const [hotInHere, setHotInHere] = useState([]);
+  const [myStation, setMyStation] = useState(null);
   const { playTrack, currentTrack, isPlaying } = usePlayer();
 
   useEffect(() => {
@@ -550,6 +665,36 @@ export default function RadioScreen({ setScreen }) {
     loadUser();
   }, []);
 
+  // ── Hot in Here — any logged-in user can fetch this; it just comes back empty
+  // if they have no location set (listener accounts never get asked for one) or
+  // no one else shares their city yet. ──
+  useEffect(() => {
+    const fetchHotInHere = async () => {
+      try {
+        const data = await getHotInHere();
+        // Map title -> track to match HotCard's existing field names.
+        setHotInHere((data.tracks || []).map(t => ({ ...t, track: t.title })));
+      } catch (err) {
+        console.log('Failed to fetch Hot in Here:', err);
+      }
+    };
+    fetchHotInHere();
+  }, []);
+
+  // ── Personalized station — musician accounts only ──
+  useEffect(() => {
+    if (!user?.is_artist) return;
+    const fetchMyStation = async () => {
+      try {
+        const data = await getMyStation();
+        setMyStation(data);
+      } catch (err) {
+        console.log('Failed to fetch personalized station:', err);
+      }
+    };
+    fetchMyStation();
+  }, [user?.is_artist]);
+
   const handlePlayStation = (station) => {
     playTrack(
       { title: `${station.name} Radio`, artist: station.genre, album: station.name, genre: station.genre, coverUrl: null, audioUrl: "http://localhost:5000/audio/dummy.mp3" },
@@ -559,11 +704,22 @@ export default function RadioScreen({ setScreen }) {
   };
 
   const handlePlayHot = (item) => {
+    const queue = hotInHere.map(t => ({
+      title: t.track, artist: t.artist, album: t.genre, genre: t.genre,
+      coverUrl: t.coverUrl || null, audioUrl: t.audioUrl || "http://localhost:5000/audio/dummy.mp3",
+    }));
     playTrack(
-      { title: item.track, artist: item.artist, album: item.genre, genre: item.genre, coverUrl: null, audioUrl: "http://localhost:5000/audio/dummy.mp3" },
-      HOT_IN_HERE.map(t => ({ title: t.track, artist: t.artist, album: t.genre, genre: t.genre, coverUrl: null, audioUrl: "http://localhost:5000/audio/dummy.mp3" })),
-      HOT_IN_HERE.findIndex(t => t.id === item.id)
+      { title: item.track, artist: item.artist, album: item.genre, genre: item.genre, coverUrl: item.coverUrl || null, audioUrl: item.audioUrl || "http://localhost:5000/audio/dummy.mp3" },
+      queue,
+      hotInHere.findIndex(t => t.id === item.id)
     );
+  };
+
+  // ── Your Station tap — `tracks` is the combined real ownTracks + matchedTracks
+  // array built in YourStationCard; play the whole thing as a queue starting at 0 ──
+  const handlePlayMyStation = (tracks) => {
+    if (!tracks || tracks.length === 0) return;
+    playTrack(tracks[0], tracks, 0);
   };
 
   return (
@@ -627,6 +783,8 @@ export default function RadioScreen({ setScreen }) {
                 onAddStation={() => setActiveTab("discover")}
                 currentTrack={currentTrack}
                 isPlaying={isPlaying}
+                myStation={myStation}
+                onPlayMyStation={handlePlayMyStation}
               />
             )}
             {activeTab === "discover" && (
@@ -635,6 +793,7 @@ export default function RadioScreen({ setScreen }) {
               onPlayHot={handlePlayHot}
               currentTrack={currentTrack}
               isPlaying={isPlaying}
+              hotInHere={hotInHere}
             />
           )}
           </div>
