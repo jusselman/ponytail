@@ -303,7 +303,8 @@ const LocationStep = ({ location, setLocation, onNext }) => {
 
 // ─── Shared genre chip grid — used by both GenreStep and SubgenreStep. Filters
 // by the current search text (substring match), so typing into the search box
-// and tapping a chip are really the same interaction against the same list. ──
+// and tapping a chip are really the same interaction against the same list.
+// Tapping the already-selected chip toggles it back off. ──
 const GenreChipGrid = ({ genres, selected, onSelect }) => (
   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
     {genres.map((genre, i) => {
@@ -312,7 +313,7 @@ const GenreChipGrid = ({ genres, selected, onSelect }) => (
       return (
         <div
           key={genre}
-          onClick={() => onSelect(genre)}
+          onClick={() => onSelect(isSelected ? null : genre)}
           style={{
             padding: "8px 16px", borderRadius: "20px",
             background: isSelected
@@ -609,7 +610,12 @@ export default function MusicianOnboardingScreen({ setScreen }) {
       }}>
         <div style={{
           width: "375px",
-          minHeight: "750px",
+          // ── Fixed (not min) height, matching every other screen's 375x750 card —
+          // this is also what lets the flex chain below (GenreStep/SubgenreStep's
+          // flex:1 chip grid) actually cap and scroll internally instead of growing
+          // the card taller, since flex-basis needs a definite parent height to
+          // resolve against. ──
+          height: "750px",
           backgroundColor: colors.bg,
           borderRadius: "40px",
           boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05)",

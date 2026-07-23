@@ -741,6 +741,42 @@ router.get('/users/:username', requireAuth, async (req, res) => {
   }
 });
 
+// Musicians and other users the current user follows — powers the "Musicians You
+// Follow" / "People You Follow" rows in ProfilePanel, split the same way search
+// results are (is_artist true vs false). Placed ahead of /users/:username in this
+// file only for readability; route shape (/users/me/following, two segments) never
+// collides with /users/:username (one segment) regardless of order.
+router.get('/users/me/following', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT u.username, u.display_name, u.profile_picture, u.is_artist, u.genre
+       FROM user_follows uf
+       JOIN users u ON u.id = uf.followed_id
+       WHERE uf.follower_id = $1
+       ORDER BY uf.created_at DESC`,
+      [req.user.id]
+    );
+
+    const musicians = [];
+    const people = [];
+    for (const row of result.rows) {
+      const entry = {
+        username: row.username,
+        name: row.display_name || row.username,
+        profilePicture: row.profile_picture,
+        genre: row.genre,
+      };
+      if (row.is_artist) musicians.push(entry);
+      else people.push(entry);
+    }
+
+    res.json({ musicians, people });
+  } catch (err) {
+    console.error('Get following error:', err);
+    res.status(500).json({ error: 'Failed to fetch following list.' });
+  }
+});
+
 // Follow another user
 router.post('/users/:username/follow', requireAuth, async (req, res) => {
   const { username } = req.params;

@@ -23,58 +23,11 @@ const colors = {
   gold: "#f5cf00",
 };
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const MY_STATIONS = [
-  { id: "s1", name: "Late Night Jazz", genre: "Jazz", tracks: 142, hue: 40, lastPlayed: "2h ago" },
-  { id: "s2", name: "Surf & Reverb", genre: "Surf Rock", tracks: 89, hue: 180, lastPlayed: "Yesterday" },
-  { id: "s3", name: "Dream Sequences", genre: "Dream Pop", tracks: 204, hue: 280, lastPlayed: "3 days ago" },
-  { id: "s4", name: "Post-Rock Odyssey", genre: "Post-Rock", tracks: 67, hue: 340, lastPlayed: "1 week ago" },
-];
-
-
-const COMING_SOON_STATIONS = [
-  { label: "Pony Mode Radio", icon: "pony", description: "Stations built from your taste profile" },
-  { label: "Goat Mode Radio", icon: "goat", description: "Hackable stations you control" },
-  { label: "Genre Stations", icon: "genre", description: "Deep dives into any genre" },
-  { label: "Artist Radio", icon: "artist", description: "Endless music from artists you love" },
-];
-
-const SUGGESTED_STATIONS = [
-  { id: "sg1", name: "Jazz After Dark", genre: "Jazz", hue: 40, tracks: 98 },
-  { id: "sg2", name: "Shoegaze Haze", genre: "Shoegaze", hue: 260, tracks: 74 },
-  { id: "sg3", name: "Lo-fi Mornings", genre: "Lo-fi", hue: 160, tracks: 112 },
-  { id: "sg4", name: "Post-Punk Revival", genre: "Post-Punk", hue: 320, tracks: 63 },
-  { id: "sg5", name: "Neo Soul Sundays", genre: "Neo Soul", hue: 20, tracks: 88 },
-];
-
-const FRIENDS_STATIONS = [
-  { id: "fr1", name: "andrew's jazz picks", genre: "Jazz Fusion", hue: 200, tracks: 54, friend: "andrew_g" },
-  { id: "fr2", name: "late night electronica", genre: "Electronic", hue: 220, tracks: 131, friend: "margot_v" },
-  { id: "fr3", name: "folk & feelings", genre: "Folk", hue: 80, tracks: 47, friend: "dusk_relay" },
-  { id: "fr4", name: "sunday soul session", genre: "Soul", hue: 30, tracks: 93, friend: "neon_p" },
-];
-
-const RANDOM_STATIONS = [
-  { id: "rn1", name: "Cumbia Nights", genre: "Cumbia", hue: 350, tracks: 67 },
-  { id: "rn2", name: "Koto Dreams", genre: "Japanese Traditional", hue: 140, tracks: 41 },
-  { id: "rn3", name: "Afrobeat Energy", genre: "Afrobeat", hue: 50, tracks: 88 },
-  { id: "rn4", name: "Nordic Ambient", genre: "Ambient", hue: 190, tracks: 55 },
-  { id: "rn5", name: "Balkan Brass", genre: "World Music", hue: 10, tracks: 33 },
-];
-
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const PinIcon = ({ color = colors.muted }) => (
   <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill={color} />
     <circle cx="12" cy="9" r="2.5" fill="#1a1a1a" />
-  </svg>
-);
-
-const UsersIcon = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke={colors.muted} strokeWidth="2" strokeLinecap="round" />
-    <circle cx="9" cy="7" r="4" stroke={colors.muted} strokeWidth="2" />
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke={colors.muted} strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
@@ -84,125 +37,9 @@ const PlusIcon = () => (
   </svg>
 );
 
-const PlayIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <path d="M5 4l15 8-15 8V4z" fill={colors.teal} />
-  </svg>
-);
-
-const StationIcon = ({ type }) => {
-  const icons = {
-    pony: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M12 2C8 2 5 5 5 9c0 2 1 4 2 5l-2 8h10l-2-8c1-1 2-3 2-5 0-4-3-7-5-7z" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M9 9c0 1.5 1.5 3 3 3s3-1.5 3-3" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    ),
-    goat: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M12 3c-2 0-4 1.5-4 4 0 1.5.5 3 1.5 4L8 20h8l-1.5-9c1-1 1.5-2.5 1.5-4 0-2.5-2-4-4-4z" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M9 5c-.5-.5-2-1-3 0M15 5c.5-.5 2-1 3 0" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    ),
-    genre: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M9 18V6l12-2v12" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="6" cy="18" r="3" stroke={colors.teal} strokeWidth="1.8" />
-        <circle cx="18" cy="16" r="3" stroke={colors.teal} strokeWidth="1.8" />
-      </svg>
-    ),
-    artist: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="8" r="4" stroke={colors.teal} strokeWidth="1.8" />
-        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    ),
-  };
-  return icons[type] || null;
-};
-
-// ─── My Station Card ──────────────────────────────────────────────────────────
-const StationCard = ({ station, index, onPlay, currentTrack, isPlaying }) => {
-  const [hovered, setHovered] = useState(false);
-  const isActive = currentTrack?.album === station.name;
-  const showPause = isActive && isPlaying;
-
-  return (
-    <div
-      onClick={() => onPlay(station)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        backgroundColor: hovered ? colors.bgCardHover : colors.bgCard,
-        borderRadius: "16px", padding: "14px", marginBottom: "10px",
-        border: `1px solid ${isActive ? colors.teal : colors.border}`,
-        boxShadow: isActive ? `0 0 20px rgba(93,235,215,0.1)` : "none",
-        display: "flex", alignItems: "center", gap: "14px",
-        cursor: "pointer", transition: "all 0.2s ease",
-        animation: `fadeSlideUp 0.4s ease ${index * 0.07}s forwards`, opacity: 0,
-      }}
-    >
-      {/* Station art */}
-      <div style={{
-        width: 56, height: 56, borderRadius: "12px", flexShrink: 0,
-        background: `linear-gradient(135deg, hsl(${station.hue}, 55%, 30%), hsl(${station.hue + 40}, 45%, 20%))`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        position: "relative", overflow: "hidden",
-      }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <rect x="2" y="9" width="20" height="13" rx="2" stroke={colors.teal} strokeWidth="1.8" />
-          <path d="M7 9L15 3" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" />
-          <circle cx="12" cy="15" r="2" fill={colors.teal} />
-          <path d="M6 15H7M17 15H18" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
-        {(hovered || isActive) && (
-          <div style={{
-            position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            {showPause ? (
-              <div style={{ display: "flex", gap: "3px" }}>
-                <div style={{ width: 3, height: 12, backgroundColor: colors.teal, borderRadius: 2 }} />
-                <div style={{ width: 3, height: 12, backgroundColor: colors.teal, borderRadius: 2 }} />
-              </div>
-            ) : (
-              <PlayIcon />
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {station.name}
-        </div>
-        <div style={{ fontSize: "12px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginBottom: "4px" }}>
-          {station.genre}
-        </div>
-        <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-          {station.tracks} tracks · Last played {station.lastPlayed}
-        </div>
-      </div>
-
-      {isActive && (
-        <div style={{
-          fontSize: "10px", fontWeight: "700", color: colors.teal,
-          fontFamily: "'Kanit', sans-serif", backgroundColor: colors.tealGlow,
-          padding: "3px 8px", borderRadius: "20px", border: `1px solid ${colors.teal}`,
-          flexShrink: 0,
-        }}>
-          {isPlaying ? "PLAYING" : "PAUSED"}
-        </div>
-      )}
-    </div>
-  );
-};
-
 // ─── Your Station Card — the musician's real personalized station: their own
 // uploads plus catalog tracks matched on genre/subgenre/mood/similar-artist (see
-// GET /radio/my-station). Musician accounts only; distinct from the mock
-// StationCard rows below since it's built from real data, not a placeholder. ──
+// GET /radio/my-station). Musician accounts only. ──
 const YourStationCard = ({ myStation, onPlay, currentTrack, isPlaying }) => {
   const [hovered, setHovered] = useState(false);
   const allTracks = [...myStation.ownTracks, ...myStation.matchedTracks];
@@ -358,30 +195,10 @@ const HotCard = ({ item, index, onPlay, currentTrack, isPlaying }) => {
   );
 };
 
-// ─── Coming Soon Card ─────────────────────────────────────────────────────────
-const ComingSoonCard = ({ item, index }) => (
-  <div style={{
-    backgroundColor: colors.bgCard, borderRadius: "14px", padding: "16px",
-    border: `1px solid ${colors.border}`, display: "flex", alignItems: "center", gap: "12px",
-    animation: `fadeSlideUp 0.4s ease ${0.4 + index * 0.07}s forwards`, opacity: 0,
-  }}>
-    <div style={{ width: 44, height: 44, borderRadius: "10px", backgroundColor: colors.tealGlow, border: `1px solid rgba(93,235,215,0.2)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-      <StationIcon type={item.icon} />
-    </div>
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: "13px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", marginBottom: "2px" }}>{item.label}</div>
-      <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>{item.description}</div>
-    </div>
-    <div style={{ fontSize: "10px", fontWeight: "600", color: colors.muted, fontFamily: "'Kanit', sans-serif", backgroundColor: "rgba(255,255,255,0.05)", padding: "3px 8px", borderRadius: "20px", border: `1px solid rgba(255,255,255,0.1)`, flexShrink: 0 }}>
-      Soon
-    </div>
-  </div>
-);
-
 // ─── My Stations Tab — `myStation` is the musician's real personalized station
 // (own uploads + genre/subgenre/mood/similar-artist matches, see /radio/my-station);
 // null for listener accounts, or while still loading, so it just doesn't render. ──
-const MyStationsTab = ({ onPlay, onAddStation, currentTrack, isPlaying, myStation, onPlayMyStation }) => (
+const MyStationsTab = ({ onAddStation, currentTrack, isPlaying, myStation, onPlayMyStation }) => (
   <div style={{ padding: "20px 16px 0" }}>
     {/* Header row with + button */}
     <div style={{
@@ -392,9 +209,6 @@ const MyStationsTab = ({ onPlay, onAddStation, currentTrack, isPlaying, myStatio
       <div>
         <div style={{ fontSize: "18px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.2px" }}>
           My Stations
-        </div>
-        <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
-          {MY_STATIONS.length} stations
         </div>
       </div>
       <div
@@ -425,121 +239,14 @@ const MyStationsTab = ({ onPlay, onAddStation, currentTrack, isPlaying, myStatio
       />
     )}
 
-    {/* Station list */}
-    {MY_STATIONS.map((station, i) => (
-      <StationCard
-        key={station.id}
-        station={station}
-        index={i}
-        onPlay={onPlay}
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-      />
-    ))}
-
     <div style={{ height: "20px" }} />
-  </div>
-);
-
-// ─── Horizontal Station Card (compact) ───────────────────────────────────────
-const HorizontalStationCard = ({ station, onPlay, currentTrack, isPlaying }) => {
-  const [hovered, setHovered] = useState(false);
-  const isActive = currentTrack?.album === station.name;
-  const showPause = isActive && isPlaying;
-
-  return (
-    <div
-      onClick={() => onPlay(station)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        flexShrink: 0, width: 120, cursor: "pointer",
-        transition: "transform 0.2s ease",
-        transform: hovered ? "translateY(-2px)" : "translateY(0)",
-      }}
-    >
-      <div style={{
-        width: 120, height: 120, borderRadius: "12px", overflow: "hidden",
-        background: `linear-gradient(135deg, hsl(${station.hue}, 55%, 30%), hsl(${station.hue + 40}, 45%, 20%))`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        marginBottom: "8px", position: "relative",
-        border: `1px solid ${isActive ? colors.teal : "transparent"}`,
-        boxShadow: isActive ? `0 0 16px rgba(93,235,215,0.2)` : "0 4px 12px rgba(0,0,0,0.3)",
-        transition: "box-shadow 0.2s ease",
-      }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-          <rect x="2" y="9" width="20" height="13" rx="2" stroke={colors.teal} strokeWidth="1.8" />
-          <path d="M7 9L15 3" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" />
-          <circle cx="12" cy="15" r="2" fill={colors.teal} />
-        </svg>
-        {(hovered || isActive) && (
-          <div style={{
-            position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.45)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            {showPause ? (
-              <div style={{ display: "flex", gap: "3px" }}>
-                <div style={{ width: 3, height: 14, backgroundColor: colors.teal, borderRadius: 2 }} />
-                <div style={{ width: 3, height: 14, backgroundColor: colors.teal, borderRadius: 2 }} />
-              </div>
-            ) : (
-              <div style={{
-                width: 0, height: 0,
-                borderTop: "8px solid transparent",
-                borderBottom: "8px solid transparent",
-                borderLeft: `14px solid ${colors.teal}`,
-                marginLeft: 3,
-              }} />
-            )}
-          </div>
-        )}
-      </div>
-      <div style={{ fontSize: "12px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: "2px" }}>
-        {station.name}
-      </div>
-      <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-        {station.genre}
-      </div>
-      {station.friend && (
-        <div style={{ fontSize: "10px", color: colors.teal, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
-          {station.friend}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ─── Section Row ─────────────────────────────────────────────────────────────
-const StationRow = ({ title, subtitle, stations, onPlay, currentTrack, isPlaying, index = 0 }) => (
-  <div style={{ marginBottom: "28px", animation: `fadeSlideUp 0.4s ease ${index * 0.1}s forwards`, opacity: 0 }}>
-    <div style={{ marginBottom: "12px" }}>
-      <div style={{ fontSize: "15px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.2px" }}>
-        {title}
-      </div>
-      {subtitle && (
-        <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
-          {subtitle}
-        </div>
-      )}
-    </div>
-    <div style={{ display: "flex", gap: "14px", overflowX: "auto", paddingBottom: "4px" }}>
-      {stations.map((station, i) => (
-        <HorizontalStationCard
-          key={station.id}
-          station={station}
-          onPlay={onPlay}
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-        />
-      ))}
-    </div>
   </div>
 );
 
 // ─── Discover Tab — `hotInHere` is real data (see /radio/hot-in-here): other
 // musicians uploading tracks in the same city as the current user. Renders
 // nothing if the user has no location set or no one else shares their city yet. ──
-const DiscoverTab = ({ onPlay, onPlayHot, currentTrack, isPlaying, hotInHere = [] }) => {
+const DiscoverTab = ({ onPlayHot, currentTrack, isPlaying, hotInHere = [] }) => {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
 
@@ -606,39 +313,6 @@ const DiscoverTab = ({ onPlay, onPlayHot, currentTrack, isPlaying, hotInHere = [
         </div>
       )}
 
-      {/* ── Suggested For You ── */}
-      <StationRow
-        title="Suggested For You"
-        subtitle="Based on your listening"
-        stations={SUGGESTED_STATIONS}
-        onPlay={onPlay}
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-        index={1}
-      />
-
-      {/* ── Friends Are Listening ── */}
-      <StationRow
-        title="Friends Are Listening"
-        subtitle="Stations your friends follow"
-        stations={FRIENDS_STATIONS}
-        onPlay={onPlay}
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-        index={2}
-      />
-
-      {/* ── Explore Something New ── */}
-      <StationRow
-        title="Explore Something New"
-        subtitle="Stations outside your usual taste"
-        stations={RANDOM_STATIONS}
-        onPlay={onPlay}
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-        index={3}
-      />
-
       <div style={{ height: "20px" }} />
     </div>
   );
@@ -694,14 +368,6 @@ export default function RadioScreen({ setScreen }) {
     };
     fetchMyStation();
   }, [user?.is_artist]);
-
-  const handlePlayStation = (station) => {
-    playTrack(
-      { title: `${station.name} Radio`, artist: station.genre, album: station.name, genre: station.genre, coverUrl: null, audioUrl: "http://localhost:5000/audio/dummy.mp3" },
-      [],
-      0
-    );
-  };
 
   const handlePlayHot = (item) => {
     const queue = hotInHere.map(t => ({
@@ -779,7 +445,6 @@ export default function RadioScreen({ setScreen }) {
           <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", width: "100%", boxSizing: "border-box", minHeight: 0 }}>
             {activeTab === "mystations" && (
               <MyStationsTab
-                onPlay={handlePlayStation}
                 onAddStation={() => setActiveTab("discover")}
                 currentTrack={currentTrack}
                 isPlaying={isPlaying}
@@ -789,7 +454,6 @@ export default function RadioScreen({ setScreen }) {
             )}
             {activeTab === "discover" && (
             <DiscoverTab
-              onPlay={handlePlayStation}
               onPlayHot={handlePlayHot}
               currentTrack={currentTrack}
               isPlaying={isPlaying}

@@ -81,6 +81,16 @@ export const followUser = async (username) => {
   return response.data;
 };
 
+// Musicians and people the current user follows — powers ProfilePanel's
+// "Musicians You Follow" / "People You Follow" rows
+export const getFollowing = async () => {
+  const token = await getToken();
+  const response = await axios.get(`${API_URL}/auth/users/me/following`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 // Unfollow another user
 export const unfollowUser = async (username) => {
   const token = await getToken();

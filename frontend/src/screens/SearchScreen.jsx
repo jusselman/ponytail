@@ -172,6 +172,13 @@ const XIcon = ({ size = 28, color = "#ff4444" }) => (
   </svg>
 );
 
+// ─── Filter Icon (three descending lines) — opens the Discovery genre filter panel ──
+const FilterIcon = ({ size = 16, color = "#5DEBD7" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M4 6h16M7 12h10M10 18h4" stroke={color} strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
 // ─── Elongated genre row — full-width (matches search bar width/radius), name
 // centered, flush against its neighbors (no gap). Colored like the original
 // Browse-by-Genre chips (per-genre hue gradient), white text. The "Show All"
@@ -741,14 +748,95 @@ const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = fal
   );
 };
 
+// ─── Discovery genre filter panel — full genre list as colored rectangles (not
+// pill chips), used to narrow which genres appear in the swipe deck. Always shows
+// every genre regardless of what's already selected (unlike the Search tab's
+// elongated picker, which hides chosen genres behind "Show All") — selection is
+// shown via the teal border/tealGlow highlight instead. Shares selectedGenres/
+// onToggleGenre with the Search tab's Browse-by-Genre chips, so a filter set here
+// also narrows the Search tab, and vice versa. ──
+const GenreFilterPanel = ({ isOpen, onClose, selectedGenres, onToggleGenre }) => (
+  <div style={{
+    position: "absolute", inset: 0, zIndex: 50,
+    backgroundColor: colors.bg,
+    transform: isOpen ? "translateY(0)" : "translateY(100%)",
+    transition: "transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
+    display: "flex", flexDirection: "column",
+    pointerEvents: isOpen ? "all" : "none",
+  }}>
+    {/* Header */}
+    <div style={{
+      padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between",
+      borderBottom: `1px solid ${colors.border}`, flexShrink: 0,
+    }}>
+      <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M6 9l6 6 6-6" stroke={colors.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+        Filter by Genre
+      </div>
+      <div style={{ fontSize: "12px", fontWeight: "600", color: selectedGenres.length > 0 ? colors.teal : colors.muted, fontFamily: "'Kanit', sans-serif", width: "26px", textAlign: "right" }}>
+        {selectedGenres.length > 0 ? `${selectedGenres.length}/5` : ""}
+      </div>
+    </div>
+
+    {/* Genre grid */}
+    <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+      <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginBottom: "16px" }}>
+        {selectedGenres.length === 0
+          ? "No genres selected — showing tracks from every genre."
+          : "Showing tracks that match your selected genres."}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+        {MOCK_GENRES.map((genre, i) => {
+          const hue = (i * 37 + 160) % 360;
+          const isSelected = selectedGenres.includes(genre);
+          return (
+            <div
+              key={genre}
+              onClick={() => onToggleGenre(genre)}
+              style={{
+                padding: "14px 10px", borderRadius: "10px", textAlign: "center",
+                background: isSelected
+                  ? colors.tealGlow
+                  : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+                border: isSelected ? `2px solid ${colors.teal}` : "2px solid transparent",
+                fontSize: "13px", fontWeight: "500",
+                color: isSelected ? colors.teal : colors.text,
+                fontFamily: "'Kanit', sans-serif", cursor: "pointer",
+                transition: "opacity 0.2s ease", boxSizing: "border-box",
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+            >
+              {genre}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ height: "20px" }} />
+    </div>
+  </div>
+);
+
 // ─── Discovery Tab ────────────────────────────────────────────────────────────
-const DiscoverySearch = ({ onLove, selectedGenres }) => {
+const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
   const [pool, setPool] = useState([]);
   const [current, setCurrent] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [loadedImages, setLoadedImages] = useState({}); 
+  const [loadedImages, setLoadedImages] = useState({});
   const [dragX, setDragX] = useState(0);
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const { isPlaying, togglePlay } = usePlayer();
+
+  // ── Pause playback while the genre filter panel is up ──
+  const handleOpenFilterPanel = () => {
+    if (isPlaying) togglePlay();
+    setShowFilterPanel(true);
+  };
 
   // ── Preload next card's image and track loaded state ──
   useEffect(() => {
@@ -922,12 +1010,27 @@ const DiscoverySearch = ({ onLove, selectedGenres }) => {
             <XIcon size={24} color="#ff4444" />
           </button>
 
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "18px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-              {remaining}
-            </div>
-            <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.5px" }}>
-              left
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={handleOpenFilterPanel}
+              style={{
+                width: 36, height: 36, borderRadius: "50%", backgroundColor: colors.bgCard,
+                border: `2px solid ${selectedGenres.length > 0 ? colors.teal : colors.border}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", transition: "all 0.2s ease",
+              }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = colors.tealGlow}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = colors.bgCard}
+            >
+              <FilterIcon size={15} color={selectedGenres.length > 0 ? colors.teal : colors.muted} />
+            </button>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "18px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+                {remaining}
+              </div>
+              <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.5px" }}>
+                left
+              </div>
             </div>
           </div>
 
@@ -945,6 +1048,13 @@ const DiscoverySearch = ({ onLove, selectedGenres }) => {
           </button>
         </div>
       )}
+
+      <GenreFilterPanel
+        isOpen={showFilterPanel}
+        onClose={() => setShowFilterPanel(false)}
+        selectedGenres={selectedGenres}
+        onToggleGenre={onToggleGenre}
+      />
     </div>
   );
 };
@@ -992,6 +1102,19 @@ export default function SearchScreen({ setScreen }) {
     } else {
       openUserProfile(username);
     }
+  };
+
+  // ── Shared genre-filter toggle — used by both the Search tab's Browse-by-Genre
+  // chips/elongated picker and the Discovery tab's filter panel, since they read
+  // and write the same selectedGenres state (capped at 5, same as everywhere else) ──
+  const handleToggleGenre = (genre) => {
+    setSelectedGenres(prev => {
+      if (prev.includes(genre)) {
+        return prev.filter(g => g !== genre);
+      }
+      if (prev.length >= 5) return prev; // cap at 5
+      return [...prev, genre];
+    });
   };
 
   useEffect(() => {
@@ -1113,7 +1236,13 @@ export default function SearchScreen({ setScreen }) {
             overflowX: "hidden", paddingTop: "16px",
             width: "100%", boxSizing: "border-box", minHeight: 0,
           }}>
-            {activeTab === "discovery" && <DiscoverySearch onLove={handleLove} selectedGenres={selectedGenres} />}
+            {activeTab === "discovery" && (
+              <DiscoverySearch
+                onLove={handleLove}
+                selectedGenres={selectedGenres}
+                onToggleGenre={handleToggleGenre}
+              />
+            )}
             {activeTab === "search" && (
             <StandardSearch
               loved={loved}
@@ -1122,15 +1251,7 @@ export default function SearchScreen({ setScreen }) {
               onAlbumTap={(albumObj) => openAlbum(albumObj.artist, albumObj.album)}
               onUserTap={handleUserTap}
               selectedGenres={selectedGenres}
-              onToggleGenre={(genre) => {
-                setSelectedGenres(prev => {
-                  if (prev.includes(genre)) {
-                    return prev.filter(g => g !== genre);
-                  }
-                  if (prev.length >= 5) return prev; // cap at 5
-                  return [...prev, genre];
-                });
-              }}
+              onToggleGenre={handleToggleGenre}
             />
           )}
           </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getMe } from '../services/authService';
+import { getMe, getFollowing } from '../services/authService';
 import { getFollowedPlaylists } from '../services/playlistService';
 import { useUI } from '../context/UIContext';
 import SettingsPanel from './SettingsPanel';
@@ -174,9 +174,13 @@ const PlaylistTile = ({ playlist, subtitle, size = 110, onTap }) => {
 };
 
 // ─── Person tile — circular avatar + name + optional secondary line.
-// Used for both the mocked "musicians you follow" and "people you follow" rows. ──
-const PersonTile = ({ name, subtitle, size = 72 }) => (
-  <div style={{ flexShrink: 0, width: size + 16, textAlign: "center" }}>
+// Used for both the "musicians you follow" and "people you follow" rows.
+// `onTap`, if provided, opens that user's public profile panel. ──
+const PersonTile = ({ name, subtitle, size = 72, onTap }) => (
+  <div
+    onClick={onTap}
+    style={{ flexShrink: 0, width: size + 16, textAlign: "center", cursor: onTap ? "pointer" : "default" }}
+  >
     <div style={{ marginBottom: "8px", display: "flex", justifyContent: "center" }}>
       <Avatar name={name} size={size} />
     </div>
@@ -229,33 +233,18 @@ const mapFollowedPlaylist = (playlist) => ({
   coverUrl: playlist.cover_art_url || null,
 });
 
-// ─── Mock data — musicians and other users you follow. Playlist-follow is real
-// (see followedPlaylists state below); these two rows are still placeholders since
-// artist/user following-list display isn't built yet. ──
-const MOCK_FOLLOWED_ARTISTS = [
-  { id: "art1", name: "Nova Reyes", genre: "Indie Pop" },
-  { id: "art2", name: "The Low Keys", genre: "Jazz" },
-  { id: "art3", name: "Marcus Lane", genre: "R&B" },
-  { id: "art4", name: "Echo Bloom", genre: "Electronic" },
-];
-
-const MOCK_FOLLOWED_USERS = [
-  { id: "usr1", name: "Priya S" },
-  { id: "usr2", name: "Jordan K" },
-  { id: "usr3", name: "Aiko T" },
-  { id: "usr4", name: "Devon M" },
-];
-
 // ─── Profile Panel ────────────────────────────────────────────────────────────
 export default function ProfilePanel() {
   const {
     isProfileOpen, closeProfile, openSettings, profileImage, setProfileImage, user, setUser, openPublicPlaylist,
-    myPlaylists, refreshMyPlaylists, addMyPlaylist,
+    myPlaylists, refreshMyPlaylists, addMyPlaylist, openUserProfile,
   } = useUI();
   // ── Playlists live in UIContext now, shared with MyMusicScreen.jsx, so a
   // playlist created or edited from either screen shows up in both instantly ──
   const playlists = myPlaylists.map(mapPlaylist);
   const [followedPlaylists, setFollowedPlaylists] = useState([]);
+  const [followedMusicians, setFollowedMusicians] = useState([]);
+  const [followedUsers, setFollowedUsers] = useState([]);
   const [isPlaylistPanelOpen, setIsPlaylistPanelOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
 
@@ -295,6 +284,22 @@ export default function ProfilePanel() {
 
   useEffect(() => {
     if (isProfileOpen) fetchFollowedPlaylists();
+  }, [isProfileOpen]);
+
+  // ── Fetch musicians/people you follow — same re-fetch-on-open pattern as
+  // followed playlists, so a follow/unfollow from a public profile is reflected here ──
+  const fetchFollowing = async () => {
+    try {
+      const data = await getFollowing();
+      setFollowedMusicians(data?.musicians || []);
+      setFollowedUsers(data?.people || []);
+    } catch (err) {
+      console.log('Failed to fetch following list:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (isProfileOpen) fetchFollowing();
   }, [isProfileOpen]);
 
   // ── Tapping one of the user's own playlists opens the same build-mode panel used in
@@ -493,22 +498,31 @@ const handleImageChange = async (e) => {
             emptyMessage="Playlists you follow will appear here"
           />
 
-          {/* ── Musicians You Follow — mocked, following isn't built yet ── */}
+          {/* ── Musicians You Follow — real data, tap opens their public profile ── */}
           <SectionHeader title="Musicians You Follow" />
           <ScrollRow
-            items={MOCK_FOLLOWED_ARTISTS}
-            renderItem={(artist) => (
-              <PersonTile key={artist.id} name={artist.name} subtitle={artist.genre} />
+            items={followedMusicians}
+            renderItem={(musician) => (
+              <PersonTile
+                key={musician.username}
+                name={musician.name}
+                subtitle={musician.genre}
+                onTap={() => openUserProfile(musician.username)}
+              />
             )}
             emptyMessage="Musicians you follow will appear here"
           />
 
-          {/* ── People You Follow — mocked, following isn't built yet ── */}
+          {/* ── People You Follow — real data, tap opens their public profile ── */}
           <SectionHeader title="People You Follow" />
           <ScrollRow
-            items={MOCK_FOLLOWED_USERS}
+            items={followedUsers}
             renderItem={(person) => (
-              <PersonTile key={person.id} name={person.name} />
+              <PersonTile
+                key={person.username}
+                name={person.name}
+                onTap={() => openUserProfile(person.username)}
+              />
             )}
             emptyMessage="People you follow will appear here"
           />
