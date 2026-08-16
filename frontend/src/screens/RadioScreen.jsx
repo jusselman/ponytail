@@ -297,7 +297,7 @@ const DiscoverTab = ({ onPlayHot, currentTrack, isPlaying, hotInHere = [] }) => 
               Hot in Here
             </div>
             <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
-              Musicians uploading near you
+              Artists uploading near you
             </div>
           </div>
           {hotInHere.map((item, i) => (

@@ -1,4 +1,8 @@
+import { useState } from 'react';
 import { useUI } from '../context/UIContext';
+import { logout } from '../services/authService';
+import EditProfilePanel from './EditProfilePanel';
+import LogoutConfirmModal from './LogoutConfirmModal';
 
 const colors = {
   bg: "#222222",
@@ -110,7 +114,29 @@ const SettingIcon = ({ type, danger }) => {
 
 // ─── Settings Panel ───────────────────────────────────────────────────────────
 export default function SettingsPanel() {
-  const { isSettingsOpen, closeSettings } = useUI();
+  const {
+    isSettingsOpen, closeSettings,
+    closeProfile, setUser, setProfileImage, setScreen,
+  } = useUI();
+  // ── Only "Edit Profile" and "Log Out" are wired up so far — everything else
+  // in SETTINGS is still a static placeholder row. ──
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+
+  // ── Actually logs out: clears the stored auth token, resets the shared
+  // UIContext user/avatar/panel-open state (so the next login doesn't briefly
+  // flash the previous account's data or an already-open settings panel), then
+  // hands navigation back to App.js's top-level screen switcher to land on
+  // the login screen — completing the session. ──
+  const handleConfirmLogout = async () => {
+    await logout();
+    setIsLogoutConfirmOpen(false);
+    closeSettings();
+    closeProfile();
+    setUser(null);
+    setProfileImage(null);
+    setScreen("login");
+  };
 
   return (
     <div style={{
@@ -173,6 +199,10 @@ export default function SettingsPanel() {
               {group.items.map((item, ii) => (
                 <div
                   key={ii}
+                  onClick={() => {
+                    if (item.label === "Edit Profile") setIsEditProfileOpen(true);
+                    if (item.label === "Log Out") setIsLogoutConfirmOpen(true);
+                  }}
                   style={{
                     display: "flex", alignItems: "center", gap: "14px",
                     padding: "13px 20px",
@@ -199,7 +229,22 @@ export default function SettingsPanel() {
           ))}
           <div style={{ height: "20px" }} />
         </div>
+
+        {/* Edit Profile — slides in over the settings list, within this same
+        panel's bounds (position: absolute + inset: 0 resolves against this
+        div, its nearest positioned ancestor). */}
+        <EditProfilePanel isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
       </div>
+
+      {/* Log Out confirmation — deliberately a sibling of the 88%-wide sliding
+      panel above (not nested inside it), so this bottom sheet spans the full
+      screen card width like other bottom sheets in the app (UploadTrackPanel,
+      SongPanel) instead of being confined to the settings drawer's own width. */}
+      <LogoutConfirmModal
+        isOpen={isLogoutConfirmOpen}
+        onCancel={() => setIsLogoutConfirmOpen(false)}
+        onConfirm={handleConfirmLogout}
+      />
     </div>
   );
 }

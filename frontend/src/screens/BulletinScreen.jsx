@@ -62,13 +62,6 @@ const CLASSIFIEDS = [
   { id: "cl3", title: "Rehearsal space available weekends", poster: "SoMa Studios", location: "SoMa, SF", tags: ["Space", "Rehearsal", "$15/hr"], hue: 160 },
 ];
 
-const GEAR_MERCH = [
-  { id: "g1", title: "Fender Telecaster 2019 — Sunburst", seller: "Callow Kings", price: "$680", condition: "Excellent", type: "Gear", hue: 340 },
-  { id: "g2", title: "'Glass & Copper' Tee — Limited Run", seller: "Neon Parish", price: "$32", condition: "New", type: "Merch", hue: 280 },
-  { id: "g3", title: "Rode NT1 Condenser Mic + shock mount", seller: "Sable Junction", price: "$180", condition: "Good", type: "Gear", hue: 120 },
-  { id: "g4", title: "Embroidered Ponytail Logo Cap", seller: "Ponytail", price: "$28", condition: "New", type: "Merch", hue: 180 },
-];
-
 // ─── Shared Components ────────────────────────────────────────────────────────
 
 const SectionHeader = ({ title, subtitle, index = 0 }) => (
@@ -374,70 +367,6 @@ const ClassifiedCard = ({ item, index }) => {
   );
 };
 
-// ─── Gear & Merch ─────────────────────────────────────────────────────────────
-const GearCard = ({ item, index }) => {
-  const [hovered, setHovered] = useState(false);
-  const isMerch = item.type === "Merch";
-
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        backgroundColor: hovered ? colors.bgCardHover : colors.bgCard,
-        borderRadius: "14px", padding: "14px", marginBottom: "10px",
-        border: `1px solid ${colors.border}`,
-        display: "flex", alignItems: "center", gap: "12px",
-        cursor: "pointer", transition: "all 0.2s ease",
-        animation: `fadeSlideUp 0.4s ease ${index * 0.07}s forwards`, opacity: 0,
-      }}
-    >
-      <div style={{
-        width: 48, height: 48, borderRadius: "10px", flexShrink: 0,
-        background: `linear-gradient(135deg, hsl(${item.hue}, 40%, 25%), hsl(${item.hue + 30}, 35%, 18%))`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        {isMerch ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M9 18V6l12-2v12" stroke={colors.teal} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="6" cy="18" r="3" stroke={colors.teal} strokeWidth="1.8" />
-            <circle cx="18" cy="16" r="3" stroke={colors.teal} strokeWidth="1.8" />
-          </svg>
-        )}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "13px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {item.title}
-        </div>
-        <div style={{ fontSize: "11px", color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", marginBottom: "3px" }}>
-          {item.seller}
-        </div>
-        <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-          {item.condition}
-        </div>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px", flexShrink: 0 }}>
-        <div style={{ fontSize: "14px", fontWeight: "700", color: colors.gold, fontFamily: "'Kanit', sans-serif" }}>
-          {item.price}
-        </div>
-        <div style={{
-          fontSize: "10px", color: colors.teal,
-          fontFamily: "'Kanit', sans-serif",
-          backgroundColor: colors.tealGlow,
-          padding: "2px 8px", borderRadius: "20px",
-          border: `1px solid ${colors.teal}`,
-        }}>
-          {item.type}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ─── Bulletin Screen ──────────────────────────────────────────────────────────
 export default function BulletinScreen({ setScreen }) {
   const [activeNav, setActiveNav] = useState("bulletin");
@@ -521,11 +450,6 @@ export default function BulletinScreen({ setScreen }) {
             <div style={{ height: "8px" }} />
             <SectionHeader title="Classifieds" subtitle="Connect with the community" index={5} />
             {CLASSIFIEDS.map((item, i) => <ClassifiedCard key={item.id} item={item} index={i} />)}
-
-            {/* ── Gear & Merch ── */}
-            <div style={{ height: "8px" }} />
-            <SectionHeader title="Gear & Merch" subtitle="Buy and sell with artists" index={6} />
-            {GEAR_MERCH.map((item, i) => <GearCard key={item.id} item={item} index={i} />)}
 
             <div style={{ height: "20px" }} />
           </div>

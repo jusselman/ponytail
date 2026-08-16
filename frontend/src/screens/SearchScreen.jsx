@@ -401,7 +401,7 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
                   {result.type === "track"
                     ? `${result.artist ? `by ${result.artist}` : ""}${result.album ? ` · ${result.album}` : ""}`
                     : result.type === "musician"
-                    ? "Musician"
+                    ? "Artist"
                     : result.type === "user"
                     ? "Ponytail user"
                     : result.genre}
@@ -416,7 +416,7 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
               padding: "2px 8px", borderRadius: "20px",
               textTransform: "capitalize", flexShrink: 0,
             }}>
-              {result.type}
+              {result.type === "musician" ? "Artist" : result.type}
             </div>
             </div>
           ))}
@@ -434,30 +434,44 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
   <div style={{ opacity: 1 }}>
     {/* Recent */}
 <div style={{ marginBottom: "6px", animation: "fadeSlideUp 0.4s ease 0.05s forwards", opacity: 0 }}>
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase" }}>
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "12px", height: "24px" }}>
+    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", flexShrink: 0 }}>
       Recent
     </div>
     {/* ── Selected genre filter chips — small teal chip per selected genre,
-    tap to remove. Placed beside the Recent label per spec. ── */}
-    {selectedGenres.length > 0 && (
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", justifyContent: "flex-end" }}>
-        {selectedGenres.map(genre => (
-          <div
-            key={genre}
-            onClick={() => onToggleGenre(genre)}
-            style={{
-              padding: "3px 10px", borderRadius: "20px",
-              border: `1.5px solid ${colors.teal}`,
-              color: colors.teal, fontSize: "10px", fontWeight: "600",
-              fontFamily: "'Kanit', sans-serif", cursor: "pointer",
-            }}
-          >
-            {genre}
-          </div>
-        ))}
+    tap to remove. Placed beside the Recent label per spec. This row is now
+    always mounted (not conditionally, even with zero genres selected) and
+    the outer row has an explicit `height` (not `minHeight`) rather than
+    letting content dictate it — a chip's own padding/border/line-height
+    was rendering taller than the bare "Recent" label, so the row's height
+    was silently growing whenever a chip appeared and shoving everything
+    below it down. Each chip now also centers its text via flex + height:
+    "100%" instead of vertical padding, so it's pinned to exactly this row's
+    height instead of pushing past it. Extra chips scroll horizontally
+    instead of wrapping to a second line. ── */}
+    <div style={{
+      display: "flex", flexWrap: "nowrap", gap: "6px",
+      justifyContent: "flex-start", overflowX: "auto", overflowY: "hidden",
+      minWidth: 0, maxWidth: "100%", height: "100%", WebkitOverflowScrolling: "touch",
+    }}>
+      {selectedGenres.map(genre => (
+        <div
+          key={genre}
+          onClick={() => onToggleGenre(genre)}
+          style={{
+            height: "100%", boxSizing: "border-box",
+            display: "flex", alignItems: "center",
+            padding: "0 10px", borderRadius: "20px",
+            border: `1.5px solid ${colors.teal}`,
+            color: colors.teal, fontSize: "10px", fontWeight: "600",
+            fontFamily: "'Kanit', sans-serif", cursor: "pointer",
+            whiteSpace: "nowrap", flexShrink: 0,
+          }}
+        >
+          {genre}
+        </div>
+      ))}
       </div>
-    )}
   </div>
   <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px", minHeight: "70px", alignItems: "center" }}>
     {recentActivity.length > 0 ? (
@@ -898,155 +912,158 @@ const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
   const nextTrack = pool[current + 1];
   const peekScale = 0.96 + (Math.min(Math.abs(dragX), 80) / 80) * 0.04;
 
-  if (loading) {
-    return (
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-        <div style={{ fontSize: "14px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-          Loading tracks...
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-        <div style={{ fontSize: "14px", color: "#ff6b6b", fontFamily: "'Kanit', sans-serif", textAlign: "center" }}>
-          {error}
-        </div>
-      </div>
-    );
-  }
-
+  // ── Loading/error/card-stack states are rendered *inside* this fixed outer
+  // container, and the GenreFilterPanel is always mounted alongside them
+  // (not gated behind any of those states). Previously the loading state was
+  // an early `return`, which unmounted GenreFilterPanel entirely every time
+  // toggling a genre chip triggered a track refetch — causing the panel and
+  // its chips to flash away and reveal whatever was behind it. Keeping it
+  // permanently mounted (it's already an absolutely-positioned overlay with
+  // its own open/close transform) means a refetch never touches it. ──
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "0 16px 16px", boxSizing: "border-box" }}>
 
-     
-{/* Card stack — render current and next simultaneously */}
-<div style={{
-  flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-  minHeight: 0, padding: "0 8px",
-}}>
-  <div style={{ width: "100%", maxWidth: "340px", aspectRatio: "1", position: "relative" }}>
-  {remaining === 0 ? (
-    <div style={{
-      width: "100%", height: "100%", borderRadius: "24px",
-      backgroundColor: colors.bgCard,
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px",
-    }}>
-      <HeartIcon size={48} color={colors.teal} filled />
-      <div style={{ fontSize: "18px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-        You've heard everything!
-      </div>
-      <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center" }}>
-        Check the Loved tab to revisit tracks you liked.
-      </div>
-      <button
-        onClick={() => { setCurrent(0); setDragX(0); }}
-        style={{
-          marginTop: "8px", padding: "10px 24px", borderRadius: "50px",
-          backgroundColor: colors.teal, border: "none",
-          color: "#1a1a1a", fontSize: "14px", fontWeight: "600",
-          cursor: "pointer", fontFamily: "'Kanit', sans-serif",
-        }}
-      >
-        Start over
-      </button>
-    </div>
-  ) : (
-    <>
-      {/* Next card — always a full DiscoveryCard, rendered behind */}
-      {nextTrack && (
-        <div style={{
-          position: "absolute", inset: 0, zIndex: 0,
-          transform: `scale(${peekScale})`,
-          transition: dragX === 0 ? "transform 0.3s ease" : "none",
-          transformOrigin: "center bottom",
-        }}>
-          <DiscoveryCard
-            key={`next-${current + 1}`}
-            track={nextTrack}
-            isLoaded={!!loadedImages[nextTrack.coverUrl]}
-            onLike={() => {}}
-            onSkip={() => {}}
-            onDrag={() => {}}
-            inactive
-          />
+      {loading ? (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ fontSize: "14px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
+            Loading tracks...
+          </div>
         </div>
-      )}
-
-      {/* Current card — on top, fully interactive */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
-        <DiscoveryCard
-          key={`card-${current}`}
-          track={track}
-          isLoaded={!!loadedImages[track.coverUrl]}
-          onLike={handleLike}
-          onSkip={handleSkip}
-          onDrag={setDragX}
-        />
-      </div>
-    </>
-  )}
-  </div>
-</div>
-
-      {/* ── Action buttons ── */}
-      {remaining > 0 && (
-        <div style={{
-          display: "flex", justifyContent: "center", alignItems: "center",
-          gap: "32px", paddingTop: "16px", flexShrink: 0,
-        }}>
-          <button
-            onClick={handleSkip}
-            style={{
-              width: 56, height: 56, borderRadius: "50%", backgroundColor: colors.bgCard,
-              border: "2px solid #ff4444", display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", transition: "all 0.2s ease",
-            }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(255,68,68,0.1)"}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = colors.bgCard}
-          >
-            <XIcon size={24} color="#ff4444" />
-          </button>
-
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-            <button
-              onClick={handleOpenFilterPanel}
-              style={{
-                width: 36, height: 36, borderRadius: "50%", backgroundColor: colors.bgCard,
-                border: `2px solid ${selectedGenres.length > 0 ? colors.teal : colors.border}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", transition: "all 0.2s ease",
-              }}
-              onMouseEnter={e => e.currentTarget.style.backgroundColor = colors.tealGlow}
-              onMouseLeave={e => e.currentTarget.style.backgroundColor = colors.bgCard}
-            >
-              <FilterIcon size={15} color={selectedGenres.length > 0 ? colors.teal : colors.muted} />
-            </button>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "18px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-                {remaining}
+      ) : error ? (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ fontSize: "14px", color: "#ff6b6b", fontFamily: "'Kanit', sans-serif", textAlign: "center" }}>
+            {error}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Card stack — render current and next simultaneously */}
+          <div style={{
+            flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+            minHeight: 0, padding: "0 8px",
+          }}>
+            <div style={{ width: "100%", maxWidth: "340px", aspectRatio: "1", position: "relative" }}>
+            {remaining === 0 ? (
+              <div style={{
+                width: "100%", height: "100%", borderRadius: "24px",
+                backgroundColor: colors.bgCard,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px",
+              }}>
+                <HeartIcon size={48} color={colors.teal} filled />
+                <div style={{ fontSize: "18px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+                  You've heard everything!
+                </div>
+                <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center" }}>
+                  Check the Loved tab to revisit tracks you liked.
+                </div>
+                <button
+                  onClick={() => { setCurrent(0); setDragX(0); }}
+                  style={{
+                    marginTop: "8px", padding: "10px 24px", borderRadius: "50px",
+                    backgroundColor: colors.teal, border: "none",
+                    color: "#1a1a1a", fontSize: "14px", fontWeight: "600",
+                    cursor: "pointer", fontFamily: "'Kanit', sans-serif",
+                  }}
+                >
+                  Start over
+                </button>
               </div>
-              <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.5px" }}>
-                left
-              </div>
+            ) : (
+              <>
+                {/* Next card — always a full DiscoveryCard, rendered behind */}
+                {nextTrack && (
+                  <div style={{
+                    position: "absolute", inset: 0, zIndex: 0,
+                    transform: `scale(${peekScale})`,
+                    transition: dragX === 0 ? "transform 0.3s ease" : "none",
+                    transformOrigin: "center bottom",
+                  }}>
+                    <DiscoveryCard
+                      key={`next-${current + 1}`}
+                      track={nextTrack}
+                      isLoaded={!!loadedImages[nextTrack.coverUrl]}
+                      onLike={() => {}}
+                      onSkip={() => {}}
+                      onDrag={() => {}}
+                      inactive
+                    />
+                  </div>
+                )}
+
+                {/* Current card — on top, fully interactive */}
+                <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
+                  <DiscoveryCard
+                    key={`card-${current}`}
+                    track={track}
+                    isLoaded={!!loadedImages[track.coverUrl]}
+                    onLike={handleLike}
+                    onSkip={handleSkip}
+                    onDrag={setDragX}
+                  />
+                </div>
+              </>
+            )}
             </div>
           </div>
 
-          <button
-            onClick={handleLike}
-            style={{
-              width: 56, height: 56, borderRadius: "50%", backgroundColor: colors.bgCard,
-              border: `2px solid ${colors.teal}`, display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", transition: "all 0.2s ease",
-            }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = colors.tealGlow}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = colors.bgCard}
-          >
-            <HeartIcon size={24} color={colors.teal} />
-          </button>
-        </div>
+          {/* ── Action buttons ── */}
+          {remaining > 0 && (
+            <div style={{
+              display: "flex", justifyContent: "center", alignItems: "center",
+              gap: "32px", paddingTop: "16px", flexShrink: 0,
+            }}>
+              <button
+                onClick={handleSkip}
+                style={{
+                  width: 56, height: 56, borderRadius: "50%", backgroundColor: colors.bgCard,
+                  border: "2px solid #ff4444", display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", transition: "all 0.2s ease",
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(255,68,68,0.1)"}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = colors.bgCard}
+              >
+                <XIcon size={24} color="#ff4444" />
+              </button>
+
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                <button
+                  onClick={handleOpenFilterPanel}
+                  style={{
+                    width: 36, height: 36, borderRadius: "50%", backgroundColor: colors.bgCard,
+                    border: `2px solid ${selectedGenres.length > 0 ? colors.gold : colors.border}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = selectedGenres.length > 0 ? "rgba(245,207,0,0.15)" : colors.tealGlow}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = colors.bgCard}
+                >
+                  <FilterIcon size={15} color={selectedGenres.length > 0 ? colors.gold : colors.muted} />
+                </button>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "18px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+                    {remaining}
+                  </div>
+                  <div style={{ fontSize: "10px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.5px" }}>
+                    left
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleLike}
+                style={{
+                  width: 56, height: 56, borderRadius: "50%", backgroundColor: colors.bgCard,
+                  border: `2px solid ${colors.teal}`, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", transition: "all 0.2s ease",
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = colors.tealGlow}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = colors.bgCard}
+              >
+                <HeartIcon size={24} color={colors.teal} />
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       <GenreFilterPanel

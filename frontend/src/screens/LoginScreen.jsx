@@ -308,7 +308,7 @@ const ChooseAccountTypeScreen = ({ setLocalScreen, setAppScreen }) => {
             onClick={() => setAppScreen("musician-onboarding")}
           >
             <span style={{ fontSize: "16px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-              I'm a musician
+              I'm an artist
             </span>
             <span style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
               Everything a listener can do, plus upload and share your own music

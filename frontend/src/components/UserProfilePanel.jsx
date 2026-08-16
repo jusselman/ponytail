@@ -446,13 +446,13 @@ export default function UserProfilePanel() {
               />
 
               {/* ── {Name}'s Musicians You Follow — mocked ── */}
-              <SectionHeader title={`${possessive} Musicians You Follow`} />
+              <SectionHeader title={`${possessive} Artists You Follow`} />
               <ScrollRow
                 items={MOCK_FOLLOWED_ARTISTS}
                 renderItem={(artist) => (
                   <PersonTile key={artist.id} name={artist.name} subtitle={artist.genre} />
                 )}
-                emptyMessage={`${possessive} followed musicians will appear here`}
+                emptyMessage={`${possessive} followed artists will appear here`}
               />
 
               {/* ── {Name}'s People You Follow — mocked ── */}

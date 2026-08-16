@@ -3,7 +3,11 @@ import { getMyPlaylists } from "../services/playlistService";
 
 const UIContext = createContext(null);
 
-export function UIProvider({ children }) {
+// `setScreen` is App.js's top-level screen-switcher, handed down here so any
+// component below the provider (e.g. SettingsPanel's logout confirm) can
+// navigate — like back to "login" — without prop-drilling it through every
+// screen's <ProfilePanel />/<SettingsPanel /> call site.
+export function UIProvider({ children, setScreen }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
@@ -69,6 +73,7 @@ export function UIProvider({ children }) {
       isUserProfileOpen, viewedUsername, openUserProfile, closeUserProfile,
       isPublicPlaylistOpen, viewedPlaylistId, openPublicPlaylist, closePublicPlaylist,
       myPlaylists, refreshMyPlaylists, addMyPlaylist,
+      setScreen,
     }}>
       {children}
     </UIContext.Provider>

@@ -499,7 +499,7 @@ const handleImageChange = async (e) => {
           />
 
           {/* ── Musicians You Follow — real data, tap opens their public profile ── */}
-          <SectionHeader title="Musicians You Follow" />
+          <SectionHeader title="Artists You Follow" />
           <ScrollRow
             items={followedMusicians}
             renderItem={(musician) => (
@@ -510,7 +510,7 @@ const handleImageChange = async (e) => {
                 onTap={() => openUserProfile(musician.username)}
               />
             )}
-            emptyMessage="Musicians you follow will appear here"
+            emptyMessage="Artists you follow will appear here"
           />
 
           {/* ── People You Follow — real data, tap opens their public profile ── */}

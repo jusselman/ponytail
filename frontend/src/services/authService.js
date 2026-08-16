@@ -175,7 +175,10 @@ export const getMyStation = async () => {
   return response.data;
 };
 
-// Update profile with favorite artists
+// Update profile — generic passthrough, so it serves both the favorite-artists
+// picker and EditProfilePanel (display_name, location, genre, subgenre, mood,
+// sound_description). Only include the fields you want changed; the backend
+// only updates whatever keys are present in `data`.
 export const updateProfile = async (data) => {
   const token = await getToken();
   const response = await axios.put(`${API_URL}/auth/update-profile`, data, {

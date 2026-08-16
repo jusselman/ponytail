@@ -99,7 +99,7 @@ router.post(
       );
       const account = artistCheck.rows[0];
       if (!account?.is_artist) {
-        return res.status(403).json({ error: 'Only musician accounts can upload tracks.' });
+        return res.status(403).json({ error: 'Only artist accounts can upload tracks.' });
       }
 
       const audioFile = req.files?.audio?.[0];
@@ -340,7 +340,7 @@ router.get('/radio/my-station', requireAuth, async (req, res) => {
     );
     const profile = profileResult.rows[0];
     if (!profile?.is_artist) {
-      return res.status(403).json({ error: 'Only musician accounts have a personalized station.' });
+      return res.status(403).json({ error: 'Only artist accounts have a personalized station.' });
     }
 
     const artistName = profile.display_name || profile.username;
@@ -425,19 +425,64 @@ router.get('/google/callback',
   }
 );
 
-// Update profile (favorite artists, etc.)
+// Update profile — favorite_artists (listener taste picker) plus, now, the
+// same fields the musician onboarding flow collects (display_name/artist name,
+// location, genre, subgenre, mood, sound_description), so EditProfilePanel can
+// let an artist fix a typo or change their answers after signup without
+// deleting and recreating the account. The SET clause is built dynamically from
+// whichever fields are actually present in the body, so this one endpoint still
+// works unchanged for the listener's favorite-artists-only update. ──
 router.put('/update-profile', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { favorite_artists } = req.body;
+    const {
+      favorite_artists, display_name, location, genre, subgenre, mood, sound_description,
+    } = req.body;
 
-    await pool.query(
-      'UPDATE users SET favorite_artists = $1 WHERE id = $2',
-      [JSON.stringify(favorite_artists), decoded.id]
-    );
+    const fields = [];
+    const values = [];
+    let i = 1;
+
+    if (favorite_artists !== undefined) {
+      fields.push(`favorite_artists = $${i++}`);
+      values.push(JSON.stringify(favorite_artists));
+    }
+    if (display_name !== undefined) {
+      fields.push(`display_name = $${i++}`);
+      values.push(display_name?.trim() || null);
+    }
+    if (location !== undefined) {
+      fields.push(`location = $${i++}`);
+      values.push(location?.trim() || null);
+    }
+    if (genre !== undefined) {
+      fields.push(`genre = $${i++}`);
+      values.push(genre || null);
+    }
+    if (subgenre !== undefined) {
+      fields.push(`subgenre = $${i++}`);
+      values.push(subgenre || null);
+    }
+    if (mood !== undefined) {
+      fields.push(`mood = $${i++}`);
+      values.push(mood || null);
+    }
+    if (sound_description !== undefined) {
+      // Same 30-char cap enforced at signup (register in authController.js) — backstopped
+      // here too in case a caller skips the form's own maxLength.
+      fields.push(`sound_description = $${i++}`);
+      values.push(sound_description ? sound_description.trim().slice(0, 30) : null);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update.' });
+    }
+
+    values.push(decoded.id);
+    await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = $${i}`, values);
 
     res.json({ success: true });
   } catch (err) {

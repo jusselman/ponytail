@@ -15,7 +15,7 @@ export default function App() {
 
 return (
   <PlayerProvider>
-    <UIProvider>
+    <UIProvider setScreen={setScreen}>
       {screen === "login" && <AuthScreen setScreen={setScreen} />}
       {screen === "onboarding" && <OnboardingScreen setScreen={setScreen} />}
       {screen === "musician-onboarding" && <MusicianOnboardingScreen setScreen={setScreen} />}

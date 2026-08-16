@@ -629,7 +629,7 @@ export default function MusicianOnboardingScreen({ setScreen }) {
               fontFamily: "'Kanit', sans-serif", letterSpacing: "1.5px",
               textTransform: "uppercase", marginBottom: "20px",
             }}>
-              Musician Sign Up
+              Artist Sign Up
             </div>
 
             {step === "email" && <EmailStep email={email} setEmail={setEmail} onNext={() => setStep("password")} />}
