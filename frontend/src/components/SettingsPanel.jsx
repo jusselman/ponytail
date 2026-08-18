@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useUI } from '../context/UIContext';
-import { logout } from '../services/authService';
+import { logout, deleteAccount } from '../services/authService';
 import EditProfilePanel from './EditProfilePanel';
+import ChangePasswordPanel from './ChangePasswordPanel';
 import LogoutConfirmModal from './LogoutConfirmModal';
+import DeleteAccountModal from './DeleteAccountModal';
 
 const colors = {
   bg: "#222222",
@@ -36,24 +38,6 @@ const SETTINGS = [
     items: [
       { label: "Edit Profile", icon: "user" },
       { label: "Change Password", icon: "lock" },
-      { label: "Email Preferences", icon: "mail" },
-      { label: "Connected Accounts", icon: "link" },
-    ],
-  },
-  {
-    section: "Playback",
-    items: [
-      { label: "Audio Quality", icon: "audio", value: "High" },
-      { label: "Download Quality", icon: "download", value: "Standard" },
-      { label: "Crossfade", icon: "crossfade", value: "Off" },
-      { label: "Normalize Volume", icon: "volume", value: "On" },
-    ],
-  },
-  {
-    section: "Privacy",
-    items: [
-      { label: "Private Session", icon: "eye", value: "Off" },
-      { label: "Show Listening Activity", icon: "activity", value: "On" },
     ],
   },
   {
@@ -87,14 +71,6 @@ const SettingIcon = ({ type, danger }) => {
   const icons = {
     user: <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" />,
     lock: <><rect x="3" y="11" width="18" height="11" rx="2" stroke={stroke} strokeWidth="1.8" /><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></>,
-    mail: <><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke={stroke} strokeWidth="1.8" /><path d="M22 6l-10 7L2 6" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></>,
-    link: <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" />,
-    audio: <><path d="M9 18V6l12-2v12" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /><circle cx="6" cy="18" r="3" stroke={stroke} strokeWidth="1.8" /><circle cx="18" cy="16" r="3" stroke={stroke} strokeWidth="1.8" /></>,
-    download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></>,
-    crossfade: <path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />,
-    volume: <><path d="M11 5L6 9H2v6h4l5 4V5z" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></>,
-    eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke={stroke} strokeWidth="1.8" /><circle cx="12" cy="12" r="3" stroke={stroke} strokeWidth="1.8" /></>,
-    activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />,
     bell: <><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></>,
     pin: <><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke={stroke} strokeWidth="1.8" /><circle cx="12" cy="9" r="2.5" stroke={stroke} strokeWidth="1.8" /></>,
     message: <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></>,
@@ -118,24 +94,48 @@ export default function SettingsPanel() {
     isSettingsOpen, closeSettings,
     closeProfile, setUser, setProfileImage, setScreen,
   } = useUI();
-  // ── Only "Edit Profile" and "Log Out" are wired up so far — everything else
-  // in SETTINGS is still a static placeholder row. ──
+  // ── Only "Edit Profile", "Change Password", "Log Out", and "Delete Account"
+  // are wired up so far — everything else in SETTINGS is still a static
+  // placeholder row. ──
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  // ── Change Password also asks "are you sure?" first, same as logout/delete,
+  // before it ever shows the actual form. ──
+  const [isChangePasswordConfirmOpen, setIsChangePasswordConfirmOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  // ── Delete Account is two steps on purpose, given how serious/irreversible
+  // it is: a plain "are you sure?" first, and only on "Yes" does the real,
+  // can't-be-undone confirmation (with the anxious pony) appear. ──
+  const [isDeleteStep1Open, setIsDeleteStep1Open] = useState(false);
+  const [isDeleteStep2Open, setIsDeleteStep2Open] = useState(false);
 
-  // ── Actually logs out: clears the stored auth token, resets the shared
-  // UIContext user/avatar/panel-open state (so the next login doesn't briefly
-  // flash the previous account's data or an already-open settings panel), then
-  // hands navigation back to App.js's top-level screen switcher to land on
-  // the login screen — completing the session. ──
-  const handleConfirmLogout = async () => {
+  // ── Shared cleanup for both logging out and finishing an account deletion:
+  // clears the stored auth token, resets the shared UIContext user/avatar/
+  // panel-open state (so the next login doesn't briefly flash the previous
+  // account's data or an already-open settings panel), then hands navigation
+  // back to App.js's top-level screen switcher to land on the login screen —
+  // completing the session either way. ──
+  const endSession = async () => {
     await logout();
-    setIsLogoutConfirmOpen(false);
     closeSettings();
     closeProfile();
     setUser(null);
     setProfileImage(null);
     setScreen("login");
+  };
+
+  const handleConfirmLogout = async () => {
+    setIsLogoutConfirmOpen(false);
+    await endSession();
+  };
+
+  // ── The actual delete call — left to throw on failure so DeleteAccountModal's
+  // own try/catch can show the error and let the user retry, rather than
+  // silently closing on a failed request. ──
+  const handleConfirmDeleteAccount = async () => {
+    await deleteAccount();
+    setIsDeleteStep2Open(false);
+    await endSession();
   };
 
   return (
@@ -201,7 +201,9 @@ export default function SettingsPanel() {
                   key={ii}
                   onClick={() => {
                     if (item.label === "Edit Profile") setIsEditProfileOpen(true);
+                    if (item.label === "Change Password") setIsChangePasswordConfirmOpen(true);
                     if (item.label === "Log Out") setIsLogoutConfirmOpen(true);
+                    if (item.label === "Delete Account") setIsDeleteStep1Open(true);
                   }}
                   style={{
                     display: "flex", alignItems: "center", gap: "14px",
@@ -230,10 +232,11 @@ export default function SettingsPanel() {
           <div style={{ height: "20px" }} />
         </div>
 
-        {/* Edit Profile — slides in over the settings list, within this same
-        panel's bounds (position: absolute + inset: 0 resolves against this
-        div, its nearest positioned ancestor). */}
+        {/* Edit Profile / Change Password — slide in over the settings list,
+        within this same panel's bounds (position: absolute + inset: 0 resolves
+        against this div, its nearest positioned ancestor). */}
         <EditProfilePanel isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
+        <ChangePasswordPanel isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
       </div>
 
       {/* Log Out confirmation — deliberately a sibling of the 88%-wide sliding
@@ -244,6 +247,44 @@ export default function SettingsPanel() {
         isOpen={isLogoutConfirmOpen}
         onCancel={() => setIsLogoutConfirmOpen(false)}
         onConfirm={handleConfirmLogout}
+      />
+
+      {/* Change Password confirmation — same "are you sure?" pattern as logout,
+      before the actual form (nested above) is ever shown. */}
+      <LogoutConfirmModal
+        isOpen={isChangePasswordConfirmOpen}
+        onCancel={() => setIsChangePasswordConfirmOpen(false)}
+        onConfirm={() => {
+          setIsChangePasswordConfirmOpen(false);
+          setIsChangePasswordOpen(true);
+        }}
+        title="Change your password?"
+        message="You'll be asked for your current password and a new one."
+        confirmLabel="Yes"
+        cancelLabel="No"
+      />
+
+      {/* Delete Account, step 1 — plain "are you sure?" reusing the same generic
+      modal as logout. Only "Yes" here advances to the real, irreversible
+      confirmation below. */}
+      <LogoutConfirmModal
+        isOpen={isDeleteStep1Open}
+        onCancel={() => setIsDeleteStep1Open(false)}
+        onConfirm={() => {
+          setIsDeleteStep1Open(false);
+          setIsDeleteStep2Open(true);
+        }}
+        title="Delete your account?"
+        message="This permanently removes your profile, playlists, and follows. You'll be asked to confirm once more."
+        confirmLabel="Yes"
+        cancelLabel="No"
+      />
+
+      {/* Delete Account, step 2 — the actual point of no return */}
+      <DeleteAccountModal
+        isOpen={isDeleteStep2Open}
+        onCancel={() => setIsDeleteStep2Open(false)}
+        onConfirmDelete={handleConfirmDeleteAccount}
       />
     </div>
   );

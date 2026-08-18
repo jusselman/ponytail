@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('../config/passport');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const pool = require('../config/db');
 const { register, login, getMe } = require('../controllers/authController');
 const { requireAuth } = require('../middleware/authMiddleware');
@@ -488,6 +489,86 @@ router.put('/update-profile', async (req, res) => {
   } catch (err) {
     console.error('Update profile error:', err);
     res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Permanently delete the current user's account. Most of what they own cascades
+// automatically via ON DELETE CASCADE on the users row (playlists → playlist_tracks,
+// playlist_follows, user_follows — see schema.sql and migrations 004/005). Tracks
+// they uploaded are deliberately NOT deleted: seed_tracks.uploader_user_id is
+// ON DELETE SET NULL (migration 006), so their uploads stay in the shared catalog,
+// just unattributed — same as how track deletion already leaves the catalog intact
+// for everyone else. user_play_history and user_search_selections aren't declared
+// in any tracked schema file (see the schema-drift note — enriched_db/seed_tracks
+// evolved outside schema.sql, and these two tables did too), so this can't assume
+// they cascade; they're cleared explicitly in the same transaction instead.
+router.delete('/account', requireAuth, async (req, res) => {
+  // ── A real transaction needs one dedicated client — pool.query() (this file's
+  // `pool` is actually config/db.js's { query, pool } wrapper) borrows a fresh
+  // connection per call, so BEGIN/COMMIT would land on different connections.
+  // Same pattern as playlistController.js's reorderPlaylistTracks. ──
+  const client = await pool.pool.connect();
+  try {
+    const userResult = await client.query('SELECT profile_picture FROM users WHERE id = $1', [req.user.id]);
+    const avatarUrl = userResult.rows[0]?.profile_picture || null;
+
+    await client.query('BEGIN');
+    await client.query('DELETE FROM user_play_history WHERE user_id = $1', [req.user.id]);
+    await client.query('DELETE FROM user_search_selections WHERE user_id = $1', [req.user.id]);
+    await client.query('DELETE FROM users WHERE id = $1', [req.user.id]);
+    await client.query('COMMIT');
+
+    // Best-effort — an avatar file missing on disk shouldn't undo an otherwise
+    // successful account deletion.
+    deleteUploadedFile(avatarUrl);
+
+    res.json({ success: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Delete account error:', err);
+    res.status(500).json({ error: 'Failed to delete your account. Please try again.' });
+  } finally {
+    client.release();
+  }
+});
+
+// Change password — works the same for a listener or an artist account, requires
+// the current password to verify identity before setting a new one. A Google-only
+// account (password_hash never set at signup — see the Google strategy in
+// config/passport.js) gets a clear error instead of a confusing bcrypt.compare
+// failure against a null hash.
+router.put('/change-password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Please fill out both password fields.' });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+  }
+
+  try {
+    const result = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+    const user = result.rows[0];
+
+    if (!user?.password_hash) {
+      return res.status(400).json({ error: 'This account signed up with Google and has no password to change.' });
+    }
+
+    const matches = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!matches) {
+      return res.status(401).json({ error: 'Current password is incorrect.' });
+    }
+
+    // Same cost factor as signup (authController.js's register) so an existing
+    // password changed here hashes to the same strength as a brand new one.
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newHash, req.user.id]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Failed to change your password. Please try again.' });
   }
 });
 

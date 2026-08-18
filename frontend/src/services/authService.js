@@ -187,6 +187,33 @@ export const updateProfile = async (data) => {
   return response.data;
 };
 
+// Permanently delete the current user's account — irreversible. The backend
+// cascades everything the account owns (playlists, follows, watch/search
+// history) and unattributes rather than deletes any tracks they uploaded, so
+// the shared catalog stays intact for everyone else. Does not clear the local
+// token itself — the caller (SettingsPanel's delete-account flow) does that
+// via logout() afterward, same as the rest of its cleanup.
+export const deleteAccount = async () => {
+  const token = await getToken();
+  const response = await axios.delete(`${API_URL}/auth/account`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+// Change password — works for a listener or an artist account alike. Requires
+// the current password server-side to verify identity before the new one is set.
+export const changePassword = async (currentPassword, newPassword) => {
+  const token = await getToken();
+  const response = await axios.put(`${API_URL}/auth/change-password`, {
+    currentPassword,
+    newPassword,
+  }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 // ── Record a track play in the user's permanent history ──
 const recordPlayHistory = async (track) => {
   try {
