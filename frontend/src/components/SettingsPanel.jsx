@@ -3,8 +3,12 @@ import { useUI } from '../context/UIContext';
 import { logout, deleteAccount } from '../services/authService';
 import EditProfilePanel from './EditProfilePanel';
 import ChangePasswordPanel from './ChangePasswordPanel';
+import HelpCenterPanel from './HelpCenterPanel';
 import LogoutConfirmModal from './LogoutConfirmModal';
 import DeleteAccountModal from './DeleteAccountModal';
+import AboutPonytailModal from './AboutPonytailModal';
+import ReportProblemModal from './ReportProblemModal';
+import ReportReceivedModal from './ReportReceivedModal';
 
 const colors = {
   bg: "#222222",
@@ -31,6 +35,28 @@ const ChevronRight = () => (
   </svg>
 );
 
+// ─── Toggle switch — teal track when on, matching the app's accent color used
+// for every other "active" state (selected genre chips, focused inputs, etc). ──
+const Toggle = ({ on, onToggle }) => (
+  <div
+    onClick={(e) => { e.stopPropagation(); onToggle(); }}
+    style={{
+      width: "44px", height: "26px", borderRadius: "13px",
+      backgroundColor: on ? colors.teal : "rgba(255,255,255,0.15)",
+      position: "relative", cursor: "pointer", flexShrink: 0,
+      transition: "background-color 0.2s ease",
+    }}
+  >
+    <div style={{
+      position: "absolute", top: "3px", left: on ? "21px" : "3px",
+      width: "20px", height: "20px", borderRadius: "50%",
+      backgroundColor: "#ffffff",
+      transition: "left 0.2s ease",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+    }} />
+  </div>
+);
+
 // ─── Settings sections ────────────────────────────────────────────────────────
 const SETTINGS = [
   {
@@ -42,10 +68,13 @@ const SETTINGS = [
   },
   {
     section: "Notifications",
+    // ── Toggle-only section — no chevron, no modal, tapping the switch (or
+    // the row) just flips that notification on/off in place. ──
+    toggleOnly: true,
     items: [
-      { label: "New Releases", icon: "bell", value: "On" },
-      { label: "Concert Alerts", icon: "pin", value: "On" },
-      { label: "Messages", icon: "message", value: "On" },
+      { label: "New Releases", icon: "bell" },
+      { label: "Concert Alerts", icon: "pin" },
+      { label: "Messages", icon: "message" },
     ],
   },
   {
@@ -94,11 +123,28 @@ export default function SettingsPanel() {
     isSettingsOpen, closeSettings,
     closeProfile, setUser, setProfileImage, setScreen,
   } = useUI();
-  // ── Only "Edit Profile", "Change Password", "Log Out", and "Delete Account"
-  // are wired up so far — everything else in SETTINGS is still a static
-  // placeholder row. ──
+  // ── Notifications are toggle-only, no modal — defaults match the old static
+  // "On" value every item used to show. ──
+  const [notifications, setNotifications] = useState({
+    "New Releases": true,
+    "Concert Alerts": true,
+    "Messages": true,
+  });
+  const toggleNotification = (label) => {
+    setNotifications(prev => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  // ── Only "Edit Profile", "Change Password", "Log Out", "Delete Account",
+  // "About Ponytail", "Help Center", and "Report a Problem" are wired up so
+  // far — everything else in SETTINGS is still a static placeholder row. ──
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  // ── Report a Problem is cosmetic for now (see ReportProblemModal) — submit
+  // just fakes a delay, then hands off to the "received" confirmation below. ──
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isReportReceivedOpen, setIsReportReceivedOpen] = useState(false);
   // ── Change Password also asks "are you sure?" first, same as logout/delete,
   // before it ever shows the actual form. ──
   const [isChangePasswordConfirmOpen, setIsChangePasswordConfirmOpen] = useState(false);
@@ -200,10 +246,14 @@ export default function SettingsPanel() {
                 <div
                   key={ii}
                   onClick={() => {
+                    if (group.toggleOnly) { toggleNotification(item.label); return; }
                     if (item.label === "Edit Profile") setIsEditProfileOpen(true);
                     if (item.label === "Change Password") setIsChangePasswordConfirmOpen(true);
                     if (item.label === "Log Out") setIsLogoutConfirmOpen(true);
                     if (item.label === "Delete Account") setIsDeleteStep1Open(true);
+                    if (item.label === "About Ponytail") setIsAboutOpen(true);
+                    if (item.label === "Help Center") setIsHelpCenterOpen(true);
+                    if (item.label === "Report a Problem") setIsReportOpen(true);
                   }}
                   style={{
                     display: "flex", alignItems: "center", gap: "14px",
@@ -219,12 +269,18 @@ export default function SettingsPanel() {
                   <div style={{ flex: 1, fontSize: "14px", fontWeight: "500", color: item.danger ? "#ff6b6b" : colors.text, fontFamily: "'Kanit', sans-serif" }}>
                     {item.label}
                   </div>
-                  {item.value && (
-                    <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-                      {item.value}
-                    </div>
+                  {group.toggleOnly ? (
+                    <Toggle on={!!notifications[item.label]} onToggle={() => toggleNotification(item.label)} />
+                  ) : (
+                    <>
+                      {item.value && (
+                        <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
+                          {item.value}
+                        </div>
+                      )}
+                      {!item.danger && <ChevronRight />}
+                    </>
                   )}
-                  {!item.danger && <ChevronRight />}
                 </div>
               ))}
             </div>
@@ -232,11 +288,12 @@ export default function SettingsPanel() {
           <div style={{ height: "20px" }} />
         </div>
 
-        {/* Edit Profile / Change Password — slide in over the settings list,
-        within this same panel's bounds (position: absolute + inset: 0 resolves
-        against this div, its nearest positioned ancestor). */}
+        {/* Edit Profile / Change Password / Help Center — slide in over the
+        settings list, within this same panel's bounds (position: absolute +
+        inset: 0 resolves against this div, its nearest positioned ancestor). */}
         <EditProfilePanel isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
         <ChangePasswordPanel isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
+        <HelpCenterPanel isOpen={isHelpCenterOpen} onClose={() => setIsHelpCenterOpen(false)} />
       </div>
 
       {/* Log Out confirmation — deliberately a sibling of the 88%-wide sliding
@@ -285,6 +342,28 @@ export default function SettingsPanel() {
         isOpen={isDeleteStep2Open}
         onCancel={() => setIsDeleteStep2Open(false)}
         onConfirmDelete={handleConfirmDeleteAccount}
+      />
+
+      {/* About Ponytail — purely informational, closes via its own "Got it!"
+      button or the backdrop */}
+      <AboutPonytailModal
+        isOpen={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
+      />
+
+      {/* Report a Problem — cosmetic submit flow (see ReportProblemModal); a
+      "successful" submit closes this and opens the ponyMechanic confirmation. */}
+      <ReportProblemModal
+        isOpen={isReportOpen}
+        onCancel={() => setIsReportOpen(false)}
+        onSubmitted={() => {
+          setIsReportOpen(false);
+          setIsReportReceivedOpen(true);
+        }}
+      />
+      <ReportReceivedModal
+        isOpen={isReportReceivedOpen}
+        onClose={() => setIsReportReceivedOpen(false)}
       />
     </div>
   );
