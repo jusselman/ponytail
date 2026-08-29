@@ -203,12 +203,11 @@ const ElongatedGenreRow = ({ label, onSelect, hue = 0, isShowAll = false }) => (
 );
 
 // ─── Standard Search Tab ──────────────────────────────────────────────────────
-const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGenres, onToggleGenre }) => {
+const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [focused, setFocused] = useState(false);
-  const [showAllGenres, setShowAllGenres] = useState(false);
   const debounceRef = useRef(null);
   const inputRef = useRef(null);
   const { playStandaloneTrack, playTrack } = usePlayer();
@@ -221,7 +220,6 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
   try {
     const params = new URLSearchParams();
     params.set('q', q);
-    if (selectedGenres.length > 0) params.set('genres', selectedGenres.join(','));
     const res = await fetch(`http://localhost:5000/api/auth/search?${params.toString()}`);
     const data = await res.json();
     const mapped = (data.results || []).map(r => ({
@@ -250,28 +248,8 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
     debounceRef.current = setTimeout(() => searchTracks(val), 350);
   };
 
-  // ── Re-run the active search whenever the genre filter changes, so selecting
-  // or removing a genre chip re-filters results without requiring a re-type ──
-  useEffect(() => {
-    if (query.length >= 2) searchTracks(query);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedGenres]);
-
   const showResults = query.length >= 2;
   const showEmpty = !query;
-
-  // ── Elongated genre picker shows whenever the bar is focused and empty —
-  // picking a genre just removes it from this list (it stays open, showing
-  // whatever's left); only typing a query or hitting the search bar's X closes it ──
-  const showGenrePicker = focused && query.length === 0;
-  const visibleTopGenres = TOP_GENRES.filter(g => !selectedGenres.includes(g));
-  const visibleMoreGenres = MORE_GENRES.filter(g => !selectedGenres.includes(g.name));
-
-  // ── Collapse back to the top-5 view any time the picker closes, so it doesn't
-  // reopen already-expanded next time the user taps the search bar ──
-  useEffect(() => {
-    if (!showGenrePicker) setShowAllGenres(false);
-  }, [showGenrePicker]);
 
   const handleClearAndClose = () => {
     setQuery("");
@@ -335,28 +313,6 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
           </div>
         )}
 
-        {/* ── Elongated genre picker — absolutely positioned, stacked above (higher
-        z-index than) the Recent/Loved/Browse-by-Genre rows below so it visually
-        covers them without removing them from the layout. No wrapping panel —
-        rows sit flush against each other, same width/radius as the search bar.
-        Tapping a row just removes that genre from this list (it stays open);
-        it only closes via the search bar's X. Rows use onMouseDown (not onClick)
-        paired with the input's delayed blur above, so taps register before the
-        input loses focus. ── */}
-        {showGenrePicker && (
-          <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0, zIndex: 50 }}>
-            {visibleTopGenres.map(genre => (
-              <ElongatedGenreRow key={genre} label={genre} hue={genreHue(genre)} onSelect={() => onToggleGenre(genre)} />
-            ))}
-            {!showAllGenres ? (
-              <ElongatedGenreRow label="Show All" isShowAll onSelect={() => setShowAllGenres(true)} />
-            ) : (
-              visibleMoreGenres.map(({ name }) => (
-                <ElongatedGenreRow key={name} label={name} hue={genreHue(name)} onSelect={() => onToggleGenre(name)} />
-              ))
-            )}
-          </div>
-        )}
       </div>
 
       {/* ── Results ── */}
@@ -434,44 +390,8 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
   <div style={{ opacity: 1 }}>
     {/* Recent */}
 <div style={{ marginBottom: "6px", animation: "fadeSlideUp 0.4s ease 0.05s forwards", opacity: 0 }}>
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "12px", height: "24px" }}>
-    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", flexShrink: 0 }}>
-      Recent
-    </div>
-    {/* ── Selected genre filter chips — small teal chip per selected genre,
-    tap to remove. Placed beside the Recent label per spec. This row is now
-    always mounted (not conditionally, even with zero genres selected) and
-    the outer row has an explicit `height` (not `minHeight`) rather than
-    letting content dictate it — a chip's own padding/border/line-height
-    was rendering taller than the bare "Recent" label, so the row's height
-    was silently growing whenever a chip appeared and shoving everything
-    below it down. Each chip now also centers its text via flex + height:
-    "100%" instead of vertical padding, so it's pinned to exactly this row's
-    height instead of pushing past it. Extra chips scroll horizontally
-    instead of wrapping to a second line. ── */}
-    <div style={{
-      display: "flex", flexWrap: "nowrap", gap: "6px",
-      justifyContent: "flex-start", overflowX: "auto", overflowY: "hidden",
-      minWidth: 0, maxWidth: "100%", height: "100%", WebkitOverflowScrolling: "touch",
-    }}>
-      {selectedGenres.map(genre => (
-        <div
-          key={genre}
-          onClick={() => onToggleGenre(genre)}
-          style={{
-            height: "100%", boxSizing: "border-box",
-            display: "flex", alignItems: "center",
-            padding: "0 10px", borderRadius: "20px",
-            border: `1.5px solid ${colors.teal}`,
-            color: colors.teal, fontSize: "10px", fontWeight: "600",
-            fontFamily: "'Kanit', sans-serif", cursor: "pointer",
-            whiteSpace: "nowrap", flexShrink: 0,
-          }}
-        >
-          {genre}
-        </div>
-      ))}
-      </div>
+  <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+    Recent
   </div>
   <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px", minHeight: "70px", alignItems: "center" }}>
     {recentActivity.length > 0 ? (
@@ -539,51 +459,6 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap, selectedGen
   </div>
 </div>
 
-{/* Genre chips */}
-<div style={{ animation: "fadeSlideUp 0.4s ease 0.25s forwards", opacity: 0 }}>
-  <div style={{ position: "relative", marginBottom: "12px" }}>
-    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase" }}>
-      Browse by Genre
-    </div>
-    {selectedGenres.length > 0 && (
-      <div style={{
-        position: "absolute", top: 0, right: 0,
-        fontSize: "11px", fontWeight: "600",
-        color: colors.teal,
-        fontFamily: "'Kanit', sans-serif",
-      }}>
-        {selectedGenres.length}/5
-      </div>
-    )}
-  </div>
-  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-    {MOCK_GENRES.map((genre, i) => {
-      const hue = (i * 37 + 160) % 360;
-      const isSelected = selectedGenres.includes(genre);
-      return (
-        <div
-          key={i}
-          onClick={() => onToggleGenre(genre)}
-          style={{
-            padding: "6px 14px", borderRadius: "20px",
-            background: isSelected
-              ? colors.tealGlow
-              : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
-            border: isSelected ? `2px solid ${colors.teal}` : `2px solid transparent`,
-            fontSize: "12px", fontWeight: "500",
-            color: isSelected ? colors.teal : colors.text,
-            fontFamily: "'Kanit', sans-serif",
-            cursor: "pointer", transition: "opacity 0.2s ease",
-          }}
-          onMouseEnter={e => e.currentTarget.style.opacity = "0.75"}
-          onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-        >
-          {genre}
-        </div>
-      );
-    })}
-  </div>
-</div>
    </div>
 )}
 </div>
@@ -836,6 +711,115 @@ const GenreFilterPanel = ({ isOpen, onClose, selectedGenres, onToggleGenre }) =>
 );
 
 // ─── Discovery Tab ────────────────────────────────────────────────────────────
+// ─── Discovery's own genre search bar — same search-bar + elongated genre
+// picker pattern the Search tab used to show (identical markup/behavior),
+// but scoped to Discovery's own selectedGenres/onToggleGenre so it no longer
+// shares filter state with the Search tab. The text input itself doesn't
+// run a search here — Discovery has no "results" list — it exists purely
+// as the tap target that reveals the genre picker below it, exactly like
+// it did on the Search tab. This sits alongside the existing filter-icon
+// panel (GenreFilterPanel) as a second way to set the same genre filter. ───
+const DiscoveryGenreBar = ({ selectedGenres, onToggleGenre }) => {
+  const [query, setQuery] = useState("");
+  const [focused, setFocused] = useState(false);
+  const [showAllGenres, setShowAllGenres] = useState(false);
+  const inputRef = useRef(null);
+
+  // ── Typing now searches genre names (case-insensitive substring match
+  // against the full MOCK_GENRES list) instead of being a no-op — the picker
+  // stays open the whole time the bar is focused, it just switches between
+  // "browse" (top 5 + Show All) and "search results" depending on query ──
+  const trimmedQuery = query.trim();
+  const isSearching = trimmedQuery.length > 0;
+  const showGenrePicker = focused;
+  const visibleTopGenres = TOP_GENRES.filter(g => !selectedGenres.includes(g));
+  const visibleMoreGenres = MORE_GENRES.filter(g => !selectedGenres.includes(g.name));
+  const matchingGenres = MOCK_GENRES.filter(g =>
+    g.toLowerCase().includes(trimmedQuery.toLowerCase()) && !selectedGenres.includes(g)
+  );
+
+  useEffect(() => {
+    if (!showGenrePicker) setShowAllGenres(false);
+  }, [showGenrePicker]);
+
+  const handleClearAndClose = () => {
+    setQuery("");
+    setFocused(false);
+    if (inputRef.current) inputRef.current.blur();
+  };
+
+  return (
+    <div style={{ position: "relative", marginBottom: "12px", flexShrink: 0 }}>
+      <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+        <SearchIcon color={focused ? colors.teal : "#666"} />
+      </div>
+      <input
+        ref={inputRef}
+        style={{
+          width: "100%", padding: "12px 40px 12px 40px",
+          borderRadius: "12px", backgroundColor: colors.bgCard,
+          border: `1.5px solid ${focused ? colors.teal : "transparent"}`,
+          color: colors.text, fontSize: "14px", outline: "none",
+          fontFamily: "'Kanit', sans-serif", boxSizing: "border-box",
+          boxShadow: focused ? `0 0 0 3px rgba(93,235,215,0.1)` : "none",
+          transition: "all 0.2s ease",
+        }}
+        placeholder="Search genres..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setTimeout(() => setFocused(false), 150)}
+      />
+      {(query.length > 0 || focused) && (
+        <button
+          onClick={handleClearAndClose}
+          style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "4px" }}
+        >
+          <ClearIcon />
+        </button>
+      )}
+
+      {/* ── Dropdown below the bar — while searching, shows genres matching
+      the typed text (or a "no match" placeholder); otherwise falls back to
+      the browse view (top 5 + "Show All"), same as before ── */}
+      {showGenrePicker && (
+        <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0, zIndex: 50 }}>
+          {isSearching ? (
+            matchingGenres.length > 0 ? (
+              matchingGenres.map(genre => (
+                <ElongatedGenreRow key={genre} label={genre} hue={genreHue(genre)} onSelect={() => onToggleGenre(genre)} />
+              ))
+            ) : (
+              <div style={{
+                width: "100%", padding: "12px 0", borderRadius: "12px",
+                textAlign: "center", boxSizing: "border-box",
+                backgroundColor: colors.bgCard,
+                color: colors.muted, fontSize: "13px",
+                fontFamily: "'Kanit', sans-serif",
+              }}>
+                No genres match "{trimmedQuery}"
+              </div>
+            )
+          ) : (
+            <>
+              {visibleTopGenres.map(genre => (
+                <ElongatedGenreRow key={genre} label={genre} hue={genreHue(genre)} onSelect={() => onToggleGenre(genre)} />
+              ))}
+              {!showAllGenres ? (
+                <ElongatedGenreRow label="Show All" isShowAll onSelect={() => setShowAllGenres(true)} />
+              ) : (
+                visibleMoreGenres.map(({ name }) => (
+                  <ElongatedGenreRow key={name} label={name} hue={genreHue(name)} onSelect={() => onToggleGenre(name)} />
+                ))
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
   const [pool, setPool] = useState([]);
   const [current, setCurrent] = useState(0);
@@ -922,6 +906,8 @@ const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
   // its own open/close transform) means a refetch never touches it. ──
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "0 16px 16px", boxSizing: "border-box" }}>
+
+      <DiscoveryGenreBar selectedGenres={selectedGenres} onToggleGenre={onToggleGenre} />
 
       {loading ? (
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
@@ -1121,9 +1107,10 @@ export default function SearchScreen({ setScreen }) {
     }
   };
 
-  // ── Shared genre-filter toggle — used by both the Search tab's Browse-by-Genre
-  // chips/elongated picker and the Discovery tab's filter panel, since they read
-  // and write the same selectedGenres state (capped at 5, same as everywhere else) ──
+  // ── Discovery-only genre-filter toggle — used by both the Discovery tab's
+  // filter-icon panel (GenreFilterPanel) and its own genre search bar
+  // (DiscoveryGenreBar); the Search tab no longer has any genre filtering
+  // of its own, so this state isn't shared with it anymore (capped at 5) ──
   const handleToggleGenre = (genre) => {
     setSelectedGenres(prev => {
       if (prev.includes(genre)) {
@@ -1267,8 +1254,6 @@ export default function SearchScreen({ setScreen }) {
               onArtistTap={openArtist}
               onAlbumTap={(albumObj) => openAlbum(albumObj.artist, albumObj.album)}
               onUserTap={handleUserTap}
-              selectedGenres={selectedGenres}
-              onToggleGenre={handleToggleGenre}
             />
           )}
           </div>
