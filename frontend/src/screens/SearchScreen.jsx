@@ -183,20 +183,26 @@ const FilterIcon = ({ size = 16, color = "#5DEBD7" }) => (
 // centered, flush against its neighbors (no gap). Colored like the original
 // Browse-by-Genre chips (per-genre hue gradient), white text. The "Show All"
 // row uses a flat gray background instead of a hue gradient. ───
+// ─── Matches the GenreFilterPanel chip styling exactly (10px radius, transparent
+// 2px border, opacity hover feedback) so Discovery's search-bar picker and its
+// full-screen filter panel read as the same chip design in two layouts ──────
 const ElongatedGenreRow = ({ label, onSelect, hue = 0, isShowAll = false }) => (
   <div
     onMouseDown={(e) => { e.preventDefault(); onSelect(); }}
     style={{
-      width: "100%", padding: "12px 0", borderRadius: "12px",
+      width: "100%", padding: "14px 10px", borderRadius: "10px",
       textAlign: "center", boxSizing: "border-box",
       background: isShowAll
         ? "#555555"
         : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+      border: "2px solid transparent",
       color: "#ffffff",
       fontSize: "13px", fontWeight: "500",
       fontFamily: "'Kanit', sans-serif",
-      cursor: "pointer",
+      cursor: "pointer", transition: "opacity 0.2s ease",
     }}
+    onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+    onMouseLeave={e => e.currentTarget.style.opacity = "1"}
   >
     {label}
   </div>
@@ -212,6 +218,8 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap }) => {
   const inputRef = useRef(null);
   const { playStandaloneTrack, playTrack } = usePlayer();
   const [recentActivity, setRecentActivity] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true);
 
 
  const searchTracks = async (q) => {
@@ -273,6 +281,39 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap }) => {
     };
     fetchRecent();
   }, []);
+
+  // ── "Maybe you'd like..." suggestions — mirrors the genres already present in
+  // Recent + Loved (the two rows right above it) so it reads as "more like what
+  // you've been into". Only when BOTH are empty (nothing loved, no play/search
+  // history at all) does it fall back to the three artists picked at onboarding —
+  // /albums/discover's own no-genres branch already weights favorite_artists first
+  // and only adds history signal on top, and history being empty here is guaranteed
+  // by recentActivity (sourced from that same history) also being empty. ──
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      setSuggestionsLoading(true);
+      try {
+        const genrePool = [...loved, ...recentActivity].map(t => t.genre).filter(Boolean);
+        const uniqueGenres = [...new Set(genrePool)].slice(0, 5);
+
+        const params = new URLSearchParams();
+        if (uniqueGenres.length > 0) params.set('genres', uniqueGenres.join(','));
+        params.set('limit', '12');
+
+        const token = await AsyncStorage.getItem('ponytail_token');
+        const res = await fetch(`http://localhost:5000/api/auth/albums/discover?${params.toString()}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setSuggestions(data.albums || []);
+      } catch (err) {
+        console.log('Failed to fetch suggestions:', err);
+      } finally {
+        setSuggestionsLoading(false);
+      }
+    };
+    fetchSuggestions();
+  }, [loved, recentActivity]);
 
   return (
     <div style={{ padding: "0 16px 20px", width: "100%", boxSizing: "border-box" }}>
@@ -457,6 +498,56 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap }) => {
       ))
     )}
   </div>
+</div>
+
+{/* ── Maybe you'd like... — Instagram-search-tab-style dense square grid.
+Genre-matched against Recent + Loved when either has anything; otherwise
+(both empty) falls back to the three onboarding-picked artists, handled
+server-side by /albums/discover's own no-genres branch. Tiles are plain
+cover art, no captions, same as IG's Explore grid — tapping one opens the
+album panel via onAlbumTap, already wired in from the parent screen. ── */}
+<div style={{ animation: "fadeSlideUp 0.4s ease 0.3s forwards", opacity: 0 }}>
+  <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "12px" }}>
+    Maybe you'd like...
+  </div>
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2px" }}>
+    {(suggestionsLoading ? Array.from({ length: 9 }) : suggestions).map((item, i) => {
+      if (suggestionsLoading) {
+        return <div key={i} style={{ aspectRatio: "1", backgroundColor: colors.bgCard }} />;
+      }
+      const hue = item.artist ? (item.artist.charCodeAt(0) * 37 + 160) % 360 : 200;
+      return (
+        <div
+          key={`${item.artist}-${item.album}-${i}`}
+          onClick={() => onAlbumTap({ artist: item.artist, album: item.album })}
+          style={{
+            aspectRatio: "1", position: "relative", overflow: "hidden", cursor: "pointer",
+            background: `linear-gradient(135deg, hsl(${hue}, 50%, 26%), hsl(${hue + 40}, 40%, 16%))`,
+          }}
+        >
+          {item.coverUrl ? (
+            <img
+              src={item.coverUrl}
+              alt={item.album}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.5)" strokeWidth="1.8" />
+                <circle cx="12" cy="12" r="3" stroke="rgba(255,255,255,0.5)" strokeWidth="1.8" />
+              </svg>
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+  {!suggestionsLoading && suggestions.length === 0 && (
+    <div style={{ textAlign: "center", color: colors.muted, fontFamily: "'Kanit', sans-serif", fontSize: "12px", padding: "16px 0" }}>
+      Love or play a few tracks to see picks here.
+    </div>
+  )}
 </div>
 
    </div>
