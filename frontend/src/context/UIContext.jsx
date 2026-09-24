@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { getMyPlaylists } from "../services/playlistService";
+import { getUnreadCount } from "../services/messageService";
 
 const UIContext = createContext(null);
 
@@ -64,6 +65,38 @@ export function UIProvider({ children, setScreen }) {
     setViewedPlaylistId(null);
   }, []);
 
+  // ── Direct messages. The inbox (list of threads) and an open conversation are
+  // separate panels so a thread opened from someone's profile doesn't need the
+  // inbox underneath it. `activeConversation` is { id, otherUser }. ──
+  const [isInboxOpen, setIsInboxOpen] = useState(false);
+  const [activeConversation, setActiveConversation] = useState(null);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+
+  const openInbox = useCallback(() => setIsInboxOpen(true), []);
+  const closeInbox = useCallback(() => setIsInboxOpen(false), []);
+  const openConversation = useCallback((conversation) => setActiveConversation(conversation), []);
+  const closeConversation = useCallback(() => setActiveConversation(null), []);
+
+  const refreshUnreadCount = useCallback(async () => {
+    try {
+      setUnreadMessageCount(await getUnreadCount());
+    } catch (err) {
+      // Not logged in yet, or backend down — the badge just stays as-is.
+    }
+  }, []);
+
+  // ── Poll the unread badge while someone is logged in. 15s is plenty for a
+  // badge; the open thread polls much faster on its own. ──
+  useEffect(() => {
+    if (!user?.id) {
+      setUnreadMessageCount(0);
+      return;
+    }
+    refreshUnreadCount();
+    const interval = setInterval(refreshUnreadCount, 15000);
+    return () => clearInterval(interval);
+  }, [user?.id, refreshUnreadCount]);
+
   return (
     <UIContext.Provider value={{
       isProfileOpen, openProfile, closeProfile,
@@ -73,6 +106,9 @@ export function UIProvider({ children, setScreen }) {
       isUserProfileOpen, viewedUsername, openUserProfile, closeUserProfile,
       isPublicPlaylistOpen, viewedPlaylistId, openPublicPlaylist, closePublicPlaylist,
       myPlaylists, refreshMyPlaylists, addMyPlaylist,
+      isInboxOpen, openInbox, closeInbox,
+      activeConversation, openConversation, closeConversation,
+      unreadMessageCount, refreshUnreadCount,
       setScreen,
     }}>
       {children}

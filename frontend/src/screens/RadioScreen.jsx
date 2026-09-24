@@ -11,6 +11,7 @@ import FooterNav from '../components/FooterNav';
 import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
 import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
+import MessagesLayer from '../components/MessagesLayer';
 import { usePlayer } from '../context/PlayerContext';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
@@ -859,6 +860,7 @@ export default function RadioScreen({ setScreen }) {
           <ProfilePanel />
 
           {/* ── Read-only viewer for a playlist you don't own ── */}
+          <MessagesLayer />
           <PublicPlaylistPanel />
 
           {/* ── Add Station sheet ── */}

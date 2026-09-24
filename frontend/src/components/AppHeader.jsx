@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUI } from '../context/UIContext';
+import InboxButton from './InboxButton';
 
 const colors = {
   bg: "#222222",
@@ -47,6 +48,8 @@ export default function AppHeader() {
             marginLeft: "4px", marginBottom: "6px",
           }} />
         </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+        <InboxButton />
         <button
           onClick={openProfile}
           style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
@@ -61,6 +64,7 @@ export default function AppHeader() {
             </div>
           )}
         </button>
+        </div>
       </div>
     </div>
   );

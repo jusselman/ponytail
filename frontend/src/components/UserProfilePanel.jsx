@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getPublicProfile, followUser, unfollowUser } from '../services/authService';
 import { useUI } from '../context/UIContext';
+import { openConversation as openConversationApi } from '../services/messageService';
 
 const colors = {
   bg: "#222222",
@@ -84,6 +85,30 @@ const FollowButton = ({ following, pending, onToggle }) => (
     {following && <CheckIcon />}
     <span style={{ fontSize: "12px", fontWeight: "600", color: colors.teal, fontFamily: "'Kanit', sans-serif" }}>
       {following ? "Following" : "Follow"}
+    </span>
+  </button>
+);
+
+// ─── Message button — opens (or creates) the DM thread with this person ──
+const MessageButton = ({ pending, onPress }) => (
+  <button
+    onClick={onPress}
+    disabled={pending}
+    style={{
+      display: "flex", alignItems: "center", gap: "6px",
+      padding: "7px 16px", borderRadius: "20px",
+      border: "1.5px solid rgba(255,255,255,0.25)",
+      backgroundColor: "transparent",
+      cursor: pending ? "default" : "pointer",
+      opacity: pending ? 0.6 : 1,
+      marginTop: "10px",
+    }}
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke={colors.text} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+    <span style={{ fontSize: "12px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+      Message
     </span>
   </button>
 );
@@ -247,7 +272,7 @@ const MOCK_FOLLOWED_USERS = [
 // Unlike ProfilePanel.jsx: no photo upload, no add-playlist affordance, section
 // labels are possessive ("Andrew's Playlists"), and there's a Follow button. ──
 export default function UserProfilePanel() {
-  const { isUserProfileOpen, viewedUsername, closeUserProfile, openPublicPlaylist } = useUI();
+  const { isUserProfileOpen, viewedUsername, closeUserProfile, openPublicPlaylist, openConversation, user } = useUI();
   const [profile, setProfile] = useState(null);
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -273,6 +298,24 @@ export default function UserProfilePanel() {
   }, [isUserProfileOpen, viewedUsername]);
 
   const [pendingFollow, setPendingFollow] = useState(false);
+
+  // ── Message: get-or-create the conversation, then slide the thread in over
+  // this profile (ConversationPanel sits above UserProfilePanel) ──
+  const [pendingMessage, setPendingMessage] = useState(false);
+  const handleMessage = async () => {
+    if (!profile || pendingMessage) return;
+    setPendingMessage(true);
+    try {
+      const conversation = await openConversationApi(profile.username);
+      openConversation(conversation);
+    } catch (err) {
+      console.log('Failed to open conversation:', err);
+      alert(err.response?.data?.error || "Couldn't open messages right now.");
+    } finally {
+      setPendingMessage(false);
+    }
+  };
+  const isOwnProfile = !!(user && profile && user.username === profile.username);
 
   // ── Toggle follow/unfollow — optimistic update (flips is_following and
   // adjusts the followers count immediately), reverted if the request fails ──
@@ -381,11 +424,16 @@ export default function UserProfilePanel() {
                   }}>
                     {displayName}
                   </div>
-                  <FollowButton
-                    following={profile.is_following}
-                    pending={pendingFollow}
-                    onToggle={handleToggleFollow}
-                  />
+                  {!isOwnProfile && (
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <FollowButton
+                        following={profile.is_following}
+                        pending={pendingFollow}
+                        onToggle={handleToggleFollow}
+                      />
+                      <MessageButton pending={pendingMessage} onPress={handleMessage} />
+                    </div>
+                  )}
                   <div style={{ display: "flex", gap: "20px", marginTop: "14px" }}>
                     <StatBlock value={profile.followers_count ?? 0} label="Followers" />
                     <StatBlock value={profile.following_count ?? 0} label="Following" />

@@ -126,3 +126,26 @@ CREATE INDEX idx_transactions_fan_id ON transactions(fan_id);
 
 -- Discovery feed
 CREATE INDEX idx_follows_follower_id ON follows(follower_id);
+-- ── Direct messages (see migrations/009_direct_messages.sql) ──
+CREATE TABLE IF NOT EXISTS conversations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_a_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_b_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_message_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (user_a_id, user_b_id),
+    CHECK (user_a_id < user_b_id)
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body TEXT,
+    attachment_type TEXT CHECK (attachment_type IN ('track', 'playlist')),
+    attachment JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    read_at TIMESTAMPTZ,
+    CHECK ((body IS NOT NULL AND length(btrim(body)) > 0) OR attachment_type IS NOT NULL),
+    CHECK ((attachment_type IS NULL) = (attachment IS NULL))
+);

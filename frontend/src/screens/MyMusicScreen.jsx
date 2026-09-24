@@ -8,6 +8,7 @@ import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
 import PlaylistPanel from '../components/PlaylistPanel';
 import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
+import MessagesLayer from '../components/MessagesLayer';
 import UploadTrackPanel from '../components/UploadTrackPanel';
 import SongPanel from '../components/SongPanel';
 import { usePlayer } from '../context/PlayerContext';
@@ -623,6 +624,7 @@ useEffect(() => {
            <ProfilePanel />
 
           {/* ── Read-only viewer for a playlist you don't own ── */}
+          <MessagesLayer />
           <PublicPlaylistPanel />
 
           {/* ── Playlist Creation / Build Panel ── */}

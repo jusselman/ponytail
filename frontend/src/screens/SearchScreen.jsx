@@ -3,6 +3,8 @@ import { getMe } from '../services/authService';
 import { useUI } from '../context/UIContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppHeader from '../components/AppHeader';
+import InboxButton from '../components/InboxButton';
+import MessagesLayer from '../components/MessagesLayer';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 import { usePlayer } from '../context/PlayerContext';
@@ -1285,6 +1287,8 @@ export default function SearchScreen({ setScreen }) {
         marginLeft: "4px", marginBottom: "6px",
       }} />
     </div>
+    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+    <InboxButton />
     <button
       onClick={openProfile}
       style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
@@ -1297,6 +1301,7 @@ export default function SearchScreen({ setScreen }) {
         )}
       </div>
     </button>
+    </div>
   </div>
   <div style={{ display: "flex", gap: "4px", width: "100%" }}>
     {[
@@ -1371,6 +1376,9 @@ export default function SearchScreen({ setScreen }) {
 
           {/* ── Another user's public profile ── */}
           <UserProfilePanel />
+
+          {/* ── Direct messages: inbox + open thread ── */}
+          <MessagesLayer />
 
           {/* ── Read-only viewer for a playlist you don't own ── */}
           <PublicPlaylistPanel />
