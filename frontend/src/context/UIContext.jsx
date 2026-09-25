@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { getMyPlaylists } from "../services/playlistService";
 import { getUnreadCount } from "../services/messageService";
+import { getMyUploads } from "../services/authService";
 
 const UIContext = createContext(null);
 
@@ -31,6 +32,25 @@ export function UIProvider({ children, setScreen }) {
   }, []);
   const addMyPlaylist = useCallback((playlist) => {
     setMyPlaylists(prev => [playlist, ...prev]);
+  }, []);
+
+  // ── A musician's own uploaded tracks — shared the same way as myPlaylists, so
+  // edits made from Settings > Library > My Music show up in the My Music tab's
+  // Your Uploads row (and vice versa) without a remount. ──
+  const [myUploads, setMyUploads] = useState([]);
+  const refreshMyUploads = useCallback(async () => {
+    try {
+      const data = await getMyUploads();
+      setMyUploads(data || []);
+    } catch (err) {
+      console.log('Failed to fetch uploads:', err);
+    }
+  }, []);
+  const updateMyUploadLocal = useCallback((updated) => {
+    setMyUploads(prev => prev.map(t => (t.id === updated.id ? { ...t, ...updated } : t)));
+  }, []);
+  const removeMyUploadLocal = useCallback((deleted) => {
+    setMyUploads(prev => prev.filter(t => t.id !== deleted.id));
   }, []);
 
   // ── Viewing another user's public profile — separate from the above, which is
@@ -106,6 +126,7 @@ export function UIProvider({ children, setScreen }) {
       isUserProfileOpen, viewedUsername, openUserProfile, closeUserProfile,
       isPublicPlaylistOpen, viewedPlaylistId, openPublicPlaylist, closePublicPlaylist,
       myPlaylists, refreshMyPlaylists, addMyPlaylist,
+      myUploads, refreshMyUploads, updateMyUploadLocal, removeMyUploadLocal,
       isInboxOpen, openInbox, closeInbox,
       activeConversation, openConversation, closeConversation,
       unreadMessageCount, refreshUnreadCount,

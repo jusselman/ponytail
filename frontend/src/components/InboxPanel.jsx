@@ -37,6 +37,16 @@ const ConversationRow = ({ convo, onTap }) => {
             {otherUser.displayName}
           </span>
           {otherUser.isArtist && <ArtistBadge />}
+          {convo.blockedByMe && (
+            <span style={{
+              fontSize: "9px", fontWeight: "700", color: colors.danger,
+              border: `1px solid ${colors.danger}`, borderRadius: "6px",
+              padding: "1px 5px", marginLeft: "6px", letterSpacing: "0.5px",
+              textTransform: "uppercase", fontFamily: font, flexShrink: 0,
+            }}>
+              Blocked
+            </span>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px", minWidth: 0 }}>
           <span style={{
@@ -144,7 +154,7 @@ export default function InboxPanel() {
               <ConversationRow
                 key={convo.id}
                 convo={convo}
-                onTap={(c) => openConversation({ id: c.id, otherUser: c.otherUser })}
+                onTap={(c) => openConversation({ id: c.id, otherUser: c.otherUser, blockedByMe: c.blockedByMe })}
               />
             ))
           )}

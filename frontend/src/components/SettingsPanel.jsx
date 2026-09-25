@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUI } from '../context/UIContext';
 import { logout, deleteAccount } from '../services/authService';
 import EditProfilePanel from './EditProfilePanel';
@@ -9,6 +9,13 @@ import DeleteAccountModal from './DeleteAccountModal';
 import AboutPonytailModal from './AboutPonytailModal';
 import ReportProblemModal from './ReportProblemModal';
 import ReportReceivedModal from './ReportReceivedModal';
+import MyMusicLibraryPanel from './MyMusicLibraryPanel';
+import MyPlaylistsLibraryPanel from './MyPlaylistsLibraryPanel';
+import SongPanel from './SongPanel';
+import PlaylistPanel from './PlaylistPanel';
+import UploadTrackPanel from './UploadTrackPanel';
+import BlockedUsersPanel from './BlockedUsersPanel';
+import { getBlockedUsers } from '../services/blockService';
 
 const colors = {
   bg: "#222222",
@@ -67,6 +74,21 @@ const SETTINGS = [
     ],
   },
   {
+    section: "Library",
+    // ── My Music is musician-only (artistOnly); every account gets My Playlists.
+    // Both open a manage list that slides in over this one. ──
+    items: [
+      { label: "My Music", icon: "music", artistOnly: true },
+      { label: "My Playlists", icon: "playlist" },
+    ],
+  },
+  {
+    section: "Privacy",
+    items: [
+      { label: "Blocked Users", icon: "block" },
+    ],
+  },
+  {
     section: "Notifications",
     // ── Toggle-only section — no chevron, no modal, tapping the switch (or
     // the row) just flips that notification on/off in place. ──
@@ -102,6 +124,9 @@ const SettingIcon = ({ type, danger }) => {
     lock: <><rect x="3" y="11" width="18" height="11" rx="2" stroke={stroke} strokeWidth="1.8" /><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></>,
     bell: <><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></>,
     pin: <><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke={stroke} strokeWidth="1.8" /><circle cx="12" cy="9" r="2.5" stroke={stroke} strokeWidth="1.8" /></>,
+    music: <><path d="M9 18V5l12-2v13" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /><circle cx="6" cy="18" r="3" stroke={stroke} strokeWidth="1.8" /><circle cx="18" cy="16" r="3" stroke={stroke} strokeWidth="1.8" /></>,
+    playlist: <><path d="M3 6h13M3 12h13M3 18h8" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /><path d="M17 18V10l4-1" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /><circle cx="15.5" cy="18" r="2" stroke={stroke} strokeWidth="1.8" /></>,
+    block: <><circle cx="12" cy="12" r="9" stroke={stroke} strokeWidth="1.8" /><path d="M5.6 5.6l12.8 12.8" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></>,
     message: <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></>,
     help: <><circle cx="12" cy="12" r="10" stroke={stroke} strokeWidth="1.8" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></>,
     flag: <><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /><line x1="4" y1="22" x2="4" y2="15" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></>,
@@ -122,7 +147,56 @@ export default function SettingsPanel() {
   const {
     isSettingsOpen, closeSettings,
     closeProfile, setUser, setProfileImage, setScreen,
+    user,
+    myUploads, refreshMyUploads, updateMyUploadLocal, removeMyUploadLocal,
+    myPlaylists, refreshMyPlaylists, addMyPlaylist,
   } = useUI();
+  const isArtist = !!user?.is_artist;
+
+  // ── Library: which list is open, plus the full-width editors those lists
+  // hand off to (SongPanel for an upload, PlaylistPanel for a playlist,
+  // UploadTrackPanel for a new upload). The editors are rendered as siblings
+  // of the 88%-wide drawer, like the confirmation modals below, so they cover
+  // the whole screen card the same way they do from My Music. ──
+  const [isMyMusicOpen, setIsMyMusicOpen] = useState(false);
+  const [isMyPlaylistsOpen, setIsMyPlaylistsOpen] = useState(false);
+  const [editingTrack, setEditingTrack] = useState(null);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isPlaylistEditorOpen, setIsPlaylistEditorOpen] = useState(false);
+  const [editingPlaylist, setEditingPlaylist] = useState(null);
+
+  // ── Privacy > Blocked Users ──
+  const [isBlockedOpen, setIsBlockedOpen] = useState(false);
+  const [blockedCount, setBlockedCount] = useState(0);
+
+  // ── Keep the Library row counts current each time Settings opens ──
+  useEffect(() => {
+    if (!isSettingsOpen) return;
+    refreshMyPlaylists();
+    if (isArtist) refreshMyUploads();
+    getBlockedUsers().then(list => setBlockedCount(list.length)).catch(() => {});
+  }, [isSettingsOpen, isArtist, refreshMyPlaylists, refreshMyUploads]);
+
+  // ── Close any open Library list along with Settings, so reopening starts on
+  // the main list ──
+  useEffect(() => {
+    if (isSettingsOpen) return;
+    setIsMyMusicOpen(false);
+    setIsMyPlaylistsOpen(false);
+    setIsBlockedOpen(false);
+  }, [isSettingsOpen]);
+
+  const libraryValue = (label) => {
+    if (label === "My Music") return `${myUploads.length} track${myUploads.length === 1 ? "" : "s"}`;
+    if (label === "My Playlists") return `${myPlaylists.length}`;
+    if (label === "Blocked Users") return blockedCount ? `${blockedCount}` : null;
+    return null;
+  };
+
+  const visibleSettings = SETTINGS.map(group => ({
+    ...group,
+    items: group.items.filter(item => !item.artistOnly || isArtist),
+  }));
   // ── Notifications are toggle-only, no modal — defaults match the old static
   // "On" value every item used to show. ──
   const [notifications, setNotifications] = useState({
@@ -233,7 +307,7 @@ export default function SettingsPanel() {
 
         {/* Scrollable content */}
         <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-          {SETTINGS.map((group, gi) => (
+          {visibleSettings.map((group, gi) => (
             <div key={gi} style={{ marginBottom: "8px" }}>
               <div style={{
                 fontSize: "11px", fontWeight: "600", color: colors.muted,
@@ -254,6 +328,9 @@ export default function SettingsPanel() {
                     if (item.label === "About Ponytail") setIsAboutOpen(true);
                     if (item.label === "Help Center") setIsHelpCenterOpen(true);
                     if (item.label === "Report a Problem") setIsReportOpen(true);
+                    if (item.label === "My Music") setIsMyMusicOpen(true);
+                    if (item.label === "My Playlists") setIsMyPlaylistsOpen(true);
+                    if (item.label === "Blocked Users") setIsBlockedOpen(true);
                   }}
                   style={{
                     display: "flex", alignItems: "center", gap: "14px",
@@ -273,9 +350,9 @@ export default function SettingsPanel() {
                     <Toggle on={!!notifications[item.label]} onToggle={() => toggleNotification(item.label)} />
                   ) : (
                     <>
-                      {item.value && (
+                      {(item.value || libraryValue(item.label)) && (
                         <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
-                          {item.value}
+                          {item.value || libraryValue(item.label)}
                         </div>
                       )}
                       {!item.danger && <ChevronRight />}
@@ -294,7 +371,58 @@ export default function SettingsPanel() {
         <EditProfilePanel isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
         <ChangePasswordPanel isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
         <HelpCenterPanel isOpen={isHelpCenterOpen} onClose={() => setIsHelpCenterOpen(false)} />
+
+        {/* Library lists — same slide-in-over-settings pattern as Edit Profile */}
+        {isArtist && (
+          <MyMusicLibraryPanel
+            isOpen={isMyMusicOpen}
+            onClose={() => setIsMyMusicOpen(false)}
+            onEditTrack={(track) => setEditingTrack(track)}
+            onUpload={() => setIsUploadOpen(true)}
+          />
+        )}
+        <MyPlaylistsLibraryPanel
+          isOpen={isMyPlaylistsOpen}
+          onClose={() => setIsMyPlaylistsOpen(false)}
+          onEditPlaylist={(playlist) => {
+            setEditingPlaylist(playlist);
+            setIsPlaylistEditorOpen(true);
+          }}
+        />
+        <BlockedUsersPanel
+          isOpen={isBlockedOpen}
+          onClose={() => setIsBlockedOpen(false)}
+          onCountChange={setBlockedCount}
+        />
       </div>
+
+      {/* Library editors — full width, siblings of the drawer (see state comment above) */}
+      {isArtist && (
+        <>
+          <SongPanel
+            isOpen={!!editingTrack}
+            track={editingTrack}
+            onClose={() => setEditingTrack(null)}
+            onSaved={updateMyUploadLocal}
+            onDeleted={removeMyUploadLocal}
+          />
+          <UploadTrackPanel
+            isOpen={isUploadOpen}
+            onClose={() => setIsUploadOpen(false)}
+            onUploaded={() => refreshMyUploads()}
+          />
+        </>
+      )}
+      <PlaylistPanel
+        isOpen={isPlaylistEditorOpen}
+        playlist={editingPlaylist}
+        onClose={() => {
+          setIsPlaylistEditorOpen(false);
+          setEditingPlaylist(null);
+          refreshMyPlaylists();
+        }}
+        onCreated={addMyPlaylist}
+      />
 
       {/* Log Out confirmation — deliberately a sibling of the 88%-wide sliding
       panel above (not nested inside it), so this bottom sheet spans the full

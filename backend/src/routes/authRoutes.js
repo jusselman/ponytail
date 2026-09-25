@@ -1069,7 +1069,11 @@ router.get('/users/:username', requireAuth, async (req, res) => {
               EXISTS(
                 SELECT 1 FROM user_follows
                 WHERE follower_id = $2 AND followed_id = users.id
-              ) AS is_following
+              ) AS is_following,
+              EXISTS(
+                SELECT 1 FROM user_blocks
+                WHERE blocker_id = $2 AND blocked_id = users.id
+              ) AS is_blocked
        FROM users WHERE username = $1`,
       [username, req.user.id]
     );
@@ -1102,6 +1106,7 @@ router.get('/users/:username', requireAuth, async (req, res) => {
         followers_count: profile.followers_count,
         following_count: profile.following_count,
         is_following: profile.is_following,
+        is_blocked: profile.is_blocked,
       },
       playlists: playlistsResult.rows,
     });

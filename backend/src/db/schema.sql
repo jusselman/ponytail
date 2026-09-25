@@ -149,3 +149,12 @@ CREATE TABLE IF NOT EXISTS messages (
     CHECK ((body IS NOT NULL AND length(btrim(body)) > 0) OR attachment_type IS NOT NULL),
     CHECK ((attachment_type IS NULL) = (attachment IS NULL))
 );
+
+-- ── User blocks (see migrations/010_user_blocks.sql) ──
+CREATE TABLE IF NOT EXISTS user_blocks (
+    blocker_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    blocked_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (blocker_id, blocked_id),
+    CHECK (blocker_id != blocked_id)
+);

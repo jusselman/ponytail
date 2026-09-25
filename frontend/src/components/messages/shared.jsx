@@ -94,3 +94,45 @@ export const previewText = (msg) => {
   if (msg.attachmentType === "playlist") return `${prefix}Shared a playlist · ${msg.attachment?.title || ""}`;
   return prefix;
 };
+
+// ─── Block / Unblock toggle — one button whose icon and label flip with the
+// state: a red circle-slash "Block" while not blocked, a teal "Unblock" once
+// blocked. Used in the conversation header and on profiles. ──
+export const BlockToggleButton = ({ blocked, pending, onPress, compact = false }) => {
+  const color = blocked ? colors.teal : colors.danger;
+  return (
+    <button
+      onClick={onPress}
+      disabled={pending}
+      aria-label={blocked ? "Unblock" : "Block"}
+      title={blocked ? "Unblock" : "Block"}
+      style={{
+        display: "flex", alignItems: "center", gap: "5px", flexShrink: 0,
+        padding: compact ? "5px" : "5px 10px", borderRadius: "14px",
+        border: `1.5px solid ${blocked ? colors.teal : "rgba(255,107,107,0.55)"}`,
+        backgroundColor: blocked ? colors.tealGlow : "transparent",
+        cursor: pending ? "default" : "pointer", opacity: pending ? 0.6 : 1,
+        transition: "all 0.2s ease",
+      }}
+    >
+      {blocked ? (
+        // Unblock: open circle with a check — "let them back in"
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="2" />
+          <path d="M8 12.5l2.8 2.8L16.5 9.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ) : (
+        // Block: circle-slash
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="2" />
+          <path d="M5.6 5.6l12.8 12.8" stroke={color} strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      )}
+      {!compact && (
+        <span style={{ fontSize: "11px", fontWeight: "600", color, fontFamily: font }}>
+          {blocked ? "Unblock" : "Block"}
+        </span>
+      )}
+    </button>
+  );
+};

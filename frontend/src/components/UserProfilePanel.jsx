@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { getPublicProfile, followUser, unfollowUser } from '../services/authService';
 import { useUI } from '../context/UIContext';
 import { openConversation as openConversationApi } from '../services/messageService';
+import { blockUser, unblockUser } from '../services/blockService';
+import LogoutConfirmModal from './LogoutConfirmModal';
+import { BlockToggleButton } from './messages/shared';
 
 const colors = {
   bg: "#222222",
@@ -272,7 +275,7 @@ const MOCK_FOLLOWED_USERS = [
 // Unlike ProfilePanel.jsx: no photo upload, no add-playlist affordance, section
 // labels are possessive ("Andrew's Playlists"), and there's a Follow button. ──
 export default function UserProfilePanel() {
-  const { isUserProfileOpen, viewedUsername, closeUserProfile, openPublicPlaylist, openConversation, user } = useUI();
+  const { isUserProfileOpen, viewedUsername, closeUserProfile, openPublicPlaylist, openConversation, user, refreshUnreadCount } = useUI();
   const [profile, setProfile] = useState(null);
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -316,6 +319,43 @@ export default function UserProfilePanel() {
     }
   };
   const isOwnProfile = !!(user && profile && user.username === profile.username);
+
+  // ── Block / unblock from the header toggle. Blocking only stops them from
+  // messaging you for now, so the rest of the profile stays as-is. ──
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
+  const [blockPending, setBlockPending] = useState(false);
+  useEffect(() => { setBlockConfirmOpen(false); }, [viewedUsername, isUserProfileOpen]);
+
+  const handleConfirmBlock = async () => {
+    if (!profile || blockPending) return;
+    setBlockPending(true);
+    try {
+      await blockUser(profile.username);
+      setProfile(prev => ({ ...prev, is_blocked: true }));
+      setBlockConfirmOpen(false);
+      refreshUnreadCount();
+    } catch (err) {
+      console.log('Failed to block user:', err);
+      alert("Couldn't block this account right now.");
+    } finally {
+      setBlockPending(false);
+    }
+  };
+
+  const handleUnblock = async () => {
+    if (!profile || blockPending) return;
+    setBlockPending(true);
+    try {
+      await unblockUser(profile.username);
+      setProfile(prev => ({ ...prev, is_blocked: false }));
+      refreshUnreadCount();
+    } catch (err) {
+      console.log('Failed to unblock user:', err);
+      alert("Couldn't unblock this account right now.");
+    } finally {
+      setBlockPending(false);
+    }
+  };
 
   // ── Toggle follow/unfollow — optimistic update (flips is_following and
   // adjusts the followers count immediately), reverted if the request fails ──
@@ -389,7 +429,15 @@ export default function UserProfilePanel() {
           <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", letterSpacing: "0.3px" }}>
             {displayName || "Profile"}
           </div>
-          <div style={{ width: "28px" }} />
+          {profile && !isOwnProfile ? (
+            <BlockToggleButton
+              blocked={!!profile.is_blocked}
+              pending={blockPending}
+              onPress={() => (profile.is_blocked ? handleUnblock() : setBlockConfirmOpen(true))}
+            />
+          ) : (
+            <div style={{ width: "28px" }} />
+          )}
         </div>
 
         {/* ── Scrollable content ── */}
@@ -432,6 +480,11 @@ export default function UserProfilePanel() {
                         onToggle={handleToggleFollow}
                       />
                       <MessageButton pending={pendingMessage} onPress={handleMessage} />
+                    </div>
+                  )}
+                  {profile.is_blocked && (
+                    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "8px" }}>
+                      Blocked: they can't send you messages.
                     </div>
                   )}
                   <div style={{ display: "flex", gap: "20px", marginTop: "14px" }}>
@@ -517,6 +570,16 @@ export default function UserProfilePanel() {
 
           <div style={{ height: "20px" }} />
         </div>
+
+        <LogoutConfirmModal
+          isOpen={blockConfirmOpen}
+          onCancel={() => setBlockConfirmOpen(false)}
+          onConfirm={handleConfirmBlock}
+          title={`Block @${profile?.username || ""}?`}
+          message="They won't be able to send you messages. Your conversation stays as it is, and they won't be notified. You can unblock them anytime."
+          confirmLabel={blockPending ? "Blocking..." : "Block"}
+          cancelLabel="Cancel"
+        />
       </div>
     </>
   );

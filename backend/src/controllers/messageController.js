@@ -31,6 +31,22 @@ const mapOtherUser = (row) => ({
   isArtist: row.other_is_artist,
 });
 
+// ── Block state between me and the other person, iPhone-Messages style: a
+// block is one-directional. The blocked person can no longer send to the
+// blocker (canMessage false on their side), while the blocker keeps the whole
+// thread and can still write. blockedByMe drives the Block/Unblock toggle. We
+// never tell a user that the other person blocked them. ──
+const getBlockState = async (userId, otherId) => {
+  const result = await db.query(
+    `SELECT
+       EXISTS(SELECT 1 FROM user_blocks WHERE blocker_id = $1 AND blocked_id = $2) AS blocked_by_me,
+       EXISTS(SELECT 1 FROM user_blocks WHERE blocker_id = $2 AND blocked_id = $1) AS blocked_me`,
+    [userId, otherId]
+  );
+  const { blocked_by_me, blocked_me } = result.rows[0];
+  return { blockedByMe: blocked_by_me, canMessage: !blocked_me };
+};
+
 // ── Confirm the requesting user is one of the two people in a conversation ──
 const getParticipantConversation = async (conversationId, userId) => {
   const result = await db.query(
@@ -115,7 +131,8 @@ const getConversations = async (req, res) => {
               lm.attachment_type AS last_attachment_type, lm.attachment AS last_attachment,
               lm.created_at AS last_created_at,
               (SELECT COUNT(*)::int FROM messages m
-                WHERE m.conversation_id = c.id AND m.sender_id <> $1 AND m.read_at IS NULL) AS unread_count
+                WHERE m.conversation_id = c.id AND m.sender_id <> $1 AND m.read_at IS NULL) AS unread_count,
+              EXISTS(SELECT 1 FROM user_blocks b WHERE b.blocker_id = $1 AND b.blocked_id = u.id) AS blocked_by_me
        FROM conversations c
        JOIN users u ON u.id = CASE WHEN c.user_a_id = $1 THEN c.user_b_id ELSE c.user_a_id END
        JOIN LATERAL (
@@ -142,6 +159,7 @@ const getConversations = async (req, res) => {
           createdAt: row.last_created_at,
         },
         unreadCount: row.unread_count,
+        blockedByMe: row.blocked_by_me,
       })),
     });
   } catch (err) {
@@ -195,7 +213,8 @@ const openConversation = async (req, res) => {
     );
 
     const convo = await getParticipantConversation(upsert.rows[0].id, req.user.id);
-    res.json({ conversation: { id: convo.id, otherUser: mapOtherUser(convo) } });
+    const blockState = await getBlockState(req.user.id, convo.other_id);
+    res.json({ conversation: { id: convo.id, otherUser: mapOtherUser(convo), ...blockState } });
   } catch (err) {
     console.error('Open conversation error:', err);
     res.status(500).json({ error: 'Failed to open conversation.' });
@@ -246,8 +265,11 @@ const getMessages = async (req, res) => {
       [id, req.user.id]
     );
 
+    const blockState = await getBlockState(req.user.id, convo.other_id);
+
     res.json({
-      conversation: { id: convo.id, otherUser: mapOtherUser(convo) },
+      conversation: { id: convo.id, otherUser: mapOtherUser(convo), ...blockState },
+      ...blockState,
       messages: rows.map(r => mapMessage(r, req.user.id)),
       hasMore: !after && rows.length === PAGE_SIZE,
       otherLastReadAt: seen.rows[0].last_read_at,
@@ -285,6 +307,11 @@ const sendMessage = async (req, res) => {
   try {
     const convo = await getParticipantConversation(id, req.user.id);
     if (!convo) return res.status(404).json({ error: 'Conversation not found.' });
+
+    const { canMessage } = await getBlockState(req.user.id, convo.other_id);
+    if (!canMessage) {
+      return res.status(403).json({ error: "You can't message this account.", code: 'CANNOT_MESSAGE' });
+    }
 
     const result = await db.query(
       `INSERT INTO messages (conversation_id, sender_id, body, attachment_type, attachment)

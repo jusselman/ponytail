@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMe, getToken, getMyUploads } from '../services/authService';
+import { getMe, getToken } from '../services/authService';
 import { useUI } from '../context/UIContext';
 import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
@@ -321,12 +321,15 @@ export default function MyMusicScreen({ setScreen }) {
   const [loadingNew, setLoadingNew] = useState(true);
   // ── Playlists live in UIContext now, shared with ProfilePanel, so creating one
   // here shows up there instantly (and vice versa) without an app restart ──
-  const { myPlaylists, refreshMyPlaylists, addMyPlaylist } = useUI();
+  const {
+    myPlaylists, refreshMyPlaylists, addMyPlaylist,
+    myUploads, refreshMyUploads, updateMyUploadLocal, removeMyUploadLocal,
+  } = useUI();
   const playlists = myPlaylists.map(mapPlaylist);
   const [loadingPlaylists, setLoadingPlaylists] = useState(true);
   const [isPlaylistPanelOpen, setIsPlaylistPanelOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
-  const [myUploads, setMyUploads] = useState([]);
+  // myUploads lives in UIContext (shared with Settings > Library > My Music)
   const [loadingUploads, setLoadingUploads] = useState(true);
   const [isUploadPanelOpen, setIsUploadPanelOpen] = useState(false);
   const [isSongPanelOpen, setIsSongPanelOpen] = useState(false);
@@ -371,10 +374,7 @@ export default function MyMusicScreen({ setScreen }) {
   const fetchMyUploads = async () => {
     setLoadingUploads(true);
     try {
-      const data = await getMyUploads();
-      setMyUploads(data || []);
-    } catch (err) {
-      console.log('Failed to fetch uploads:', err);
+      await refreshMyUploads();
     } finally {
       setLoadingUploads(false);
     }
@@ -399,11 +399,11 @@ export default function MyMusicScreen({ setScreen }) {
   };
 
   const handleUploadSaved = (updated) => {
-    setMyUploads(prev => prev.map(t => (t.id === updated.id ? { ...t, ...updated } : t)));
+    updateMyUploadLocal(updated);
   };
 
   const handleUploadDeleted = (deleted) => {
-    setMyUploads(prev => prev.filter(t => t.id !== deleted.id));
+    removeMyUploadLocal(deleted);
   };
 
   // ── Fetch the user's real playlists (shared UIContext state) — on mount, and

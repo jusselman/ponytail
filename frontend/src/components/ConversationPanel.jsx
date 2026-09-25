@@ -3,7 +3,9 @@ import { useUI } from '../context/UIContext';
 import { usePlayer } from '../context/PlayerContext';
 import { getMessages, sendMessage, markConversationRead } from '../services/messageService';
 import { searchTracks } from '../services/playlistService';
-import { colors, font, UserAvatar, ArtistBadge, separatorTime } from './messages/shared';
+import { blockUser, unblockUser } from '../services/blockService';
+import LogoutConfirmModal from './LogoutConfirmModal';
+import { colors, font, UserAvatar, ArtistBadge, separatorTime, BlockToggleButton } from './messages/shared';
 
 const POLL_MS = 4000;
 const SEPARATOR_GAP_MS = 15 * 60 * 1000; // show a timestamp when 15+ min pass between messages
@@ -314,6 +316,24 @@ const PickRow = ({ cover, title, subtitle, onTap }) => {
 // seconds for new messages while open. ──
 export default function ConversationPanel() {
   const { activeConversation, closeConversation, refreshUnreadCount } = useUI();
+
+  // ── Block state for this thread, iPhone-Messages style. blockedByMe: I
+  // blocked them — the thread stays, I can still write, and the header toggle
+  // reads Unblock. canMessage: false only when THEY blocked me — when they
+  // blocked me, all I ever see is a neutral "can't message" note. ──
+  const [blockedByMe, setBlockedByMe] = useState(false);
+  const [canMessage, setCanMessage] = useState(true);
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
+  const [blockPending, setBlockPending] = useState(false);
+  useEffect(() => {
+    setBlockedByMe(!!activeConversation?.blockedByMe);
+    setCanMessage(activeConversation?.canMessage ?? true);
+    setBlockConfirmOpen(false);
+  }, [activeConversation?.id]);
+  const applyBlockState = (data) => {
+    if (typeof data?.blockedByMe === "boolean") setBlockedByMe(data.blockedByMe);
+    if (typeof data?.canMessage === "boolean") setCanMessage(data.canMessage);
+  };
   const isOpen = !!activeConversation;
   const conversationId = activeConversation?.id;
 
@@ -384,6 +404,7 @@ export default function ConversationPanel() {
         mergeMessages(data.messages);
         setHasMore(data.hasMore);
         setOtherLastReadAt(data.otherLastReadAt);
+        applyBlockState(data);
         markRead(conversationId);
       } catch (err) {
         console.log('Failed to load messages:', err);
@@ -397,6 +418,7 @@ export default function ConversationPanel() {
         const data = await getMessages(conversationId, { after: newestRef.current || undefined });
         if (cancelled) return;
         setOtherLastReadAt(data.otherLastReadAt);
+        applyBlockState(data);
         if (data.messages.length) {
           mergeMessages(data.messages);
           if (data.messages.some(m => !m.mine)) markRead(conversationId);
@@ -457,6 +479,13 @@ export default function ConversationPanel() {
       if (!newestRef.current || new Date(saved.createdAt) > new Date(newestRef.current)) newestRef.current = saved.createdAt;
     } catch (err) {
       console.log('Failed to send message:', err);
+      // A block landed since the thread opened: drop the unsent bubble and
+      // swap the composer for the "can't message" note instead of offering retry.
+      if (err.response?.status === 403) {
+        setMessages(prev => prev.filter(m => m.id !== tempMsg.id));
+        setCanMessage(false);
+        return;
+      }
       setMessages(prev => prev.map(m => m.id === tempMsg.id ? { ...m, pending: false, failed: true } : m));
     }
   };
@@ -507,6 +536,40 @@ export default function ConversationPanel() {
   };
   useEffect(() => { if (!draft && inputRef.current) inputRef.current.style.height = "20px"; }, [draft]);
 
+  // ── Block: confirm first, then stay right here — the conversation is kept
+  // as-is and the header toggle flips to Unblock. Unblock is immediate. ──
+  const handleConfirmBlock = async () => {
+    if (!otherUser || blockPending) return;
+    setBlockPending(true);
+    try {
+      await blockUser(otherUser.username);
+      setBlockConfirmOpen(false);
+      setBlockedByMe(true);
+    } catch (err) {
+      console.log('Failed to block user:', err);
+      alert("Couldn't block this account right now.");
+    } finally {
+      setBlockPending(false);
+    }
+  };
+
+  const handleUnblock = async () => {
+    if (!otherUser || blockPending) return;
+    setBlockPending(true);
+    try {
+      await unblockUser(otherUser.username);
+      const data = await getMessages(conversationId, { after: newestRef.current || undefined });
+      applyBlockState(data);
+      mergeMessages(data.messages);
+      refreshUnreadCount();
+    } catch (err) {
+      console.log('Failed to unblock user:', err);
+      alert("Couldn't unblock this account right now.");
+    } finally {
+      setBlockPending(false);
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -552,6 +615,11 @@ export default function ConversationPanel() {
               </div>
               <div style={{ fontSize: "12px", color: colors.muted, fontFamily: font }}>@{otherUser.username}</div>
             </div>
+            <BlockToggleButton
+              blocked={blockedByMe}
+              pending={blockPending}
+              onPress={() => (blockedByMe ? handleUnblock() : setBlockConfirmOpen(true))}
+            />
           </>
         )}
       </div>
@@ -602,6 +670,27 @@ export default function ConversationPanel() {
         )}
       </div>
 
+      {/* ── I blocked them: a quiet banner above my (still working) composer ── */}
+      {blockedByMe && (
+        <div style={{
+          padding: "10px 20px", borderTop: `1px solid ${colors.border}`, flexShrink: 0,
+          textAlign: "center", fontSize: "12px", color: colors.textSecondary, fontFamily: font, lineHeight: 1.5,
+        }}>
+          You blocked @{otherUser?.username}. They can't send you messages.
+        </div>
+      )}
+
+      {!canMessage ? (
+        /* ── They blocked me: neutral note instead of the composer. It never
+        says they blocked me. ── */
+        <div style={{
+          padding: "16px 20px 22px", borderTop: `1px solid ${colors.border}`, flexShrink: 0,
+          textAlign: "center", fontSize: "13px", color: colors.textSecondary, fontFamily: font, lineHeight: 1.5,
+        }}>
+          You can't message this account.
+        </div>
+      ) : (
+      <>
       {/* ── Staged attachment ── */}
       {pendingAttachment && (
         <div style={{ padding: "8px 16px 0", display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
@@ -665,6 +754,18 @@ export default function ConversationPanel() {
           <SendIcon active={canSend} />
         </button>
       </div>
+      </>
+      )}
+
+      <LogoutConfirmModal
+        isOpen={blockConfirmOpen}
+        onCancel={() => setBlockConfirmOpen(false)}
+        onConfirm={handleConfirmBlock}
+        title={`Block @${otherUser?.username || ""}?`}
+        message="They won't be able to send you messages. Your conversation stays as it is, and they won't be notified. You can unblock them anytime."
+        confirmLabel={blockPending ? "Blocking..." : "Block"}
+        cancelLabel="Cancel"
+      />
 
       <AttachSheet
         open={attachOpen}
