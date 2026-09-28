@@ -730,78 +730,240 @@ const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = fal
   );
 };
 
-// ─── Discovery genre filter panel — full genre list as colored rectangles (not
-// pill chips), used to narrow which genres appear in the swipe deck. Always shows
-// every genre regardless of what's already selected (unlike the Search tab's
-// elongated picker, which hides chosen genres behind "Show All") — selection is
-// shown via the teal border/tealGlow highlight instead. Shares selectedGenres/
-// onToggleGenre with the Search tab's Browse-by-Genre chips, so a filter set here
-// also narrows the Search tab, and vice versa. ──
-const GenreFilterPanel = ({ isOpen, onClose, selectedGenres, onToggleGenre }) => (
-  <div style={{
-    position: "absolute", inset: 0, zIndex: 50,
-    backgroundColor: colors.bg,
-    transform: isOpen ? "translateY(0)" : "translateY(100%)",
-    transition: "transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
-    display: "flex", flexDirection: "column",
-    pointerEvents: isOpen ? "all" : "none",
-  }}>
-    {/* Header */}
-    <div style={{
-      padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between",
-      borderBottom: `1px solid ${colors.border}`, flexShrink: 0,
-    }}>
-      <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}>
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <path d="M6 9l6 6 6-6" stroke={colors.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-        Filter by Genre
-      </div>
-      <div style={{ fontSize: "12px", fontWeight: "600", color: selectedGenres.length > 0 ? colors.teal : colors.muted, fontFamily: "'Kanit', sans-serif", width: "26px", textAlign: "right" }}>
-        {selectedGenres.length > 0 ? `${selectedGenres.length}/5` : ""}
-      </div>
-    </div>
+// ─── Discovery genre filter panel — opened from the filter icon on the Discovery
+// tab. Top to bottom: the status line, a "Search for Genres" bar, a
+// "geolocation" bar (visual placeholder only for now), then the full genre
+// list as colored rectangles. Typing in the genre search shows a dropdown of
+// matching genre names only (never tracks or artists). Tapping a result does
+// exactly what tapping its rectangle does — toggles it through the same
+// onToggleGenre, so the rectangle below lights up teal — then clears the
+// search and scrolls that rectangle into view with a brief pulse. ──
+const MAX_SELECTED_GENRES = 5;
 
-    {/* Genre grid */}
-    <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
-      <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginBottom: "16px" }}>
-        {selectedGenres.length === 0
-          ? "No genres selected — showing tracks from every genre."
-          : "Showing tracks that match your selected genres."}
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-        {MOCK_GENRES.map((genre, i) => {
-          const hue = (i * 37 + 160) % 360;
-          const isSelected = selectedGenres.includes(genre);
-          return (
-            <div
-              key={genre}
-              onClick={() => onToggleGenre(genre)}
-              style={{
-                padding: "14px 10px", borderRadius: "10px", textAlign: "center",
-                background: isSelected
-                  ? colors.tealGlow
-                  : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
-                border: isSelected ? `2px solid ${colors.teal}` : "2px solid transparent",
-                fontSize: "13px", fontWeight: "500",
-                color: isSelected ? colors.teal : colors.text,
-                fontFamily: "'Kanit', sans-serif", cursor: "pointer",
-                transition: "opacity 0.2s ease", boxSizing: "border-box",
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
-              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-            >
-              {genre}
-            </div>
-          );
-        })}
-      </div>
-      <div style={{ height: "20px" }} />
+const PanelInput = ({ icon, focused, children }) => (
+  <div style={{ position: "relative", marginBottom: "12px" }}>
+    <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "flex" }}>
+      {icon}
     </div>
+    {children}
   </div>
 );
+
+const panelInputStyle = (focused) => ({
+  width: "100%", padding: "12px 40px 12px 40px",
+  borderRadius: "12px", backgroundColor: colors.bgCard,
+  border: `1.5px solid ${focused ? colors.teal : "transparent"}`,
+  color: colors.text, fontSize: "14px", outline: "none",
+  fontFamily: "'Kanit', sans-serif", boxSizing: "border-box",
+  boxShadow: focused ? "0 0 0 3px rgba(93,235,215,0.1)" : "none",
+  transition: "all 0.2s ease",
+});
+
+const PinIcon = ({ color = "#666" }) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke={color} strokeWidth="1.8" />
+    <circle cx="12" cy="9" r="2.5" stroke={color} strokeWidth="1.8" />
+  </svg>
+);
+
+const GenreFilterPanel = ({ isOpen, onClose, selectedGenres, onToggleGenre }) => {
+  const [query, setQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [geoQuery, setGeoQuery] = useState("");
+  const [geoFocused, setGeoFocused] = useState(false);
+  const [pulseGenre, setPulseGenre] = useState(null);
+  const inputRef = useRef(null);
+  const chipRefs = useRef({});
+
+  // Reset the search each time the panel closes
+  useEffect(() => {
+    if (!isOpen) { setQuery(""); setSearchFocused(false); }
+  }, [isOpen]);
+
+  const trimmedQuery = query.trim();
+  const showDropdown = searchFocused && trimmedQuery.length > 0;
+  // Genres only — matched against the genre list, nothing else
+  const matchingGenres = MOCK_GENRES.filter(g => g.toLowerCase().includes(trimmedQuery.toLowerCase()));
+  const atCap = selectedGenres.length >= MAX_SELECTED_GENRES;
+
+  const handlePickFromSearch = (genre) => {
+    const isSelected = selectedGenres.includes(genre);
+    if (!isSelected && atCap) return; // same 5-genre cap as tapping a rectangle
+    if (!isSelected) onToggleGenre(genre);
+    setQuery("");
+    setSearchFocused(false);
+    if (inputRef.current) inputRef.current.blur();
+    // Bring the (now highlighted) rectangle into view and pulse it
+    const el = chipRefs.current[genre];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setPulseGenre(genre);
+    setTimeout(() => setPulseGenre(g => (g === genre ? null : g)), 900);
+  };
+
+  return (
+    <div style={{
+      position: "absolute", inset: 0, zIndex: 50,
+      backgroundColor: colors.bg,
+      transform: isOpen ? "translateY(0)" : "translateY(100%)",
+      transition: "transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
+      display: "flex", flexDirection: "column",
+      pointerEvents: isOpen ? "all" : "none",
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between",
+        borderBottom: `1px solid ${colors.border}`, flexShrink: 0,
+      }}>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+            <path d="M6 9l6 6 6-6" stroke={colors.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+          Filter by Genre
+        </div>
+        <div style={{ fontSize: "12px", fontWeight: "600", color: selectedGenres.length > 0 ? colors.teal : colors.muted, fontFamily: "'Kanit', sans-serif", width: "26px", textAlign: "right" }}>
+          {selectedGenres.length > 0 ? `${selectedGenres.length}/${MAX_SELECTED_GENRES}` : ""}
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+        <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginBottom: "16px" }}>
+          {selectedGenres.length === 0
+            ? "No genres selected — showing tracks from every genre."
+            : "Showing tracks that match your selected genres."}
+        </div>
+
+        {/* ── Genre search — dropdown floats over the geolocation bar and grid ── */}
+        <div style={{ position: "relative", zIndex: 5 }}>
+          <PanelInput icon={<SearchIcon color={searchFocused ? colors.teal : "#666"} />}>
+            <input
+              ref={inputRef}
+              style={panelInputStyle(searchFocused)}
+              placeholder="Search for Genres"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+            />
+            {query.length > 0 && (
+              <button
+                onMouseDown={(e) => { e.preventDefault(); setQuery(""); }}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "4px" }}
+              >
+                <ClearIcon />
+              </button>
+            )}
+          </PanelInput>
+
+          {showDropdown && (
+            <div style={{
+              position: "absolute", top: "calc(100% - 4px)", left: 0, right: 0,
+              maxHeight: "260px", overflowY: "auto",
+              backgroundColor: colors.bg, borderRadius: "12px",
+              boxShadow: "0 12px 30px rgba(0,0,0,0.55)",
+              display: "flex", flexDirection: "column", gap: "6px", padding: "6px",
+              boxSizing: "border-box",
+            }}>
+              {matchingGenres.length === 0 ? (
+                <div style={{
+                  padding: "12px 0", borderRadius: "10px", textAlign: "center",
+                  backgroundColor: colors.bgCard, color: colors.muted,
+                  fontSize: "13px", fontFamily: "'Kanit', sans-serif",
+                }}>
+                  No genres match "{trimmedQuery}"
+                </div>
+              ) : (
+                <>
+                  {atCap && (
+                    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center", padding: "2px 0 4px" }}>
+                      You can pick up to {MAX_SELECTED_GENRES} genres. Deselect one to add another.
+                    </div>
+                  )}
+                  {matchingGenres.map(genre => {
+                    const isSelected = selectedGenres.includes(genre);
+                    const disabled = !isSelected && atCap;
+                    const hue = genreHue(genre);
+                    return (
+                      <div
+                        key={genre}
+                        onMouseDown={(e) => { e.preventDefault(); handlePickFromSearch(genre); }}
+                        style={{
+                          padding: "12px 14px", borderRadius: "10px", boxSizing: "border-box",
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          background: isSelected
+                            ? colors.tealGlow
+                            : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+                          border: isSelected ? `2px solid ${colors.teal}` : "2px solid transparent",
+                          color: isSelected ? colors.teal : colors.text,
+                          fontSize: "13px", fontWeight: "500", fontFamily: "'Kanit', sans-serif",
+                          cursor: disabled ? "default" : "pointer",
+                          opacity: disabled ? 0.4 : 1,
+                        }}
+                      >
+                        <span>{genre}</span>
+                        {isSelected && (
+                          <span style={{ fontSize: "11px", fontWeight: "600" }}>Selected</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── Geolocation — visual placeholder only; not wired to anything yet ── */}
+        <PanelInput icon={<PinIcon color={geoFocused ? colors.teal : "#666"} />}>
+          <input
+            style={panelInputStyle(geoFocused)}
+            placeholder="geolocation"
+            value={geoQuery}
+            onChange={(e) => setGeoQuery(e.target.value)}
+            onFocus={() => setGeoFocused(true)}
+            onBlur={() => setGeoFocused(false)}
+          />
+        </PanelInput>
+
+        {/* ── Genre grid ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "8px" }}>
+          {MOCK_GENRES.map((genre, i) => {
+            const hue = (i * 37 + 160) % 360;
+            const isSelected = selectedGenres.includes(genre);
+            const isPulsing = pulseGenre === genre;
+            return (
+              <div
+                key={genre}
+                ref={el => { chipRefs.current[genre] = el; }}
+                onClick={() => onToggleGenre(genre)}
+                style={{
+                  padding: "14px 10px", borderRadius: "10px", textAlign: "center",
+                  background: isSelected
+                    ? colors.tealGlow
+                    : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+                  border: isSelected ? `2px solid ${colors.teal}` : "2px solid transparent",
+                  fontSize: "13px", fontWeight: "500",
+                  color: isSelected ? colors.teal : colors.text,
+                  fontFamily: "'Kanit', sans-serif", cursor: "pointer",
+                  transition: "opacity 0.2s ease, box-shadow 0.3s ease, transform 0.3s ease",
+                  boxShadow: isPulsing ? "0 0 0 4px rgba(93,235,215,0.35)" : "none",
+                  transform: isPulsing ? "scale(1.04)" : "scale(1)",
+                  boxSizing: "border-box",
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+              >
+                {genre}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ height: "20px" }} />
+      </div>
+    </div>
+  );
+};
 
 // ─── Discovery Tab ────────────────────────────────────────────────────────────
 // ─── Discovery's own genre search bar — same search-bar + elongated genre
