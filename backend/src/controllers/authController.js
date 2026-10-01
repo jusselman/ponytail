@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const { cityLabel } = require('../services/geo');
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -23,7 +24,7 @@ const register = async (req, res) => {
   // stamps every new upload with these same values instead of asking per track.
   const {
     email, username, password, display_name, is_artist,
-    location, genre, subgenre, mood, sound_description,
+    location, location_place_id, genre, subgenre, mood, sound_description,
   } = req.body;
 
   try {
@@ -56,16 +57,29 @@ const register = async (req, res) => {
       ? sound_description.trim().slice(0, 30)
       : null;
 
+    // ── The onboarding city picker sends location_place_id (a places row, see
+    // migration 011). Resolve it to coordinates so Discovery's Place filter and
+    // "Near me" can find this musician; the label replaces any typed text. ──
+    let place = null;
+    const placeId = parseInt(location_place_id, 10);
+    if (placeId) {
+      const placeResult = await db.query(`SELECT * FROM places WHERE id = $1 AND kind = 'city'`, [placeId]);
+      place = placeResult.rows[0] || null;
+    }
+    const locationLabel = place ? cityLabel(place) : (location || null);
+
     // Insert user
     const result = await db.query(
       `INSERT INTO users (email, username, display_name, password_hash, is_artist,
-                          location, genre, subgenre, mood, sound_description)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                          location, genre, subgenre, mood, sound_description,
+                          location_place_id, location_lat, location_lng, location_country, location_region)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING id, email, username, display_name, is_artist,
                  location, genre, subgenre, mood, sound_description, created_at`,
       [
         email, username, display_name || username, password_hash, Boolean(is_artist),
-        location || null, genre || null, subgenre || null, mood || null, trimmedSoundDescription,
+        locationLabel, genre || null, subgenre || null, mood || null, trimmedSoundDescription,
+        place?.id ?? null, place?.lat ?? null, place?.lng ?? null, place?.country_code ?? null, place?.admin1_code ?? null,
       ]
     );
 

@@ -130,7 +130,8 @@ async function seedTracks() {
         filename = EXCLUDED.filename,
         cover = EXCLUDED.cover,
         popularity = EXCLUDED.popularity,
-        location = EXCLUDED.location,
+        -- keep a location the CSV lacks (enrichArtistLocations.js fills it in)
+        location = COALESCE(EXCLUDED.location, seed_tracks.location),
         thumb_up = EXCLUDED.thumb_up,
         thumb_down = EXCLUDED.thumb_down,
         skips = EXCLUDED.skips,

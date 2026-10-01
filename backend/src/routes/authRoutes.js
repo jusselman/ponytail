@@ -13,6 +13,7 @@ const fs = require('fs');
 // ── Cover/audio URL resolution — shared with playlistController.js, see
 // utils/trackUrls.js for the fuzzy-filesystem-match + upload-branching logic. ──
 const { getCoverUrl, getAudioUrl, buildTrackUrls } = require('../utils/trackUrls');
+const geo = require('../services/geo');
 
 // ── Ensure uploads directory exists ──
 const uploadDir = path.join(__dirname, '../../assets/uploads');
@@ -94,7 +95,8 @@ router.post(
   async (req, res) => {
     try {
       const artistCheck = await pool.query(
-        `SELECT is_artist, display_name, username, location, genre, subgenre, mood, sound_description
+        `SELECT is_artist, display_name, username, location, genre, subgenre, mood, sound_description,
+                location_lat, location_lng, location_country, location_region
          FROM users WHERE id = $1`,
         [req.user.id]
       );
@@ -122,8 +124,9 @@ router.post(
       const result = await pool.query(
         `INSERT INTO seed_tracks
            (title, artist, album, genre, subgenre, mood, tag5, location,
-            uploader_user_id, is_user_upload, uploaded_audio_url, uploaded_cover_url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10, $11)
+            uploader_user_id, is_user_upload, uploaded_audio_url, uploaded_cover_url,
+            location_lat, location_lng, location_country, location_region)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10, $11, $12, $13, $14, $15)
          ON CONFLICT (title, artist) DO UPDATE SET
            album = EXCLUDED.album,
            genre = EXCLUDED.genre,
@@ -131,6 +134,10 @@ router.post(
            mood = EXCLUDED.mood,
            tag5 = EXCLUDED.tag5,
            location = EXCLUDED.location,
+           location_lat = EXCLUDED.location_lat,
+           location_lng = EXCLUDED.location_lng,
+           location_country = EXCLUDED.location_country,
+           location_region = EXCLUDED.location_region,
            uploaded_audio_url = EXCLUDED.uploaded_audio_url,
            uploaded_cover_url = EXCLUDED.uploaded_cover_url
          RETURNING id, title, artist, album, genre, subgenre, mood, tag5, location`,
@@ -139,6 +146,8 @@ router.post(
           account.genre || null, account.subgenre || null, account.mood || null,
           account.sound_description || null, account.location || null,
           req.user.id, uploadedAudioUrl, uploadedCoverUrl,
+          account.location_lat ?? null, account.location_lng ?? null,
+          account.location_country || null, account.location_region || null,
         ]
       );
 
@@ -1229,22 +1238,43 @@ router.get('/albums/discover', requireAuth, async (req, res) => {
   try {
     let result;
 
-    if (genres) {
-      // ── Genre filter mode — up to 5 genres, OR'd together ──
-      const genreList = genres.split(',').map(g => g.trim()).slice(0, 5);
+    // ── Place filter (Discovery's Place tab): `places` is a JSON array of
+    // tokens ("p:<placeId>" or "a:<artist>"), `near` a radius in miles from
+    // the listener's home city. All of them are OR'd together, then AND'd
+    // with the genre filter. See services/geo.js. ──
+    const placeTokens = geo.parsePlaceTokens(req.query.places);
+    const nearRadius = geo.parseNearRadius(req.query.near);
+    const placeFilterRequested = placeTokens.length > 0 || !!nearRadius;
+    const placeSpecs = placeFilterRequested
+      ? await geo.resolvePlaceSpecs({ tokens: placeTokens, nearRadius, userId: req.user.id })
+      : [];
 
-     result = await pool.query(
+    if (genres || placeFilterRequested) {
+      // ── Filter mode — up to 5 genres OR'd together, AND any picked places ──
+      const genreList = geo.parseGenres(genres);
+      const params = [];
+      const conds = [];
+      if (genreList.length) {
+        params.push(genreList);
+        conds.push(`genre = ANY($${params.length})`);
+      }
+      // A place filter that resolved to nothing (e.g. "near me" with no home
+      // city saved) must return nothing, not silently fall back to everywhere.
+      conds.push(placeFilterRequested ? (geo.specsSql(placeSpecs, params) || 'FALSE') : 'TRUE');
+      params.push(parseInt(limit) * 3);
+
+      result = await pool.query(
         `SELECT DISTINCT ON (artist, album)
           artist, album, genre, cover, filename, is_user_upload, uploaded_audio_url, uploaded_cover_url
         FROM (
           SELECT * FROM seed_tracks
           WHERE album IS NOT NULL AND album != ''
-            AND genre = ANY($1)
+            AND ${conds.join(' AND ')}
           ORDER BY RANDOM()
           LIMIT 1000
         ) randomized
-        LIMIT $2`,
-        [genreList, parseInt(limit) * 3]
+        LIMIT $${params.length}`,
+        params
       );
     } else {
       // ── No genre filter — personalize using onboarding favorite artists (weighted heavily) + play history ──

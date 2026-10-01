@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { getMe } from '../services/authService';
+import { searchPlaces, getPlaceOptions, searchCities, setHomeCity } from '../services/placesService';
 import { useUI } from '../context/UIContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppHeader from '../components/AppHeader';
@@ -730,15 +731,22 @@ const DiscoveryCard = ({ track, onLike, onSkip, isLoaded, onDrag, inactive = fal
   );
 };
 
-// ─── Discovery genre filter panel — opened from the filter icon on the Discovery
-// tab. Top to bottom: the status line, a "Search for Genres" bar, a
-// "geolocation" bar (visual placeholder only for now), then the full genre
-// list as colored rectangles. Typing in the genre search shows a dropdown of
-// matching genre names only (never tracks or artists). Tapping a result does
-// exactly what tapping its rectangle does — toggles it through the same
-// onToggleGenre, so the rectangle below lights up teal — then clears the
-// search and scrolls that rectangle into view with a brief pulse. ──
+// ─── Discovery filter panel ("Sound | Place") — opened from the filter icon on
+// the Discovery tab. A segmented control switches between two views:
+//   • Sound — the genre search bar + full genre grid (up to 5 genres, teal)
+//   • Place — a search bar for cities / regions / countries / musicians, the
+//     listener's picked places as chips, a "Near me" radius from their home
+//     city, and scene tiles (up to 3 places, gold)
+// The status line under the control always summarizes both. Genres and places
+// combine as (any picked genre) AND (any picked place). Everything filters
+// live — there's no apply button; the chevron closes the panel. Place data
+// comes from /api/places (backend/src/routes/placesRoutes.js). ──
 const MAX_SELECTED_GENRES = 5;
+const MAX_SELECTED_PLACES = 3;
+const NEAR_RADII = [25, 100, 250, 500];
+const goldGlow = "rgba(245,207,0,0.14)";
+const goldBorder = "rgba(245,207,0,0.5)";
+const kanit = "'Kanit', sans-serif";
 
 const PanelInput = ({ icon, focused, children }) => (
   <div style={{ position: "relative", marginBottom: "12px" }}>
@@ -749,42 +757,178 @@ const PanelInput = ({ icon, focused, children }) => (
   </div>
 );
 
-const panelInputStyle = (focused) => ({
+const panelInputStyle = (focused, accent = colors.teal, glow = "rgba(93,235,215,0.1)") => ({
   width: "100%", padding: "12px 40px 12px 40px",
   borderRadius: "12px", backgroundColor: colors.bgCard,
-  border: `1.5px solid ${focused ? colors.teal : "transparent"}`,
+  border: `1.5px solid ${focused ? accent : "transparent"}`,
   color: colors.text, fontSize: "14px", outline: "none",
-  fontFamily: "'Kanit', sans-serif", boxSizing: "border-box",
-  boxShadow: focused ? "0 0 0 3px rgba(93,235,215,0.1)" : "none",
+  fontFamily: kanit, boxSizing: "border-box",
+  boxShadow: focused ? `0 0 0 3px ${glow}` : "none",
   transition: "all 0.2s ease",
 });
 
-const PinIcon = ({ color = "#666" }) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+const PinIcon = ({ color = "#666", size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke={color} strokeWidth="1.8" />
     <circle cx="12" cy="9" r="2.5" stroke={color} strokeWidth="1.8" />
   </svg>
 );
 
-const GenreFilterPanel = ({ isOpen, onClose, selectedGenres, onToggleGenre }) => {
+const TargetIcon = ({ color = colors.gold }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="3" fill={color} />
+    <circle cx="12" cy="12" r="7.5" stroke={color} strokeWidth="1.6" opacity="0.6" />
+    <path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3" stroke={color} strokeWidth="1.6" strokeLinecap="round" opacity="0.6" />
+  </svg>
+);
+
+const RegionIcon = ({ color = colors.gold }) => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+    <path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2V6z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M9 4v14M15 6v14" stroke={color} strokeWidth="1.4" />
+  </svg>
+);
+
+const GlobeIcon = ({ color = colors.gold }) => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.8" />
+    <path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z" stroke={color} strokeWidth="1.6" />
+  </svg>
+);
+
+const placeKindIcon = (kind) => (kind === "country" ? <GlobeIcon /> : kind === "region" || kind === "metro" ? <RegionIcon /> : <PinIcon color={colors.gold} size={15} />);
+
+const SectionLabel = ({ children, aside, first = false }) => (
+  <div style={{
+    fontSize: "10.5px", letterSpacing: "1.3px", textTransform: "uppercase", color: colors.muted,
+    fontWeight: "600", fontFamily: kanit, margin: first ? "6px 2px 9px" : "18px 2px 9px",
+    display: "flex", justifyContent: "space-between", alignItems: "baseline",
+  }}>
+    <span>{children}</span>
+    {aside && <span style={{ letterSpacing: 0, textTransform: "none", fontWeight: "400", fontSize: "11px" }}>{aside}</span>}
+  </div>
+);
+
+const dropdownStyle = {
+  position: "absolute", top: "calc(100% - 4px)", left: 0, right: 0, zIndex: 10,
+  maxHeight: "300px", overflowY: "auto",
+  backgroundColor: colors.bg, borderRadius: "12px",
+  boxShadow: "0 12px 30px rgba(0,0,0,0.55)",
+  display: "flex", flexDirection: "column", gap: "6px", padding: "6px",
+  boxSizing: "border-box",
+};
+
+const dropdownNote = (text) => (
+  <div style={{
+    padding: "12px 0", borderRadius: "10px", textAlign: "center",
+    backgroundColor: colors.bgCard, color: colors.muted,
+    fontSize: "13px", fontFamily: kanit,
+  }}>
+    {text}
+  </div>
+);
+
+const GenreFilterPanel = ({
+  isOpen, onClose,
+  selectedGenres, onToggleGenre,
+  selectedPlaces, onTogglePlace,
+  nearRadius, onSetNearRadius,
+  onClearFilters,
+}) => {
+  const [tab, setTab] = useState("sound");
+
+  // ── Sound: genre search ──
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [geoQuery, setGeoQuery] = useState("");
-  const [geoFocused, setGeoFocused] = useState(false);
   const [pulseGenre, setPulseGenre] = useState(null);
   const inputRef = useRef(null);
   const chipRefs = useRef({});
 
-  // Reset the search each time the panel closes
+  // ── Place: search, options (home / radii / scenes), home-city prompt ──
+  const [placeQuery, setPlaceQuery] = useState("");
+  const [placeFocused, setPlaceFocused] = useState(false);
+  const [placeResults, setPlaceResults] = useState({ places: [], musicians: [] });
+  const [placeSearching, setPlaceSearching] = useState(false);
+  const [options, setOptions] = useState(null);
+  const [optionsError, setOptionsError] = useState(null);
+  const [lastRadius, setLastRadius] = useState(nearRadius || NEAR_RADII[0]);
+  const [homeQuery, setHomeQuery] = useState("");
+  const [homeFocused, setHomeFocused] = useState(false);
+  const [homeResults, setHomeResults] = useState([]);
+  const [savingHome, setSavingHome] = useState(false);
+  const placeInputRef = useRef(null);
+
+  // Reset the searches each time the panel closes
   useEffect(() => {
-    if (!isOpen) { setQuery(""); setSearchFocused(false); }
+    if (!isOpen) {
+      setQuery(""); setSearchFocused(false);
+      setPlaceQuery(""); setPlaceFocused(false);
+      setHomeQuery(""); setHomeFocused(false);
+    }
   }, [isOpen]);
+
+  // ── Load home city, radius counts and scene tiles. Counts depend on the
+  // picked genres, so reload whenever those change while the panel is open. ──
+  const loadOptions = async (cancelledRef = { current: false }) => {
+    try {
+      const data = await getPlaceOptions(selectedGenres);
+      if (!cancelledRef.current) { setOptions(data); setOptionsError(null); }
+    } catch (err) {
+      console.log('Failed to load place options:', err);
+      if (!cancelledRef.current) setOptionsError("Couldn't load places. Make sure the backend is running.");
+    }
+  };
+  useEffect(() => {
+    if (!isOpen) return;
+    const cancelledRef = { current: false };
+    loadOptions(cancelledRef);
+    return () => { cancelledRef.current = true; };
+  }, [isOpen, selectedGenres]);
+
+  // ── Debounced place search ──
+  const trimmedPlaceQuery = placeQuery.trim();
+  useEffect(() => {
+    if (!trimmedPlaceQuery) { setPlaceResults({ places: [], musicians: [] }); return; }
+    let cancelled = false;
+    setPlaceSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const data = await searchPlaces(trimmedPlaceQuery, selectedGenres);
+        if (!cancelled) setPlaceResults(data);
+      } catch (err) {
+        console.log('Place search failed:', err);
+        if (!cancelled) setPlaceResults({ places: [], musicians: [] });
+      } finally {
+        if (!cancelled) setPlaceSearching(false);
+      }
+    }, 200);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [trimmedPlaceQuery, selectedGenres]);
+
+  // ── Debounced city search for the "set your city" prompt ──
+  const trimmedHomeQuery = homeQuery.trim();
+  useEffect(() => {
+    if (trimmedHomeQuery.length < 2) { setHomeResults([]); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const cities = await searchCities(trimmedHomeQuery);
+        if (!cancelled) setHomeResults(cities);
+      } catch {
+        if (!cancelled) setHomeResults([]);
+      }
+    }, 200);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [trimmedHomeQuery]);
 
   const trimmedQuery = query.trim();
   const showDropdown = searchFocused && trimmedQuery.length > 0;
   // Genres only — matched against the genre list, nothing else
   const matchingGenres = MOCK_GENRES.filter(g => g.toLowerCase().includes(trimmedQuery.toLowerCase()));
   const atCap = selectedGenres.length >= MAX_SELECTED_GENRES;
+  const atPlaceCap = selectedPlaces.length >= MAX_SELECTED_PLACES;
+  const isPlaceSelected = (id) => selectedPlaces.some(p => p.id === id);
+  const home = options?.home || null;
 
   const handlePickFromSearch = (genre) => {
     const isSelected = selectedGenres.includes(genre);
@@ -799,6 +943,87 @@ const GenreFilterPanel = ({ isOpen, onClose, selectedGenres, onToggleGenre }) =>
     setPulseGenre(genre);
     setTimeout(() => setPulseGenre(g => (g === genre ? null : g)), 900);
   };
+
+  const handlePickPlace = (place) => {
+    if (!isPlaceSelected(place.id)) {
+      if (atPlaceCap) return;
+      onTogglePlace({ id: place.id, label: place.label, sub: place.sub, kind: place.kind });
+    }
+    setPlaceQuery("");
+    setPlaceFocused(false);
+    if (placeInputRef.current) placeInputRef.current.blur();
+  };
+
+  const handleToggleScene = (scene) => {
+    if (!isPlaceSelected(scene.id) && atPlaceCap) return;
+    onTogglePlace({ id: scene.id, label: scene.label, sub: scene.sub, kind: scene.kind });
+  };
+
+  const handleToggleNear = () => {
+    if (nearRadius) onSetNearRadius(null);
+    else onSetNearRadius(lastRadius);
+  };
+
+  const handlePickRadius = (r) => {
+    setLastRadius(r);
+    onSetNearRadius(r);
+  };
+
+  const handlePickHome = async (city) => {
+    setSavingHome(true);
+    try {
+      await setHomeCity(city.id);
+      setHomeQuery(""); setHomeFocused(false); setHomeResults([]);
+      await loadOptions();
+      onSetNearRadius(lastRadius); // they asked for near-me, so turn it on
+    } catch (err) {
+      console.log('Failed to save home city:', err);
+    } finally {
+      setSavingHome(false);
+    }
+  };
+
+  // ── "Only 6 tracks within 25 mi — widen?" when near-me finds very little ──
+  const radiusCount = (r) => options?.radii?.find(x => x.radius === r)?.count ?? null;
+  let nudge = null;
+  if (nearRadius && home) {
+    const current = radiusCount(nearRadius);
+    const next = NEAR_RADII.find(r => r > nearRadius && (radiusCount(r) ?? 0) > (current ?? 0));
+    if (current !== null && current < 60 && next) {
+      nudge = {
+        text: `${current === 0 ? `Nothing within ${nearRadius} mi.` : `Only ${current} track${current === 1 ? "" : "s"} within ${nearRadius} mi.`} ${next} mi has ${radiusCount(next).toLocaleString()}.`,
+        radius: next,
+      };
+    }
+  }
+
+  // ── Status line: "Showing Punk, Ska from Manchester or within 100 mi of you." ──
+  const placeParts = selectedPlaces.map(p => p.label);
+  if (nearRadius) placeParts.push(`within ${nearRadius} mi of you`);
+  const placeCount = selectedPlaces.length + (nearRadius ? 1 : 0);
+  const anyFilter = selectedGenres.length > 0 || placeCount > 0;
+
+  const countBadge = (n) => (n > 0 ? (
+    <span style={{
+      fontSize: "11px", fontWeight: "600", minWidth: "18px", height: "18px", borderRadius: "9px",
+      display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px",
+      backgroundColor: "#3a3a3a", color: colors.textSecondary, boxSizing: "border-box",
+    }}>{n}</span>
+  ) : null);
+
+  const segButton = (key, label, n, color) => (
+    <button
+      onClick={() => setTab(key)}
+      style={{
+        position: "relative", zIndex: 1, background: "none", border: "none", padding: "8px 0",
+        fontSize: "14px", fontWeight: "500", fontFamily: kanit, cursor: "pointer",
+        color: tab === key ? color : colors.muted, transition: "color 0.25s ease",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
+      }}
+    >
+      {label}{countBadge(n)}
+    </button>
+  );
 
   return (
     <div style={{
@@ -819,151 +1044,457 @@ const GenreFilterPanel = ({ isOpen, onClose, selectedGenres, onToggleGenre }) =>
             <path d="M6 9l6 6 6-6" stroke={colors.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-          Filter by Genre
+        <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: kanit }}>
+          Filter Discovery
         </div>
-        <div style={{ fontSize: "12px", fontWeight: "600", color: selectedGenres.length > 0 ? colors.teal : colors.muted, fontFamily: "'Kanit', sans-serif", width: "26px", textAlign: "right" }}>
-          {selectedGenres.length > 0 ? `${selectedGenres.length}/${MAX_SELECTED_GENRES}` : ""}
-        </div>
+        <button
+          onClick={onClearFilters}
+          disabled={!anyFilter}
+          style={{
+            background: "none", border: "none", width: "44px", textAlign: "right", padding: "4px 0",
+            fontSize: "12px", fontWeight: "600", fontFamily: kanit,
+            color: anyFilter ? colors.textSecondary : colors.muted,
+            cursor: anyFilter ? "pointer" : "default",
+          }}
+        >
+          Clear
+        </button>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
-        <div style={{ fontSize: "12px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginBottom: "16px" }}>
-          {selectedGenres.length === 0
-            ? "No genres selected — showing tracks from every genre."
-            : "Showing tracks that match your selected genres."}
-        </div>
+      {/* ── Sound | Place segmented control ── */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "1fr 1fr", backgroundColor: colors.bgCard,
+        borderRadius: "12px", padding: "4px", margin: "16px 20px 0", position: "relative", flexShrink: 0,
+      }}>
+        <div style={{
+          position: "absolute", top: "4px", bottom: "4px", left: "4px", width: "calc(50% - 4px)",
+          borderRadius: "9px", boxSizing: "border-box",
+          transform: tab === "place" ? "translateX(100%)" : "translateX(0)",
+          backgroundColor: tab === "place" ? goldGlow : colors.tealGlow,
+          border: `1.5px solid ${tab === "place" ? goldBorder : "rgba(93,235,215,0.5)"}`,
+          transition: "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s ease, border-color 0.3s ease",
+        }} />
+        {segButton("sound", "Sound", selectedGenres.length, colors.teal)}
+        {segButton("place", "Place", placeCount, colors.gold)}
+      </div>
 
-        {/* ── Genre search — dropdown floats over the geolocation bar and grid ── */}
-        <div style={{ position: "relative", zIndex: 5 }}>
-          <PanelInput icon={<SearchIcon color={searchFocused ? colors.teal : "#666"} />}>
-            <input
-              ref={inputRef}
-              style={panelInputStyle(searchFocused)}
-              placeholder="Search for Genres"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-            />
-            {query.length > 0 && (
-              <button
-                onMouseDown={(e) => { e.preventDefault(); setQuery(""); }}
-                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "4px" }}
-              >
-                <ClearIcon />
-              </button>
-            )}
-          </PanelInput>
+      <div style={{ fontSize: "12px", color: colors.muted, fontFamily: kanit, padding: "12px 20px 0", lineHeight: 1.5, flexShrink: 0 }}>
+        Showing{" "}
+        {selectedGenres.length
+          ? <span style={{ color: colors.teal }}>{selectedGenres.join(", ")}</span>
+          : <span style={{ color: colors.textSecondary }}>every genre</span>}
+        {" "}from{" "}
+        {placeParts.length
+          ? <span style={{ color: colors.gold }}>{placeParts.join(" or ")}</span>
+          : <span style={{ color: colors.textSecondary }}>anywhere</span>}.
+      </div>
 
-          {showDropdown && (
-            <div style={{
-              position: "absolute", top: "calc(100% - 4px)", left: 0, right: 0,
-              maxHeight: "260px", overflowY: "auto",
-              backgroundColor: colors.bg, borderRadius: "12px",
-              boxShadow: "0 12px 30px rgba(0,0,0,0.55)",
-              display: "flex", flexDirection: "column", gap: "6px", padding: "6px",
-              boxSizing: "border-box",
-            }}>
-              {matchingGenres.length === 0 ? (
-                <div style={{
-                  padding: "12px 0", borderRadius: "10px", textAlign: "center",
-                  backgroundColor: colors.bgCard, color: colors.muted,
-                  fontSize: "13px", fontFamily: "'Kanit', sans-serif",
-                }}>
-                  No genres match "{trimmedQuery}"
-                </div>
-              ) : (
-                <>
-                  {atCap && (
-                    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center", padding: "2px 0 4px" }}>
-                      You can pick up to {MAX_SELECTED_GENRES} genres. Deselect one to add another.
-                    </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 20px" }}>
+        {tab === "sound" ? (
+          <>
+            {/* ── Genre search — dropdown floats over the grid ── */}
+            <div style={{ position: "relative", zIndex: 5 }}>
+              <PanelInput icon={<SearchIcon color={searchFocused ? colors.teal : "#666"} />}>
+                <input
+                  ref={inputRef}
+                  style={panelInputStyle(searchFocused)}
+                  placeholder="Search for genres"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+                />
+                {query.length > 0 && (
+                  <button
+                    onMouseDown={(e) => { e.preventDefault(); setQuery(""); }}
+                    style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "4px" }}
+                  >
+                    <ClearIcon />
+                  </button>
+                )}
+              </PanelInput>
+
+              {showDropdown && (
+                <div style={{ ...dropdownStyle, maxHeight: "260px" }}>
+                  {matchingGenres.length === 0 ? dropdownNote(`No genres match "${trimmedQuery}"`) : (
+                    <>
+                      {atCap && (
+                        <div style={{ fontSize: "11px", color: colors.muted, fontFamily: kanit, textAlign: "center", padding: "2px 0 4px" }}>
+                          You can pick up to {MAX_SELECTED_GENRES} genres. Deselect one to add another.
+                        </div>
+                      )}
+                      {matchingGenres.map(genre => {
+                        const isSelected = selectedGenres.includes(genre);
+                        const disabled = !isSelected && atCap;
+                        const hue = genreHue(genre);
+                        return (
+                          <div
+                            key={genre}
+                            onMouseDown={(e) => { e.preventDefault(); handlePickFromSearch(genre); }}
+                            style={{
+                              padding: "12px 14px", borderRadius: "10px", boxSizing: "border-box",
+                              display: "flex", alignItems: "center", justifyContent: "space-between",
+                              background: isSelected
+                                ? colors.tealGlow
+                                : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+                              border: isSelected ? `2px solid ${colors.teal}` : "2px solid transparent",
+                              color: isSelected ? colors.teal : colors.text,
+                              fontSize: "13px", fontWeight: "500", fontFamily: kanit,
+                              cursor: disabled ? "default" : "pointer",
+                              opacity: disabled ? 0.4 : 1,
+                            }}
+                          >
+                            <span>{genre}</span>
+                            {isSelected && <span style={{ fontSize: "11px", fontWeight: "600" }}>Selected</span>}
+                          </div>
+                        );
+                      })}
+                    </>
                   )}
-                  {matchingGenres.map(genre => {
-                    const isSelected = selectedGenres.includes(genre);
-                    const disabled = !isSelected && atCap;
-                    const hue = genreHue(genre);
-                    return (
-                      <div
-                        key={genre}
-                        onMouseDown={(e) => { e.preventDefault(); handlePickFromSearch(genre); }}
-                        style={{
-                          padding: "12px 14px", borderRadius: "10px", boxSizing: "border-box",
-                          display: "flex", alignItems: "center", justifyContent: "space-between",
-                          background: isSelected
-                            ? colors.tealGlow
-                            : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
-                          border: isSelected ? `2px solid ${colors.teal}` : "2px solid transparent",
-                          color: isSelected ? colors.teal : colors.text,
-                          fontSize: "13px", fontWeight: "500", fontFamily: "'Kanit', sans-serif",
-                          cursor: disabled ? "default" : "pointer",
-                          opacity: disabled ? 0.4 : 1,
-                        }}
-                      >
-                        <span>{genre}</span>
-                        {isSelected && (
-                          <span style={{ fontSize: "11px", fontWeight: "600" }}>Selected</span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </>
+                </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* ── Geolocation — visual placeholder only; not wired to anything yet ── */}
-        <PanelInput icon={<PinIcon color={geoFocused ? colors.teal : "#666"} />}>
-          <input
-            style={panelInputStyle(geoFocused)}
-            placeholder="geolocation"
-            value={geoQuery}
-            onChange={(e) => setGeoQuery(e.target.value)}
-            onFocus={() => setGeoFocused(true)}
-            onBlur={() => setGeoFocused(false)}
-          />
-        </PanelInput>
+            <SectionLabel first aside={selectedGenres.length ? `${selectedGenres.length}/${MAX_SELECTED_GENRES}` : null}>Genres</SectionLabel>
 
-        {/* ── Genre grid ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "8px" }}>
-          {MOCK_GENRES.map((genre, i) => {
-            const hue = (i * 37 + 160) % 360;
-            const isSelected = selectedGenres.includes(genre);
-            const isPulsing = pulseGenre === genre;
-            return (
-              <div
-                key={genre}
-                ref={el => { chipRefs.current[genre] = el; }}
-                onClick={() => onToggleGenre(genre)}
-                style={{
-                  padding: "14px 10px", borderRadius: "10px", textAlign: "center",
-                  background: isSelected
-                    ? colors.tealGlow
-                    : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
-                  border: isSelected ? `2px solid ${colors.teal}` : "2px solid transparent",
-                  fontSize: "13px", fontWeight: "500",
-                  color: isSelected ? colors.teal : colors.text,
-                  fontFamily: "'Kanit', sans-serif", cursor: "pointer",
-                  transition: "opacity 0.2s ease, box-shadow 0.3s ease, transform 0.3s ease",
-                  boxShadow: isPulsing ? "0 0 0 4px rgba(93,235,215,0.35)" : "none",
-                  transform: isPulsing ? "scale(1.04)" : "scale(1)",
-                  boxSizing: "border-box",
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
-                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-              >
-                {genre}
+            {/* ── Genre grid ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              {MOCK_GENRES.map((genre, i) => {
+                const hue = (i * 37 + 160) % 360;
+                const isSelected = selectedGenres.includes(genre);
+                const isPulsing = pulseGenre === genre;
+                const disabled = !isSelected && atCap;
+                return (
+                  <div
+                    key={genre}
+                    ref={el => { chipRefs.current[genre] = el; }}
+                    onClick={() => onToggleGenre(genre)}
+                    style={{
+                      padding: "14px 10px", borderRadius: "10px", textAlign: "center",
+                      background: isSelected
+                        ? colors.tealGlow
+                        : `linear-gradient(135deg, hsl(${hue}, 35%, 28%), hsl(${hue + 30}, 30%, 22%))`,
+                      border: isSelected ? `2px solid ${colors.teal}` : "2px solid transparent",
+                      fontSize: "13px", fontWeight: "500",
+                      color: isSelected ? colors.teal : colors.text,
+                      fontFamily: kanit, cursor: disabled ? "default" : "pointer",
+                      opacity: disabled ? 0.4 : 1,
+                      transition: "opacity 0.2s ease, box-shadow 0.3s ease, transform 0.3s ease",
+                      boxShadow: isPulsing ? "0 0 0 4px rgba(93,235,215,0.35)" : "none",
+                      transform: isPulsing ? "scale(1.04)" : "scale(1)",
+                      boxSizing: "border-box",
+                    }}
+                    onMouseEnter={e => { if (!disabled) e.currentTarget.style.opacity = "0.8"; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = disabled ? "0.4" : "1"; }}
+                  >
+                    {genre}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* ── Place search — cities, regions, countries, metros, musicians ── */}
+            <div style={{ position: "relative", zIndex: 5 }}>
+              <PanelInput icon={<PinIcon color={placeFocused ? colors.gold : "#666"} />}>
+                <input
+                  ref={placeInputRef}
+                  style={panelInputStyle(placeFocused, colors.gold, "rgba(245,207,0,0.1)")}
+                  placeholder="City, region, country or musician"
+                  value={placeQuery}
+                  onChange={(e) => setPlaceQuery(e.target.value)}
+                  onFocus={() => setPlaceFocused(true)}
+                  onBlur={() => setTimeout(() => setPlaceFocused(false), 150)}
+                />
+                {placeQuery.length > 0 && (
+                  <button
+                    onMouseDown={(e) => { e.preventDefault(); setPlaceQuery(""); }}
+                    style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "4px" }}
+                  >
+                    <ClearIcon />
+                  </button>
+                )}
+              </PanelInput>
+
+              {placeFocused && trimmedPlaceQuery.length > 0 && (
+                <div style={dropdownStyle}>
+                  {atPlaceCap && (
+                    <div style={{ fontSize: "11px", color: colors.muted, fontFamily: kanit, textAlign: "center", padding: "2px 0 4px" }}>
+                      You can pick up to {MAX_SELECTED_PLACES} places. Remove one to add another.
+                    </div>
+                  )}
+                  {placeResults.places.length === 0 && placeResults.musicians.length === 0
+                    ? dropdownNote(placeSearching ? "Searching..." : `No places or musicians match "${trimmedPlaceQuery}"`)
+                    : (
+                      <>
+                        {placeResults.places.length > 0 && <SectionLabel first>Places</SectionLabel>}
+                        {placeResults.places.map(p => (
+                          <PlaceRow
+                            key={p.id}
+                            icon={placeKindIcon(p.kind)}
+                            name={p.label}
+                            sub={p.sub}
+                            right={isPlaceSelected(p.id) ? "Added" : `${p.count.toLocaleString()} tracks`}
+                            selected={isPlaceSelected(p.id)}
+                            disabled={!isPlaceSelected(p.id) && atPlaceCap}
+                            onPick={() => handlePickPlace(p)}
+                          />
+                        ))}
+                        {placeResults.musicians.length > 0 && <SectionLabel first={placeResults.places.length === 0}>Musicians</SectionLabel>}
+                        {placeResults.musicians.map(m => {
+                          const hue = (m.artist.charCodeAt(0) * 37) % 360;
+                          return (
+                            <PlaceRow
+                              key={m.id}
+                              icon={
+                                <div style={{
+                                  width: "30px", height: "30px", borderRadius: "50%", backgroundColor: `hsl(${hue}, 55%, 62%)`,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  fontSize: "12px", fontWeight: "600", color: "#1a1a1a", fontFamily: kanit,
+                                }}>
+                                  {m.artist.replace(/^The /, "").charAt(0)}
+                                </div>
+                              }
+                              iconBare
+                              name={m.artist}
+                              sub={`${m.location || "Location unknown"}${m.isUpload ? " · Ponytail musician" : ""}`}
+                              right={isPlaceSelected(m.id) ? "Added" : "Their area"}
+                              selected={isPlaceSelected(m.id)}
+                              disabled={!isPlaceSelected(m.id) && atPlaceCap}
+                              onPick={() => handlePickPlace(m)}
+                            />
+                          );
+                        })}
+                      </>
+                    )}
+                </div>
+              )}
+            </div>
+
+            <SectionLabel first aside={selectedPlaces.length ? `${selectedPlaces.length}/${MAX_SELECTED_PLACES}` : null}>Your places</SectionLabel>
+            {selectedPlaces.length === 0 ? (
+              <div style={{ fontSize: "12px", color: colors.muted, fontWeight: "300", fontFamily: kanit, padding: "2px" }}>
+                No places yet. Search above or tap a scene.
               </div>
-            );
-          })}
-        </div>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+                {selectedPlaces.map(p => (
+                  <span key={p.id} style={{
+                    display: "inline-flex", alignItems: "center", gap: "7px",
+                    padding: "7px 8px 7px 11px", borderRadius: "10px",
+                    backgroundColor: goldGlow, border: `1.5px solid ${goldBorder}`,
+                    color: colors.gold, fontSize: "12.5px", fontWeight: "500", fontFamily: kanit,
+                  }}>
+                    <PinIcon color={colors.gold} size={12} />
+                    {p.label}
+                    <span style={{ color: "rgba(245,207,0,0.65)", fontWeight: "400", fontSize: "11px" }}>{p.sub}</span>
+                    <button
+                      onClick={() => onTogglePlace(p)}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: "1px", display: "flex", opacity: 0.75 }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6l12 12" stroke={colors.gold} strokeWidth="2.4" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* ── Near me ── */}
+            <SectionLabel>Near you</SectionLabel>
+            <div style={{
+              backgroundColor: colors.bgCard, borderRadius: "12px", padding: "12px",
+              border: `2px solid ${nearRadius && home ? "rgba(245,207,0,0.55)" : "transparent"}`,
+              background: nearRadius && home ? `linear-gradient(160deg, rgba(245,207,0,0.09), ${colors.bgCard} 70%)` : colors.bgCard,
+              transition: "border-color 0.2s ease",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{
+                  width: "34px", height: "34px", borderRadius: "50%", flexShrink: 0,
+                  backgroundColor: nearRadius && home ? "rgba(245,207,0,0.18)" : "#353535",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <TargetIcon />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "14px", fontWeight: "500", color: colors.text, fontFamily: kanit }}>Near me</div>
+                  <div style={{ fontSize: "11px", fontWeight: "300", color: colors.textSecondary, fontFamily: kanit }}>
+                    {home ? `${home.label} · from your profile` : "Set your city to use this"}
+                  </div>
+                </div>
+                {home && (
+                  <button
+                    role="switch"
+                    aria-checked={!!nearRadius}
+                    onClick={handleToggleNear}
+                    style={{
+                      width: "42px", height: "24px", borderRadius: "12px", border: "none", position: "relative",
+                      cursor: "pointer", flexShrink: 0, transition: "background-color 0.2s ease",
+                      backgroundColor: nearRadius ? colors.gold : "#444",
+                    }}
+                  >
+                    <span style={{
+                      position: "absolute", left: "3px", top: "3px", width: "18px", height: "18px", borderRadius: "50%",
+                      backgroundColor: nearRadius ? "#1a1a1a" : "#ddd",
+                      transform: nearRadius ? "translateX(18px)" : "translateX(0)", transition: "transform 0.22s ease",
+                    }} />
+                  </button>
+                )}
+              </div>
+
+              {home ? (
+                <>
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginTop: "12px",
+                    opacity: nearRadius ? 1 : 0.35, pointerEvents: nearRadius ? "auto" : "none",
+                  }}>
+                    {NEAR_RADII.map(r => {
+                      const on = (nearRadius || lastRadius) === r;
+                      const count = radiusCount(r);
+                      return (
+                        <button
+                          key={r}
+                          onClick={() => handlePickRadius(r)}
+                          style={{
+                            backgroundColor: on ? goldGlow : "#333", color: on ? colors.gold : colors.textSecondary,
+                            border: `1.5px solid ${on ? colors.gold : "transparent"}`, borderRadius: "9px",
+                            padding: "7px 0 6px", fontSize: "12.5px", fontWeight: "500", fontFamily: kanit, cursor: "pointer",
+                            display: "flex", flexDirection: "column", alignItems: "center", gap: "1px",
+                          }}
+                        >
+                          {r} mi
+                          <span style={{ fontSize: "10px", fontWeight: "400", color: on ? "rgba(245,207,0,0.7)" : colors.muted }}>
+                            {count === null ? "–" : count.toLocaleString()}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {nudge && (
+                    <div style={{
+                      marginTop: "10px", backgroundColor: "#2f2a12", border: "1px solid rgba(245,207,0,0.3)", borderRadius: "10px",
+                      padding: "9px 11px", fontSize: "12px", color: "#e9dc9a", fontFamily: kanit, lineHeight: 1.4,
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px",
+                    }}>
+                      <span>{nudge.text}</span>
+                      <button
+                        onClick={() => handlePickRadius(nudge.radius)}
+                        style={{
+                          backgroundColor: colors.gold, color: "#1a1a1a", border: "none", borderRadius: "8px",
+                          padding: "6px 10px", fontSize: "11.5px", fontWeight: "600", fontFamily: kanit, cursor: "pointer", whiteSpace: "nowrap",
+                        }}
+                      >
+                        Widen to {nudge.radius} mi
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                // ── No home city yet (most listeners) — pick one right here ──
+                <div style={{ position: "relative", marginTop: "12px" }}>
+                  <input
+                    style={{ ...panelInputStyle(homeFocused, colors.gold, "rgba(245,207,0,0.1)"), padding: "10px 14px", backgroundColor: "#333" }}
+                    placeholder={savingHome ? "Saving..." : "Your city"}
+                    value={homeQuery}
+                    disabled={savingHome}
+                    onChange={(e) => setHomeQuery(e.target.value)}
+                    onFocus={() => setHomeFocused(true)}
+                    onBlur={() => setTimeout(() => setHomeFocused(false), 150)}
+                  />
+                  {homeFocused && trimmedHomeQuery.length >= 2 && (
+                    <div style={{ ...dropdownStyle, top: "calc(100% + 4px)" }}>
+                      {homeResults.length === 0 ? dropdownNote(`No cities match "${trimmedHomeQuery}"`) : homeResults.map(city => (
+                        <PlaceRow
+                          key={city.id}
+                          icon={<PinIcon color={colors.gold} size={15} />}
+                          name={city.label}
+                          sub={city.sub}
+                          onPick={() => handlePickHome(city)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ── Scenes ── */}
+            <SectionLabel aside="tracks match your sound">Scenes</SectionLabel>
+            {optionsError ? (
+              <div style={{ fontSize: "12px", color: "#ff6b6b", fontFamily: kanit }}>{optionsError}</div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                {(options?.scenes || []).map(scene => {
+                  const isSelected = isPlaceSelected(scene.id);
+                  const empty = scene.count === 0 && !isSelected;
+                  const disabled = !isSelected && atPlaceCap;
+                  return (
+                    <div
+                      key={scene.id}
+                      onClick={() => handleToggleScene(scene)}
+                      style={{
+                        padding: "11px 12px", borderRadius: "10px", minHeight: "60px", boxSizing: "border-box",
+                        display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: "1px", overflow: "hidden",
+                        background: isSelected
+                          ? goldGlow
+                          : `linear-gradient(135deg, hsl(${scene.hue}, 35%, 26%), hsl(${scene.hue + 30}, 30%, 19%))`,
+                        border: `2px solid ${isSelected ? colors.gold : "transparent"}`,
+                        fontFamily: kanit, cursor: disabled ? "default" : "pointer",
+                        opacity: empty || disabled ? 0.35 : 1, transition: "opacity 0.2s ease",
+                      }}
+                    >
+                      <span style={{ fontSize: "13.5px", fontWeight: "600", color: isSelected ? colors.gold : colors.text }}>{scene.label}</span>
+                      <span style={{ fontSize: "11px", color: isSelected ? "rgba(245,207,0,0.7)" : "rgba(255,255,255,0.65)" }}>
+                        {scene.count.toLocaleString()} tracks
+                      </span>
+                      <span style={{
+                        fontSize: "10.5px", fontWeight: "300", color: isSelected ? "rgba(245,207,0,0.7)" : "rgba(255,255,255,0.5)",
+                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                      }}>
+                        {scene.topArtists.length ? scene.topArtists.join(", ") : "No matches for this sound"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
         <div style={{ height: "20px" }} />
       </div>
     </div>
   );
 };
+
+// ─── One row in a place/musician/city dropdown ──
+const PlaceRow = ({ icon, iconBare = false, name, sub, right, selected = false, disabled = false, onPick }) => (
+  <div
+    onMouseDown={(e) => { e.preventDefault(); if (!disabled) onPick(); }}
+    style={{
+      padding: "10px 12px", borderRadius: "10px", boxSizing: "border-box",
+      display: "flex", alignItems: "center", gap: "11px",
+      backgroundColor: selected ? goldGlow : colors.bgCard,
+      border: `2px solid ${selected ? colors.gold : "transparent"}`,
+      cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.4 : 1,
+      fontFamily: kanit,
+    }}
+    onMouseEnter={e => { if (!disabled && !selected) e.currentTarget.style.backgroundColor = colors.bgCardHover; }}
+    onMouseLeave={e => { if (!selected) e.currentTarget.style.backgroundColor = colors.bgCard; }}
+  >
+    {iconBare ? icon : (
+      <div style={{ width: "30px", height: "30px", borderRadius: "8px", backgroundColor: "#353535", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        {icon}
+      </div>
+    )}
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ fontSize: "13px", fontWeight: "500", color: colors.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
+      {sub && <div style={{ fontSize: "11px", fontWeight: "300", color: colors.textSecondary }}>{sub}</div>}
+    </div>
+    {right && <span style={{ fontSize: "11px", color: colors.muted, whiteSpace: "nowrap" }}>{right}</span>}
+  </div>
+);
 
 // ─── Discovery Tab ────────────────────────────────────────────────────────────
 // ─── Discovery's own genre search bar — same search-bar + elongated genre
@@ -1075,7 +1606,10 @@ const DiscoveryGenreBar = ({ selectedGenres, onToggleGenre }) => {
   );
 };
 
-const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
+const DiscoverySearch = ({
+  onLove, selectedGenres, onToggleGenre,
+  selectedPlaces, onTogglePlace, nearRadius, onSetNearRadius, onClearFilters,
+}) => {
   const [pool, setPool] = useState([]);
   const [current, setCurrent] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -1116,6 +1650,14 @@ const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
       if (selectedGenres.length > 0) {
         params.set('genres', selectedGenres.join(','));
       }
+      // ── Place filter (Sound | Place panel): picked places/musicians as
+      // tokens, plus "near me" as a radius from the listener's home city ──
+      if (selectedPlaces.length > 0) {
+        params.set('places', JSON.stringify(selectedPlaces.map(p => p.id)));
+      }
+      if (nearRadius) {
+        params.set('near', String(nearRadius));
+      }
       params.set('limit', '15');
 
       const res = await fetch(`http://localhost:5000/api/auth/albums/discover?${params.toString()}`, {
@@ -1131,7 +1673,7 @@ const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
     }
   };
   fetchTracks();
-}, [selectedGenres]);
+}, [selectedGenres, selectedPlaces, nearRadius]);
 
   const handleLike = () => {
     if (current >= pool.length) return;
@@ -1147,6 +1689,7 @@ const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
   };
 
   const remaining = pool.length - current;
+  const hasFilters = selectedGenres.length > 0 || selectedPlaces.length > 0 || !!nearRadius;
   const track = pool[current];
   const nextTrack = pool[current + 1];
   const peekScale = 0.96 + (Math.min(Math.abs(dragX), 80) / 80) * 0.04;
@@ -1192,13 +1735,20 @@ const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
               }}>
                 <HeartIcon size={48} color={colors.teal} filled />
                 <div style={{ fontSize: "18px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
-                  You've heard everything!
+                  {pool.length === 0 ? "Nothing matches yet" : "You've heard everything!"}
                 </div>
-                <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center" }}>
-                  Check the Loved tab to revisit tracks you liked.
+                <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", textAlign: "center", padding: "0 24px" }}>
+                  {pool.length === 0
+                    ? "Try a wider radius, another place, or fewer genres."
+                    : "Check the Loved tab to revisit tracks you liked."}
                 </div>
                 <button
-                  onClick={() => { setCurrent(0); setDragX(0); }}
+                  onClick={() => {
+                    // ── An empty pool means the filters matched nothing — open
+                    // the filter panel instead of restarting an empty deck ──
+                    if (pool.length === 0) { handleOpenFilterPanel(); return; }
+                    setCurrent(0); setDragX(0);
+                  }}
                   style={{
                     marginTop: "8px", padding: "10px 24px", borderRadius: "50px",
                     backgroundColor: colors.teal, border: "none",
@@ -1206,7 +1756,7 @@ const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
                     cursor: "pointer", fontFamily: "'Kanit', sans-serif",
                   }}
                 >
-                  Start over
+                  {pool.length === 0 ? "Open filters" : "Start over"}
                 </button>
               </div>
             ) : (
@@ -1271,14 +1821,14 @@ const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
                   onClick={handleOpenFilterPanel}
                   style={{
                     width: 36, height: 36, borderRadius: "50%", backgroundColor: colors.bgCard,
-                    border: `2px solid ${selectedGenres.length > 0 ? colors.gold : colors.border}`,
+                    border: `2px solid ${hasFilters ? colors.gold : colors.border}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer", transition: "all 0.2s ease",
                   }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = selectedGenres.length > 0 ? "rgba(245,207,0,0.15)" : colors.tealGlow}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = hasFilters ? "rgba(245,207,0,0.15)" : colors.tealGlow}
                   onMouseLeave={e => e.currentTarget.style.backgroundColor = colors.bgCard}
                 >
-                  <FilterIcon size={15} color={selectedGenres.length > 0 ? colors.gold : colors.muted} />
+                  <FilterIcon size={15} color={hasFilters ? colors.gold : colors.muted} />
                 </button>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: "18px", fontWeight: "700", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
@@ -1312,6 +1862,11 @@ const DiscoverySearch = ({ onLove, selectedGenres, onToggleGenre }) => {
         onClose={() => setShowFilterPanel(false)}
         selectedGenres={selectedGenres}
         onToggleGenre={onToggleGenre}
+        selectedPlaces={selectedPlaces}
+        onTogglePlace={onTogglePlace}
+        nearRadius={nearRadius}
+        onSetNearRadius={onSetNearRadius}
+        onClearFilters={onClearFilters}
       />
     </div>
   );
@@ -1326,6 +1881,11 @@ export default function SearchScreen({ setScreen }) {
   const { isPlayerOpen, isPlaying, togglePlay } = usePlayer();
   const [panelStack, setPanelStack] = useState([]); 
   const [selectedGenres, setSelectedGenres] = useState([]);
+  // ── Discovery's Place filter: picked places/musicians ({ id, label, sub,
+  // kind }, id is "p:<placeId>" or "a:<artist>", max 3) and the near-me
+  // radius in miles (null = off) ──
+  const [selectedPlaces, setSelectedPlaces] = useState([]);
+  const [nearRadius, setNearRadius] = useState(null);
   const [loved, setLoved] = useState([]);
 
   useEffect(() => {
@@ -1374,6 +1934,20 @@ export default function SearchScreen({ setScreen }) {
       if (prev.length >= 5) return prev; // cap at 5
       return [...prev, genre];
     });
+  };
+
+  const handleTogglePlace = (place) => {
+    setSelectedPlaces(prev => {
+      if (prev.some(p => p.id === place.id)) return prev.filter(p => p.id !== place.id);
+      if (prev.length >= 3) return prev; // cap at 3
+      return [...prev, place];
+    });
+  };
+
+  const handleClearFilters = () => {
+    setSelectedGenres([]);
+    setSelectedPlaces([]);
+    setNearRadius(null);
   };
 
   useEffect(() => {
@@ -1503,6 +2077,11 @@ export default function SearchScreen({ setScreen }) {
                 onLove={handleLove}
                 selectedGenres={selectedGenres}
                 onToggleGenre={handleToggleGenre}
+                selectedPlaces={selectedPlaces}
+                onTogglePlace={handleTogglePlace}
+                nearRadius={nearRadius}
+                onSetNearRadius={setNearRadius}
+                onClearFilters={handleClearFilters}
               />
             )}
             {activeTab === "search" && (

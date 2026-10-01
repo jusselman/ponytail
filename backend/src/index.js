@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const playlistRoutes = require('./routes/playlistRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const blockRoutes = require('./routes/blockRoutes');
+const placesRoutes = require('./routes/placesRoutes');
 const path = require('path');
 require('dotenv').config();
 
@@ -43,6 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/blocks', blockRoutes);
+app.use('/api/places', placesRoutes);
 
 // ── Health check ──
 app.get('/health', (req, res) => {

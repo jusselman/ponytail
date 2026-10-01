@@ -1,0 +1,318 @@
+{
+  "_comment": "Hand-checked hometowns. enrichArtistLocations.js uses these before asking MusicBrainz. Keys must match seed_tracks.artist exactly. region is the GeoNames admin1 code (US state, ENG/SCT/WLS/NIR) and is only used to pick between same-named cities.",
+  "artists": {
+    "10cc": {
+      "city": "Stockport",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "13th Floor Elevators": {
+      "city": "Austin",
+      "country": "US",
+      "region": "TX"
+    },
+    "A Tribe Called Quest": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "Air": {
+      "city": "Versailles",
+      "country": "FR"
+    },
+    "Aretha Franklin": {
+      "city": "Detroit",
+      "country": "US",
+      "region": "MI"
+    },
+    "Beastie Boys": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "Big Star": {
+      "city": "Memphis",
+      "country": "US",
+      "region": "TN"
+    },
+    "Björk": {
+      "city": "Reykjavík",
+      "country": "IS"
+    },
+    "Black Sabbath": {
+      "city": "Birmingham",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Creedence Clearwater Revival": {
+      "city": "El Cerrito",
+      "country": "US",
+      "region": "CA"
+    },
+    "Doves": {
+      "city": "Manchester",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Dr. Dre": {
+      "city": "Compton",
+      "country": "US",
+      "region": "CA"
+    },
+    "Echo & The Bunnymen": {
+      "city": "Liverpool",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Erykah Badu": {
+      "city": "Dallas",
+      "country": "US",
+      "region": "TX"
+    },
+    "Guided By Voices": {
+      "city": "Dayton",
+      "country": "US",
+      "region": "OH"
+    },
+    "Hella": {
+      "city": "Sacramento",
+      "country": "US",
+      "region": "CA"
+    },
+    "Hole": {
+      "city": "Los Angeles",
+      "country": "US",
+      "region": "CA"
+    },
+    "Ice Cube": {
+      "city": "Los Angeles",
+      "country": "US",
+      "region": "CA"
+    },
+    "Jay-Z": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "Kraftwerk": {
+      "city": "Düsseldorf",
+      "country": "DE"
+    },
+    "Metallica": {
+      "city": "Los Angeles",
+      "country": "US",
+      "region": "CA"
+    },
+    "Milton Nascimento & Lô Borges": {
+      "city": "Belo Horizonte",
+      "country": "BR"
+    },
+    "Minutemen": {
+      "city": "San Pedro",
+      "country": "US",
+      "region": "CA"
+    },
+    "Missy Elliott": {
+      "city": "Portsmouth",
+      "country": "US",
+      "region": "VA"
+    },
+    "Muddy Waters": {
+      "city": "Chicago",
+      "country": "US",
+      "region": "IL"
+    },
+    "My Bloody Valentine": {
+      "city": "Dublin",
+      "country": "IE"
+    },
+    "Napalm Death": {
+      "city": "Birmingham",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Nirvana": {
+      "city": "Seattle",
+      "country": "US",
+      "region": "WA"
+    },
+    "Oasis": {
+      "city": "Manchester",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Outkast": {
+      "city": "Atlanta",
+      "country": "US",
+      "region": "GA"
+    },
+    "OutKast": {
+      "city": "Atlanta",
+      "country": "US",
+      "region": "GA"
+    },
+    "Pavement": {
+      "city": "Stockton",
+      "country": "US",
+      "region": "CA"
+    },
+    "Pink Floyd": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Pixies": {
+      "city": "Boston",
+      "country": "US",
+      "region": "MA"
+    },
+    "Prefuse 73": {
+      "city": "Atlanta",
+      "country": "US",
+      "region": "GA"
+    },
+    "Prince": {
+      "city": "Minneapolis",
+      "country": "US",
+      "region": "MN"
+    },
+    "Public Enemy": {
+      "city": "Hempstead",
+      "country": "US",
+      "region": "NY"
+    },
+    "Pulp": {
+      "city": "Sheffield",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "R.E.M.": {
+      "city": "Athens",
+      "country": "US",
+      "region": "GA"
+    },
+    "Radiohead": {
+      "city": "Oxford",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Red Hot Chili Peppers": {
+      "city": "Los Angeles",
+      "country": "US",
+      "region": "CA"
+    },
+    "Sepultura": {
+      "city": "Belo Horizonte",
+      "country": "BR"
+    },
+    "Skip Spence": {
+      "city": "San Francisco",
+      "country": "US",
+      "region": "CA"
+    },
+    "Sonic Youth": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "Stevie Wonder": {
+      "city": "Detroit",
+      "country": "US",
+      "region": "MI"
+    },
+    "Talking Heads": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "The Beach Boys": {
+      "city": "Hawthorne",
+      "country": "US",
+      "region": "CA"
+    },
+    "The Beatles": {
+      "city": "Liverpool",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "The Clash": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "The Fall": {
+      "city": "Manchester",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "The Flaming Lips": {
+      "city": "Oklahoma City",
+      "country": "US",
+      "region": "OK"
+    },
+    "The Fucking Champs": {
+      "city": "San Francisco",
+      "country": "US",
+      "region": "CA"
+    },
+    "The Kinks": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "The Magnetic Fields": {
+      "city": "Boston",
+      "country": "US",
+      "region": "MA"
+    },
+    "The Mars Volta": {
+      "city": "El Paso",
+      "country": "US",
+      "region": "TX"
+    },
+    "The Smiths": {
+      "city": "Manchester",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "The Specials": {
+      "city": "Coventry",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "The Velvet Underground": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "The White Stripes": {
+      "city": "Detroit",
+      "country": "US",
+      "region": "MI"
+    },
+    "Tool": {
+      "city": "Los Angeles",
+      "country": "US",
+      "region": "CA"
+    },
+    "U2": {
+      "city": "Dublin",
+      "country": "IE"
+    },
+    "Van Halen": {
+      "city": "Pasadena",
+      "country": "US",
+      "region": "CA"
+    },
+    "Wilco": {
+      "city": "Chicago",
+      "country": "US",
+      "region": "IL"
+    },
+    "Wire": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    }
+  }
+}

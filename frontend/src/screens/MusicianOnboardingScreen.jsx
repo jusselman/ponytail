@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { register } from '../services/authService';
+import { searchCities } from '../services/placesService';
 import PonyMoodBg from '../assets/images/PonyMood.png';
 import PonyRockBg from '../assets/images/PonyRock.png';
 
@@ -269,11 +270,47 @@ const ArtistNameStep = ({ artistName, setArtistName, onNext }) => {
   );
 };
 
-// ─── Step 4: Location — a plain city string, no geocoding/lat-long anywhere in
-// the app yet. Feeds "Hot in Here" (nearby musicians), which starts out doing a
-// same-city text match as an interim stand-in for real geo-radius matching later. ──
-const LocationStep = ({ location, setLocation, onNext }) => {
+// ─── Step 4: Location — the musician picks their city from a list (GeoNames
+// cities via /api/places/cities) rather than typing free text, so the backend
+// can store real coordinates. Those feed Discovery's Place filter (listeners
+// filtering by city, region or "near me") and Hot in Here. ──
+const LocationStep = ({ location, setLocation, locationPlaceId, setLocationPlaceId, onNext }) => {
   const [focused, setFocused] = useState(null);
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+
+  // ── Debounced city search while the musician types ──
+  useEffect(() => {
+    if (locationPlaceId) return; // a city is already picked; the text is its label
+    const q = location.trim();
+    if (q.length < 2) { setResults([]); return; }
+    let cancelled = false;
+    setSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const cities = await searchCities(q);
+        if (!cancelled) setResults(cities);
+      } catch {
+        if (!cancelled) setResults([]);
+      } finally {
+        if (!cancelled) setSearching(false);
+      }
+    }, 200);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [location, locationPlaceId]);
+
+  const handleType = (e) => {
+    setLocation(e.target.value);
+    setLocationPlaceId(null); // editing the text un-picks the city
+  };
+
+  const handlePick = (city) => {
+    setLocation(city.label);
+    setLocationPlaceId(city.id);
+    setResults([]);
+  };
+
+  const showDropdown = !locationPlaceId && location.trim().length >= 2;
 
   return (
     <div style={{ width: "100%", animation: "fadeSlideUp 0.4s ease forwards" }}>
@@ -287,15 +324,47 @@ const LocationStep = ({ location, setLocation, onNext }) => {
       <div style={{ fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginBottom: "24px" }}>
         This connects you with nearby musicians and listeners in Hot in Here
       </div>
-      <PonytailInput
-        name="location" focused={focused}
-        onFocus={setFocused} onBlur={setFocused}
-        placeholder="Your city"
-        value={location}
-        onChange={e => setLocation(e.target.value)}
-      />
+      <div style={{ position: "relative" }}>
+        <PonytailInput
+          name="location" focused={focused}
+          onFocus={setFocused} onBlur={setFocused}
+          placeholder="Start typing your city"
+          value={location}
+          onChange={handleType}
+          autoComplete="off"
+        />
+        {showDropdown && (
+          <div style={{
+            position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 5,
+            backgroundColor: colors.bg, borderRadius: "14px", padding: "6px",
+            boxShadow: "0 12px 30px rgba(0,0,0,0.55)",
+            display: "flex", flexDirection: "column", gap: "6px",
+            maxHeight: "260px", overflowY: "auto",
+          }}>
+            {results.length === 0 ? (
+              <div style={{ padding: "12px", textAlign: "center", fontSize: "13px", color: colors.muted, fontFamily: "'Kanit', sans-serif" }}>
+                {searching ? "Searching..." : `No cities match "${location.trim()}"`}
+              </div>
+            ) : results.map(city => (
+              <div
+                key={city.id}
+                onMouseDown={(e) => { e.preventDefault(); handlePick(city); }}
+                style={{
+                  padding: "10px 14px", borderRadius: "10px", cursor: "pointer",
+                  backgroundColor: colors.inputBg, fontFamily: "'Kanit', sans-serif",
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+              >
+                <div style={{ fontSize: "14px", color: colors.text, fontWeight: "500" }}>{city.label}</div>
+                {city.sub && <div style={{ fontSize: "11px", color: colors.muted }}>{city.sub}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       <div style={{ marginTop: "24px" }}>
-        <NextButton onPress={onNext} disabled={!location.trim()} />
+        <NextButton onPress={onNext} disabled={!locationPlaceId} />
       </div>
     </div>
   );
@@ -560,6 +629,7 @@ export default function MusicianOnboardingScreen({ setScreen }) {
   // profile (for the personalized radio station / Hot in Here) and as the default
   // tags stamped onto every track they upload (see authRoutes.js /tracks/upload). ──
   const [location, setLocation] = useState("");
+  const [locationPlaceId, setLocationPlaceId] = useState(null);
   const [genre, setGenre] = useState(null);
   const [subgenre, setSubgenre] = useState(null);
   const [mood, setMood] = useState(null);
@@ -572,6 +642,7 @@ export default function MusicianOnboardingScreen({ setScreen }) {
       const username = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
       await register(email, username, password, true, artistName.trim(), {
         location: location.trim(),
+        locationPlaceId,
         genre,
         subgenre,
         mood,
@@ -642,7 +713,7 @@ export default function MusicianOnboardingScreen({ setScreen }) {
               />
             )}
             {step === "location" && (
-              <LocationStep location={location} setLocation={setLocation} onNext={() => setStep("genre")} />
+              <LocationStep location={location} setLocation={setLocation} locationPlaceId={locationPlaceId} setLocationPlaceId={setLocationPlaceId} onNext={() => setStep("genre")} />
             )}
             {step === "genre" && (
               <GenreStep genre={genre} setGenre={setGenre} onNext={() => setStep("subgenre")} />

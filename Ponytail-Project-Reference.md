@@ -302,3 +302,21 @@ Real audio/cover files often don't match the database's `filename`/`cover` value
 - Appreciates **git commit messages with no quotes, backticks, or apostrophes** (a recurring, explicit formatting request), and prefers periodic summarized commit-message requests rather than one after every single change.
 - Comfortable with iterative debugging via shared terminal output/error messages — expects direct file/line pointers rather than full-file rewrites when a small aspect of a shared code that already been given is wrong.
 - Has directly pushed back on and improved suggested engineering approaches during this project (e.g. correctly questioning why a root-level `App.js` change was proposed to fix a `SearchScreen`-only bug) — treat his pushback as often correct and worth taking seriously, not just accommodating.
+
+## Geolocation — Discovery "Sound | Place" filter
+
+The Discovery filter panel has two tabs: **Sound** (genres, teal, max 5) and **Place** (cities, regions, countries, the Bay Area metro, "around <musician>", and "Near me", gold, max 3 places). Genres and places combine as (any genre) AND (any place).
+
+- **Data:** `places` table (migration `011_geolocation.sql`) loaded from `backend/assets/geo/cities.tsv` (GeoNames cities ≥ 15k population, CC BY 4.0). `users` and `seed_tracks` gained `location_lat / location_lng / location_country / location_region`; `location` stays the readable label ("Oakland, CA").
+- **Matching:** a city matches anything within 25 mi, a metro within its `radius_mi`, a region/country by code. "Near me" measures from the user's home city. Logic lives in `backend/src/services/geo.js`.
+- **API:** `/api/places/cities` (public, onboarding), `/api/places/search`, `/api/places/options` (home, radius counts, scene tiles), `PUT /api/places/home`. `/api/auth/albums/discover` takes `places` (JSON array of `"p:<placeId>"` / `"a:<artist>"`) and `near` (25/100/250/500).
+- **Musician onboarding** now picks the city from a list and sends `location_place_id`.
+
+**One-time setup (in `backend/`):**
+```
+psql "$DATABASE_URL" -f src/db/migrations/011_geolocation.sql
+node scripts/importPlaces.js              # ~34k cities + regions + countries
+node scripts/enrichArtistLocations.js     # catalog artists → hometowns (hand-checked list, then MusicBrainz at 1 req/s)
+node scripts/backfillUserLocations.js     # existing musicians' typed cities → coordinates
+```
+Hand-checked hometowns live in `assets/geo/artist_locations.json` (add artists there and re-run to fix or fill gaps). MusicBrainz answers are cached in `assets/geo/musicbrainz_cache.json`; set `MUSICBRAINZ_CONTACT` in `.env` first.

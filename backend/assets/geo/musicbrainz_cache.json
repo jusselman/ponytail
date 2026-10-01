@@ -1,0 +1,5063 @@
+{
+  "2Pac": {
+    "country": "US",
+    "city": "East Harlem",
+    "regionName": null,
+    "mbid": "382f1005-e9ab-4684-afd4-0bdae4ee37f2"
+  },
+  "50 Cent": {
+    "country": "US",
+    "city": "South Jamaica",
+    "regionName": null,
+    "mbid": "8e68819d-71be-4e7d-b41d-f1df81b01d3f"
+  },
+  "5ive style": {
+    "miss": true
+  },
+  "808 State": {
+    "country": "GB",
+    "city": "Manchester",
+    "regionName": null,
+    "mbid": "36f35db0-bc09-43e7-8650-a123224943c7"
+  },
+  "a-ha": {
+    "country": "NO",
+    "city": "Oslo",
+    "regionName": null,
+    "mbid": "7364dea6-ca9a-48e3-be01-b44ad0d19897"
+  },
+  "ABBA": {
+    "country": "SE",
+    "city": "Stockholm",
+    "regionName": null,
+    "mbid": "d87e52c5-bb8d-4da8-b941-9f4928627dc8"
+  },
+  "ABC": {
+    "country": "GB",
+    "city": "Sheffield",
+    "regionName": null,
+    "mbid": "87199477-b0df-4ead-84ee-9b54b4abfc3d"
+  },
+  "Abdullah Ibrahim": {
+    "country": "ZA",
+    "city": "Cape Town",
+    "regionName": null,
+    "mbid": "fd64e185-9973-44d5-ad09-5d5562804292"
+  },
+  "AC/DC": {
+    "country": "AU",
+    "city": "Sydney",
+    "regionName": null,
+    "mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1"
+  },
+  "Adam and the Ants": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "75d4f194-969c-4538-b789-742f3eb3d02c"
+  },
+  "Adrian Belew": {
+    "country": null,
+    "city": "Covington",
+    "regionName": null,
+    "mbid": "73c3f499-60e2-44e1-81dd-7fe2191461fa"
+  },
+  "Aerosmith": {
+    "country": "US",
+    "city": "Boston",
+    "regionName": null,
+    "mbid": "3d2b98e5-556f-4451-a3ff-c50ea18d57cb"
+  },
+  "Afrika Bambaataa & Soulsonic Force": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "3c92c119-b8fb-414c-bb09-9bfbfc189432"
+  },
+  "a‐ha": {
+    "country": "NO",
+    "city": "Oslo",
+    "regionName": null,
+    "mbid": "7364dea6-ca9a-48e3-be01-b44ad0d19897"
+  },
+  "Aimee Mann": {
+    "country": "US",
+    "city": "Richmond",
+    "regionName": null,
+    "mbid": "db3c0a20-bf05-4b30-ac22-f294aea24172"
+  },
+  "Al Green": {
+    "country": "US",
+    "city": "Forrest City",
+    "regionName": null,
+    "mbid": "fb7272ba-f130-4f0a-934d-6eeea4c18c9a"
+  },
+  "Alanis Morissette": {
+    "country": "CA",
+    "city": "Ottawa",
+    "regionName": null,
+    "mbid": "4bdcee62-4902-4773-8cd1-e252e2e31225"
+  },
+  "Alarm Will Sound": {
+    "country": "US",
+    "city": "Rochester",
+    "regionName": null,
+    "mbid": "9c52f2bc-bca9-40ec-9640-2976fdf24236"
+  },
+  "Ali Farka Touré With Ry Cooder": {
+    "miss": true
+  },
+  "Alice Cooper": {
+    "country": "US",
+    "city": "Detroit",
+    "regionName": null,
+    "mbid": "ee58c59f-8e7f-4430-b8ca-236c4d3745ae"
+  },
+  "Allan Holdsworth": {
+    "country": "GB",
+    "city": "Bradford",
+    "regionName": null,
+    "mbid": "a6396e33-9298-493e-9409-f0e1366b326b"
+  },
+  "Allan Holdsworth, Anders Johansson, Jens Johansson,": {
+    "miss": true
+  },
+  "Alton Spencer": {
+    "miss": true
+  },
+  "American Music Club": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "5837d14e-4d18-49cf-a759-e5818714bce4"
+  },
+  "Amy Winehouse": {
+    "country": "GB",
+    "city": "Southgate",
+    "regionName": null,
+    "mbid": "dfe9a7c4-8cf2-47f4-9dcb-d233c2b86ec3"
+  },
+  "Ananda Shankar": {
+    "country": "IN",
+    "city": "Almora",
+    "regionName": null,
+    "mbid": "d7064740-c3f6-4bc8-be8c-3f6e0e888ca1"
+  },
+  "Anders Johansson": {
+    "country": "SE",
+    "city": null,
+    "regionName": null,
+    "mbid": "f4864d47-0eea-4614-9b02-47cf5e677631"
+  },
+  "Anders Johansson - Jens Johansson - Allan Holdsworth": {
+    "miss": true
+  },
+  "Andrew Gorny": {
+    "miss": true
+  },
+  "Anita Baker": {
+    "country": "US",
+    "city": "Toledo",
+    "regionName": null,
+    "mbid": "02349767-d5ac-4528-892d-17b6d40107a1"
+  },
+  "Anthrax": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "b616d6f0-ec1f-4c69-8a79-12a97ece7372"
+  },
+  "Aphex Twin": {
+    "country": null,
+    "city": "Limerick",
+    "regionName": null,
+    "mbid": "f22942a1-6f70-4f48-866e-238cb2308fbd"
+  },
+  "Aphrodite's Child": {
+    "country": "GR",
+    "city": "Paris",
+    "regionName": null,
+    "mbid": "51625f3d-adfa-4096-a7b9-113f5225cc58"
+  },
+  "Aquarius": {
+    "country": "GB",
+    "city": "City of St Albans",
+    "regionName": null,
+    "mbid": "5c306718-2648-4897-a673-609722dbf3cf"
+  },
+  "Arrested Development": {
+    "country": "US",
+    "city": "Atlanta",
+    "regionName": null,
+    "mbid": "d8b15d32-609e-44a6-bff1-65c4df53a9f1"
+  },
+  "Art Tatum": {
+    "country": "US",
+    "city": "Toledo",
+    "regionName": null,
+    "mbid": "e073f6af-d696-4340-b847-e81fabc4d55b"
+  },
+  "Ash": {
+    "country": "GB",
+    "city": "Downpatrick",
+    "regionName": null,
+    "mbid": "99164692-c02d-407c-81c9-25d338dd21f4"
+  },
+  "Astor Piazzola & Gary Burton": {
+    "miss": true
+  },
+  "Astrud Gilberto": {
+    "country": "BR",
+    "city": "Salvador",
+    "regionName": null,
+    "mbid": "8d08cabf-03a3-4f38-a815-8197a0984f19"
+  },
+  "Attention Deficit": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "30e7ef9d-ce99-4988-a6b3-08f11434d496"
+  },
+  "B.B. King": {
+    "country": "US",
+    "city": "Berclair",
+    "regionName": null,
+    "mbid": "dcb03ce3-67a5-4eb3-b2d1-2a12d93a38f3"
+  },
+  "Baaba Maal": {
+    "country": "SN",
+    "city": "Podor",
+    "regionName": null,
+    "mbid": "cec7447d-a39c-41c5-ba74-5d7057e5c731"
+  },
+  "Baaba Maal & Mansour Seck": {
+    "miss": true
+  },
+  "Bad Brains": {
+    "country": "US",
+    "city": null,
+    "regionName": "Washington, D.C.",
+    "mbid": "e919b253-da5b-4aae-a444-6a368376a2d6"
+  },
+  "Bad Company": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "0053dbd9-bfbc-4e38-9f08-66a27d914c38"
+  },
+  "Badly Drawn Boy": {
+    "country": null,
+    "city": "Dunstable",
+    "regionName": null,
+    "mbid": "0881daf1-20df-4a3e-a84f-6476a84bb172"
+  },
+  "Barry Adamson": {
+    "country": "GB",
+    "city": "Moss Side",
+    "regionName": null,
+    "mbid": "a50a1afa-23eb-4ba6-9faf-5dec260898ca"
+  },
+  "Basement Jaxx": {
+    "country": "GB",
+    "city": "Brixton",
+    "regionName": null,
+    "mbid": "28cbf94d-0700-4095-a188-37e373b069a7"
+  },
+  "Bauhaus": {
+    "country": "GB",
+    "city": "Northampton",
+    "regionName": null,
+    "mbid": "0688add2-c282-4ee2-ba61-223ffdb3c201"
+  },
+  "Beach Boys": {
+    "country": "US",
+    "city": "Hawthorne",
+    "regionName": null,
+    "mbid": "ebfc1398-8d96-47e3-82c3-f782abcdb13d"
+  },
+  "Bebel Gilberto": {
+    "country": "BR",
+    "city": "Manhattan",
+    "regionName": null,
+    "mbid": "8777a849-fb4e-4430-9918-170f619c5286"
+  },
+  "Beck": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "309c62ba-7a22-4277-9f67-4a162526d18a"
+  },
+  "Bee Gees": {
+    "country": "GB",
+    "city": "Redcliffe",
+    "regionName": null,
+    "mbid": "bf0f7e29-dfe1-416c-b5c6-f9ebc19ea810"
+  },
+  "Bela Bartók": {
+    "miss": true
+  },
+  "Bela Bartók": {
+    "miss": true
+  },
+  "Belle & Sebastian": {
+    "miss": true
+  },
+  "Belle And Sebastian": {
+    "country": "GB",
+    "city": "Glasgow",
+    "regionName": null,
+    "mbid": "e5c7b94f-e264-473c-bb0f-37c85d4d5c70"
+  },
+  "Ben Powell": {
+    "country": "US",
+    "city": null,
+    "regionName": "Gloucestershire",
+    "mbid": "9a04355b-50da-4ad4-b307-975d9ea3e602"
+  },
+  "Bert Jansch": {
+    "country": "GB",
+    "city": "Glasgow",
+    "regionName": null,
+    "mbid": "d7f95537-2b48-403d-9ac2-f1fc7aad0960"
+  },
+  "Bert Jansch & John Renbourn": {
+    "miss": true
+  },
+  "Beth Orton": {
+    "country": null,
+    "city": "Dereham",
+    "regionName": null,
+    "mbid": "214d84a5-e9e5-4432-af95-8c84da7ba4c0"
+  },
+  "Big Brother & the Holding Company": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "3cf5a3be-25ef-4408-98fe-e66fee536be1"
+  },
+  "Bill Bruford": {
+    "country": "GB",
+    "city": "Sevenoaks",
+    "regionName": null,
+    "mbid": "0211756e-139e-4b4c-a721-9ee9db363f12"
+  },
+  "Bill Evans": {
+    "country": "US",
+    "city": "Plainfield",
+    "regionName": null,
+    "mbid": "8247a3f2-3a8e-4256-b322-6c57b03a4e36"
+  },
+  "Bill Evans & Charles Mingus": {
+    "miss": true
+  },
+  "Bill Evans & Eddie Gomez": {
+    "miss": true
+  },
+  "Bill Evans & Jim Hall": {
+    "miss": true
+  },
+  "Bill Evans & Monica Zetterlund": {
+    "miss": true
+  },
+  "Bill Evans & Toots Thielemans": {
+    "miss": true
+  },
+  "Bill Evans/Tony Bennett": {
+    "miss": true
+  },
+  "Bill Frisell": {
+    "country": "US",
+    "city": "Baltimore",
+    "regionName": null,
+    "mbid": "a21318db-f228-4a4d-8bce-6947a62985a5"
+  },
+  "Billie Holiday": {
+    "country": "US",
+    "city": "Philadelphia",
+    "regionName": null,
+    "mbid": "d59c4cda-11d9-48db-8bfe-b557ee602aed"
+  },
+  "Billy Bragg": {
+    "country": "GB",
+    "city": "Barking",
+    "regionName": null,
+    "mbid": "7cec4a03-0a83-4308-856a-afb8aa5db0fc"
+  },
+  "Billy Bragg & Wilco": {
+    "miss": true
+  },
+  "Billy Joel": {
+    "country": "US",
+    "city": "The Bronx",
+    "regionName": null,
+    "mbid": "64b94289-9474-4d43-8c93-918ccc1920d1"
+  },
+  "Bireli Lagrene & Sylvain Luc": {
+    "miss": true
+  },
+  "Biscuits & Gravy m4a": {
+    "miss": true
+  },
+  "Björk & Tríó Guðmundar Ingólfssonar Guðmundsdóttir": {
+    "miss": true
+  },
+  "Bj�rk & Tr�� Gu�mundar Ing�lfssonar Gu�mundsd�ttir": {
+    "miss": true
+  },
+  "Black Flag": {
+    "country": "US",
+    "city": "Hermosa Beach",
+    "regionName": null,
+    "mbid": "9941a936-196a-4a62-ae53-a69cbc33f20e"
+  },
+  "Blondie": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "4d2956d1-a3f7-44bb-9a41-67563e1a0c94"
+  },
+  "Blood, Sweat & Tears": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "f81d592c-993f-4693-b53a-57db5a6257b9"
+  },
+  "Blue Cheer": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "523b52d7-a819-4111-9085-69fc269c9638"
+  },
+  "Blur": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "ba853904-ae25-4ebb-89d6-c44cfbd71bd2"
+  },
+  "Boards of Canada": {
+    "country": "GB",
+    "city": "Edinburgh",
+    "regionName": null,
+    "mbid": "69158f97-4c07-4c4e-baf8-4e4ab1ed666e"
+  },
+  "Bob B. Soxx and the Blue Jeans": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "ff81d878-cc98-44d4-a823-1d7c590cf1d8"
+  },
+  "Bob Dylan": {
+    "country": "US",
+    "city": "Duluth",
+    "regionName": null,
+    "mbid": "72c536dc-7137-4477-a521-567eeb840fa8"
+  },
+  "Bob Marley & The Wailers": {
+    "country": "JM",
+    "city": null,
+    "regionName": "Kingston",
+    "mbid": "c296e10c-110a-4103-9e77-47bfebb7fb2e"
+  },
+  "Bobby McFerrin": {
+    "country": "US",
+    "city": "Manhattan",
+    "regionName": null,
+    "mbid": "a996b5bd-db99-4257-b036-336f63448aa2"
+  },
+  "Bobby MCFerrin": {
+    "country": "US",
+    "city": "Manhattan",
+    "regionName": null,
+    "mbid": "a996b5bd-db99-4257-b036-336f63448aa2"
+  },
+  "Bobby Womack": {
+    "country": "US",
+    "city": "Cleveland",
+    "regionName": null,
+    "mbid": "48e78462-2f0b-4a1a-9fa4-0585e2991e80"
+  },
+  "Bon Jovi": {
+    "country": "US",
+    "city": "Sayreville",
+    "regionName": null,
+    "mbid": "5dcdb5eb-cb72-4e6e-9e63-b7bace604965"
+  },
+  "Bonnie Prince Billy": {
+    "country": "US",
+    "city": "Louisville",
+    "regionName": null,
+    "mbid": "7b0a63b2-b8e8-490e-b724-1d30cb5edfe3"
+  },
+  "Bonnie Raitt": {
+    "country": "US",
+    "city": "Burbank",
+    "regionName": null,
+    "mbid": "0f0da09c-3940-4cb5-879f-4cea28907810"
+  },
+  "Booker T. & The MG's": {
+    "country": "US",
+    "city": "Memphis",
+    "regionName": null,
+    "mbid": "377015fb-c02f-4b05-960b-e0df6a7ea99e"
+  },
+  "Boston": {
+    "country": null,
+    "city": "Boston",
+    "regionName": null,
+    "mbid": "0d8b0d50-e4cf-4da4-965d-f24c58ec3268"
+  },
+  "Boyz II Men": {
+    "country": "US",
+    "city": "Philadelphia",
+    "regionName": null,
+    "mbid": "b42eca0f-9381-43db-badb-1cba080a7dc2"
+  },
+  "Brad Bradley, David Hyde Pierce, Emily Hsu & Greg Reuter": {
+    "miss": true
+  },
+  "Brian Eno": {
+    "country": "GB",
+    "city": "Woodbridge",
+    "regionName": null,
+    "mbid": "ff95eb47-41c4-4f7f-a104-cdc30f02e872"
+  },
+  "Brian Wilson": {
+    "country": "US",
+    "city": "Inglewood",
+    "regionName": null,
+    "mbid": "634fe78e-fc6b-4b2a-ba83-c8c66e13a8aa"
+  },
+  "Britney Spears": {
+    "country": "US",
+    "city": "McComb",
+    "regionName": null,
+    "mbid": "45a663b5-b1cb-4a91-bff6-2bef7bbfdd76"
+  },
+  "Bruce Springsteen": {
+    "country": "US",
+    "city": "Long Branch",
+    "regionName": null,
+    "mbid": "70248960-cb53-4ea4-943a-edb18f7d336f"
+  },
+  "Buck Owens": {
+    "country": "US",
+    "city": "Sherman",
+    "regionName": null,
+    "mbid": "13cb0fb4-7f7f-4116-a282-905c675c39ef"
+  },
+  "Buddy Holly & The Crickets": {
+    "miss": true
+  },
+  "Buena Vista Social Club": {
+    "country": "CU",
+    "city": "La Habana",
+    "regionName": null,
+    "mbid": "2a85ecff-41e9-4be1-aca6-c87054a4c334"
+  },
+  "Buffalo Springfield": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "22dc19af-d085-4c9b-adfb-22ec256251f1"
+  },
+  "Burning Spear": {
+    "country": "JM",
+    "city": "Saint Ann's Bay",
+    "regionName": null,
+    "mbid": "16dad944-c492-43dd-88ed-e0b7ac520c40"
+  },
+  "Burt Bacharach": {
+    "country": "US",
+    "city": "Kansas City",
+    "regionName": null,
+    "mbid": "2882ffa3-dec9-4055-a842-a950728bcb02"
+  },
+  "Buster Jones/Thom Bresh": {
+    "miss": true
+  },
+  "Butthole Surfers": {
+    "country": "US",
+    "city": "San Antonio",
+    "regionName": null,
+    "mbid": "2339bc21-aa92-4850-86f0-4bb9433910c8"
+  },
+  "Buzzcocks": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Bolton",
+    "mbid": "31e9c35b-2675-4632-8596-f9bd9286f6c8"
+  },
+  "Caetano Veloso": {
+    "country": "BR",
+    "city": "Santo Amaro",
+    "regionName": null,
+    "mbid": "f07dbc2f-317b-470f-bad4-5f1b0eb6faf1"
+  },
+  "Calexico": {
+    "country": "US",
+    "city": "Tucson",
+    "regionName": null,
+    "mbid": "5e372a49-5672-4fb8-ba14-18c90780c4f9"
+  },
+  "Can": {
+    "country": "DE",
+    "city": "Köln",
+    "regionName": null,
+    "mbid": "13501c7d-d181-45ba-af52-5f101d8516a0"
+  },
+  "Candi Staton": {
+    "country": "US",
+    "city": "Hanceville",
+    "regionName": null,
+    "mbid": "6afcc957-d742-41c6-ad0b-31b2f1967353"
+  },
+  "Cannonball Adderley with Bill Evans": {
+    "miss": true
+  },
+  "Cappella Romana": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "89f69402-5984-4546-b5b1-fefc5ba1f7e2"
+  },
+  "Captain Beefheart & His Magic Band": {
+    "country": "US",
+    "city": "Lancaster",
+    "regionName": null,
+    "mbid": "8dcd04e4-7695-4d80-bae9-1d7d680a38ef"
+  },
+  "Carole King": {
+    "country": "US",
+    "city": "Manhattan",
+    "regionName": null,
+    "mbid": "bf6c29f5-b69f-4842-9031-37f9645d365d"
+  },
+  "CART!": {
+    "miss": true
+  },
+  "Cat Stevens": {
+    "country": "GB",
+    "city": "Marylebone",
+    "regionName": null,
+    "mbid": "e2345fdf-2be7-47c5-a6dd-be64353ad134"
+  },
+  "Cee-Lo Green": {
+    "miss": true
+  },
+  "CeeLo Green": {
+    "country": "US",
+    "city": "Atlanta",
+    "regionName": null,
+    "mbid": "2c69465c-0f76-45ce-90a2-1ed0fdacc997"
+  },
+  "Chameleon": {
+    "country": "GB",
+    "city": null,
+    "regionName": null,
+    "mbid": "eacab75c-0e31-48fa-87a7-6973cbb238fd"
+  },
+  "Charles Mingus": {
+    "country": "US",
+    "city": "Nogales",
+    "regionName": null,
+    "mbid": "f3b8e107-abe8-4743-b6a3-4a4ee995e71f"
+  },
+  "Charlie Parker": {
+    "country": "US",
+    "city": "Kansas City",
+    "regionName": null,
+    "mbid": "c7356af9-9ea6-4a78-a55b-c73775716312"
+  },
+  "Charlie Parker & Dizzy Gillespie": {
+    "miss": true
+  },
+  "Charlie Parker & Miles Davis": {
+    "miss": true
+  },
+  "Cheap Trick": {
+    "country": "US",
+    "city": "Rockford",
+    "regionName": null,
+    "mbid": "9f870653-72b0-4c6d-8c59-439a95963e09"
+  },
+  "Chet Atkins & Tommy Emmanuel": {
+    "miss": true
+  },
+  "Chic": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "a4ed036b-5f18-439c-b1e1-96d205bab255"
+  },
+  "Chicago Transit Authority": {
+    "miss": true
+  },
+  "Christian Borle": {
+    "country": "US",
+    "city": "Pittsburgh",
+    "regionName": null,
+    "mbid": "68840364-a295-4411-a504-73e20da1007c"
+  },
+  "Christian Borle, Christopher Sieber, David Hyde Pierce, Ensemble & Hank Azaria": {
+    "miss": true
+  },
+  "Christian Borle, David Hyde Pierce, Ensemble & Hank Azaria": {
+    "miss": true
+  },
+  "Christina Aguilera": {
+    "country": "US",
+    "city": "Staten Island",
+    "regionName": null,
+    "mbid": "b202beb7-99bd-47e7-8b72-195c8d72ebdd"
+  },
+  "Christopher Sieber, Company, David Hyde Pierce, Ensemble, Hank Azaria, Michael MCGrath, Steve Rosen & Tim Curry": {
+    "miss": true
+  },
+  "Christopher Sieber, David Hyde Pierce, Ensemble, Hank Azaria, Michael MCGrath, Sara Ramirez, Steve Rosen & Tim Curry": {
+    "miss": true
+  },
+  "Christopher Sieber, David Hyde Pierce, Hank Azaria, Michael MCGrath, Steve Rosen & Tim Curry": {
+    "miss": true
+  },
+  "Chromeo": {
+    "country": "CA",
+    "city": "Montréal",
+    "regionName": null,
+    "mbid": "647221d0-f6b1-4e03-924c-c59b8059536f"
+  },
+  "Cindy Blackman": {
+    "miss": true
+  },
+  "Circle Jerks": {
+    "country": "US",
+    "city": "Hermosa Beach",
+    "regionName": null,
+    "mbid": "22995eba-1238-4b4f-a937-ac2c5767ab9f"
+  },
+  "Claude Debussy": {
+    "country": "FR",
+    "city": "Saint-Germain-en-Laye",
+    "regionName": null,
+    "mbid": "be50643c-0377-4968-b48c-47e06b2e2a3b"
+  },
+  "Claudia Quintet": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "5882939b-edb4-411a-bc68-3f0af2e5c55f"
+  },
+  "Clifford Brown": {
+    "country": "US",
+    "city": "Wilmington",
+    "regionName": null,
+    "mbid": "2a291f34-73cb-40c5-b721-eab1269c7ba8"
+  },
+  "Cocteau Twins": {
+    "country": null,
+    "city": "Grangemouth",
+    "regionName": "Scotland",
+    "mbid": "000fc734-b7e1-4a01-92d1-f544261b43f5"
+  },
+  "Coldcut": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "cedd2cc6-c77f-4104-b333-0547b29e0b71"
+  },
+  "Coldplay": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234"
+  },
+  "Coleman Hawkins With Billy Byers And His Orchestra": {
+    "miss": true
+  },
+  "Common": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "c0a1179b-b14a-4d68-a3c1-1fdab16ed602"
+  },
+  "Company": {
+    "miss": true
+  },
+  "Corinne Bailey Rae": {
+    "country": "GB",
+    "city": "Leeds",
+    "regionName": null,
+    "mbid": "bc85c6f6-6b06-44c1-8754-ef32c1e6b824"
+  },
+  "Cornershop": {
+    "country": "GB",
+    "city": "Leicester",
+    "regionName": null,
+    "mbid": "92046be7-0927-4835-a4ed-a90416747d53"
+  },
+  "Country Joe & the Fish": {
+    "miss": true
+  },
+  "Cowboy Junkies": {
+    "country": "CA",
+    "city": "Toronto",
+    "regionName": null,
+    "mbid": "b52211f1-49a2-4cd2-8535-dd1ba37ea90b"
+  },
+  "Cream": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "04cd0cfd-bfd1-4c36-bc38-95c35e2c045f"
+  },
+  "Crosby, Stills, Nash & Young": {
+    "country": "US",
+    "city": "Bethel",
+    "regionName": null,
+    "mbid": "46a782ea-4308-476b-abd1-a91b197f3037"
+  },
+  "Crowded House": {
+    "country": "AU",
+    "city": "Melbourne",
+    "regionName": null,
+    "mbid": "9854d99f-d954-4c0f-9ae5-58a0cdd885f5"
+  },
+  "Crusaders": {
+    "country": "US",
+    "city": "Houston",
+    "regionName": null,
+    "mbid": "fcb79f1a-d3a9-41fe-9cd7-d16537907337"
+  },
+  "Culture Club": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "81435053-e1a2-48a4-adfd-e89f310c7b38"
+  },
+  "Curtis Mayfield": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "4dca4bb2-23ba-4103-97e6-5810311db33a"
+  },
+  "Curtis Mayfield ft. The Staple Singers": {
+    "miss": true
+  },
+  "Curved Air": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "202d14e1-dbee-4fa1-8aeb-93bc4ba1b20b"
+  },
+  "Cyndi Lauper": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "7bd9e20e-74b9-446a-a2ed-a223f82a36e7"
+  },
+  "Cypress Hill": {
+    "country": "US",
+    "city": "South Gate",
+    "regionName": null,
+    "mbid": "51508c1f-8d07-4a00-9cf1-26c570fe7b78"
+  },
+  "D'Angelo": {
+    "country": "US",
+    "city": "Richmond",
+    "regionName": null,
+    "mbid": "b66771cc-45fa-4a32-b14f-5337d7223d7a"
+  },
+  "Daft Punk": {
+    "country": "FR",
+    "city": "Paris",
+    "regionName": null,
+    "mbid": "056e4f3e-d505-4dad-8ec1-d04f521cbb56"
+  },
+  "Dagmar Krause": {
+    "country": "DE",
+    "city": "Hamburg",
+    "regionName": null,
+    "mbid": "c4defa11-66b2-4255-960d-ad8867bc50da"
+  },
+  "Dan Hyer": {
+    "miss": true
+  },
+  "Dan Torres": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "1ae29620-f08b-434f-8a6f-48da45d043b9"
+  },
+  "Darlene Love": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "af953ba2-283b-41ef-93bc-b4cfc5feeebc"
+  },
+  "Dave Brubeck": {
+    "country": "US",
+    "city": "Concord",
+    "regionName": null,
+    "mbid": "de0222a6-e1c4-403d-8b01-3f66d505061b"
+  },
+  "Dave Holland Quartet": {
+    "miss": true
+  },
+  "Dave Holland Quintet": {
+    "miss": true
+  },
+  "David Ackles": {
+    "country": "US",
+    "city": "Rock Island",
+    "regionName": null,
+    "mbid": "af7000dd-d92c-4b05-9c10-509ade446527"
+  },
+  "David Bowie": {
+    "country": null,
+    "city": "Brixton",
+    "regionName": "England",
+    "mbid": "5441c29d-3602-4898-b1a1-b77fa23b8e50"
+  },
+  "David Crosby": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "e90f9815-221d-4e10-8675-e75c07988113"
+  },
+  "David Gray": {
+    "country": "GB",
+    "city": "Sale",
+    "regionName": null,
+    "mbid": "3e8bd859-7d82-49e0-b267-84fc46e2bf68"
+  },
+  "David Holmes": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Belfast",
+    "mbid": "a53f5eed-f9f1-4cf1-9994-4c9374904790"
+  },
+  "David Hyde Pierce & Ensemble": {
+    "miss": true
+  },
+  "David Matthews": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "318c9141-13b2-4f85-95ed-cb8efa636cf5"
+  },
+  "De La Soul": {
+    "country": "US",
+    "city": "Amityville",
+    "regionName": null,
+    "mbid": "a8ebde98-7e91-46c7-992c-90039ba42017"
+  },
+  "Dead Kennedys": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "37c78aeb-d196-42b5-b991-6afb4fc9bc2e"
+  },
+  "Death in Vegas": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "5b32946a-4c08-4a75-b1b1-60700470671f"
+  },
+  "Deee-Lite": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "83d401e8-3322-4491-98d3-ec3a567c5047"
+  },
+  "Deep Purple": {
+    "country": "GB",
+    "city": "Hertford",
+    "regionName": null,
+    "mbid": "79491354-3d83-40e3-9d8e-7592d58d790a"
+  },
+  "Def Leppard": {
+    "country": "GB",
+    "city": "Sheffield",
+    "regionName": null,
+    "mbid": "7249b899-8db8-43e7-9e6e-22f1e736024e"
+  },
+  "Dennis Wilson": {
+    "country": "US",
+    "city": "Inglewood",
+    "regionName": null,
+    "mbid": "4051f6bf-6a59-4d23-bd8b-2fddb1389dc0"
+  },
+  "Depeche Mode": {
+    "country": "GB",
+    "city": "Basildon",
+    "regionName": null,
+    "mbid": "8538e728-ca0b-4321-b7e5-cff6565dd4c0"
+  },
+  "Derek & the Dominos": {
+    "miss": true
+  },
+  "Destiny's Child": {
+    "country": "US",
+    "city": "Houston",
+    "regionName": null,
+    "mbid": "a796b92e-c137-4895-9c89-10f900617a4f"
+  },
+  "Devendra Banhart": {
+    "country": "US",
+    "city": "Houston",
+    "regionName": null,
+    "mbid": "0110e63e-0a9b-4818-af8e-41e180c20b9a"
+  },
+  "Devo": {
+    "country": "US",
+    "city": "Akron",
+    "regionName": null,
+    "mbid": "d2db1078-c170-4e22-b261-14f3ad60a690"
+  },
+  "Dexy's Midnight Runners": {
+    "miss": true
+  },
+  "Dexys Midnight Runners": {
+    "country": "GB",
+    "city": "Birmingham",
+    "regionName": null,
+    "mbid": "ccce2053-7007-4c36-b1e7-f8fcf5023a12"
+  },
+  "Digital Underground": {
+    "country": "US",
+    "city": "Oakland",
+    "regionName": null,
+    "mbid": "ff6cb06c-a6e5-4ab9-a5ce-fa2095be45b9"
+  },
+  "Dimotika": {
+    "miss": true
+  },
+  "Dinosaur Jr.": {
+    "country": "US",
+    "city": "Amherst",
+    "regionName": null,
+    "mbid": "77c167d2-4965-4421-830a-9815e4956475"
+  },
+  "Dion": {
+    "country": "US",
+    "city": "The Bronx",
+    "regionName": null,
+    "mbid": "89efeadd-8080-4cf9-af33-2e68a173df02"
+  },
+  "Dire Straits": {
+    "country": "GB",
+    "city": "Deptford",
+    "regionName": null,
+    "mbid": "614e3804-7d34-41ba-857f-811bad7c2b7a"
+  },
+  "Dirty Loops": {
+    "country": "SE",
+    "city": null,
+    "regionName": null,
+    "mbid": "e1ee0672-96a8-44f6-b069-bddaa2553c20"
+  },
+  "Disposable Heroes Of Hiphopris": {
+    "miss": true
+  },
+  "Dixie Dregs": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "9978a09b-4467-4790-9bde-424f004b7312"
+  },
+  "Dizzee Rascal": {
+    "country": "GB",
+    "city": "Bow",
+    "regionName": null,
+    "mbid": "1a99cc88-aea3-4fe3-96b9-20791667f65f"
+  },
+  "Dizzy Gillespie": {
+    "country": "US",
+    "city": "Cheraw",
+    "regionName": null,
+    "mbid": "e9ba8ccb-505f-4e5c-b909-65998d0d35b5"
+  },
+  "DJ Shadow": {
+    "country": "US",
+    "city": "San Jose",
+    "regionName": null,
+    "mbid": "efa2c11a-1a35-4b60-bc1b-66d37de88511"
+  },
+  "Dmitry Shostakovich": {
+    "miss": true
+  },
+  "Dolly Parton": {
+    "country": "US",
+    "city": "Locust Ridge",
+    "regionName": null,
+    "mbid": "1d543e07-d0d2-4834-a8db-d65c50c2a856"
+  },
+  "Don McLean": {
+    "country": "US",
+    "city": "New Rochelle",
+    "regionName": null,
+    "mbid": "fa19ee38-c2a9-4ed1-9b24-a18100cf9db3"
+  },
+  "Don Ross": {
+    "country": "CA",
+    "city": "Montréal",
+    "regionName": null,
+    "mbid": "e55ad39a-47d2-46fc-afd4-92d59883acd1"
+  },
+  "Donald Fagen": {
+    "country": "US",
+    "city": "Passaic",
+    "regionName": null,
+    "mbid": "70047e57-0153-4117-b0fc-a1d2e322e5ef"
+  },
+  "Donovan": {
+    "country": "GB",
+    "city": "Maryhill",
+    "regionName": null,
+    "mbid": "72d7d717-0837-4f2a-9641-d0f9fdd3acf7"
+  },
+  "Doyle Dykes": {
+    "country": "US",
+    "city": "Jacksonville",
+    "regionName": null,
+    "mbid": "bddce632-c11c-4a6d-862d-066f7f8a8eaa"
+  },
+  "Dr. John": {
+    "country": "US",
+    "city": "New Orleans",
+    "regionName": null,
+    "mbid": "fe0e1895-aa84-47d9-8e5b-7930fc20709b"
+  },
+  "Dr. Octagon": {
+    "country": "US",
+    "city": "The Bronx",
+    "regionName": null,
+    "mbid": "3eba5e02-780b-4acd-befb-d23a0c6708dd"
+  },
+  "Drive Like Jehu": {
+    "country": "US",
+    "city": "San Diego",
+    "regionName": null,
+    "mbid": "608c9da7-d3ef-4661-828b-24bb6ae20cd6"
+  },
+  "Drive-By Truckers": {
+    "country": "US",
+    "city": "Athens",
+    "regionName": null,
+    "mbid": "8eae1e0a-1696-4532-9e3c-0a072217ef4c"
+  },
+  "Duke Ellington": {
+    "country": "US",
+    "city": null,
+    "regionName": "Washington, D.C.",
+    "mbid": "3af06bc4-68ad-4cae-bb7a-7eeeb45e411f"
+  },
+  "Duran Duran": {
+    "country": "GB",
+    "city": "Birmingham",
+    "regionName": null,
+    "mbid": "1a1cd7f3-e5df-4eca-bae2-2757c9e656b5"
+  },
+  "Dusty Springfield": {
+    "country": "GB",
+    "city": "West Hampstead",
+    "regionName": null,
+    "mbid": "b896aa8c-2761-40ce-b485-0e1fffd26167"
+  },
+  "Dwight Yoakam": {
+    "country": "US",
+    "city": "Pikeville",
+    "regionName": null,
+    "mbid": "0fb711af-c7ba-4bdc-b0b6-b8495fc0a590"
+  },
+  "Earl Greyhound": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "cf39d564-850b-4f5c-a2ed-f3daacf8a27b"
+  },
+  "Earth, Wind & Fire": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "535afeda-2538-435d-9dd1-5e10be586774"
+  },
+  "Eela Craig": {
+    "country": "AT",
+    "city": "Linz",
+    "regionName": null,
+    "mbid": "9813d5f3-258c-48d2-a540-e2463e34c58c"
+  },
+  "Eels": {
+    "country": "US",
+    "city": "Los Feliz",
+    "regionName": null,
+    "mbid": "14387b0f-765c-4852-852f-135335790466"
+  },
+  "Egberto Gismonti": {
+    "country": "BR",
+    "city": null,
+    "regionName": "Rio de Janeiro",
+    "mbid": "2c9bfd68-38d2-4e9f-9baa-7f99ce7f2f79"
+  },
+  "Einsturzende Neubauten": {
+    "country": "DE",
+    "city": "Berlin",
+    "regionName": null,
+    "mbid": "6e9ac29b-798c-4af7-8d9e-55cdc72a999c"
+  },
+  "Electric Light Orchestra": {
+    "country": "GB",
+    "city": "Birmingham",
+    "regionName": null,
+    "mbid": "0c502791-4ee9-4c5f-9696-0602b721ff3b"
+  },
+  "Electric Prunes": {
+    "country": "US",
+    "city": "San Fernando",
+    "regionName": null,
+    "mbid": "8cb8b329-e152-4394-80d0-6aab033ec16c"
+  },
+  "Eli Moore": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "de3b2fbc-ab08-4fbb-aa01-186cb083173d"
+  },
+  "Elis Regina": {
+    "country": "BR",
+    "city": "Porto Alegre",
+    "regionName": null,
+    "mbid": "e9e85a54-074c-4d29-a886-bcaaa9d44f9f"
+  },
+  "Ella Fitzgerald": {
+    "country": "US",
+    "city": "Newport News",
+    "regionName": null,
+    "mbid": "54799c0e-eb45-4eea-996d-c4d71a63c499"
+  },
+  "Ella Fitzgerald & Joe Pass": {
+    "miss": true
+  },
+  "Elliott Smith": {
+    "country": "US",
+    "city": "Omaha",
+    "regionName": null,
+    "mbid": "03ad1736-b7c9-412a-b442-82536d63a5c4"
+  },
+  "ELP": {
+    "miss": true
+  },
+  "Elton John": {
+    "country": "GB",
+    "city": "Pinner",
+    "regionName": null,
+    "mbid": "b83bc61f-8451-4a5d-8b8e-7e9ed295e822"
+  },
+  "Elvis Costello": {
+    "country": "GB",
+    "city": "Paddington",
+    "regionName": null,
+    "mbid": "8a338e06-d182-46f2-bd16-30a09bc840ba"
+  },
+  "Elvis Presley": {
+    "country": "US",
+    "city": "Tupelo",
+    "regionName": null,
+    "mbid": "01809552-4f87-45b0-afff-2c6f0730a3be"
+  },
+  "Eminem": {
+    "country": "US",
+    "city": "St. Joseph",
+    "regionName": null,
+    "mbid": "b95ce3ff-3d05-4e87-9e01-c97b66af13d4"
+  },
+  "Emmylou Harris": {
+    "country": "US",
+    "city": "Birmingham",
+    "regionName": null,
+    "mbid": "35ef61ca-43db-4772-ba27-0489e9ebcb69"
+  },
+  "Ensemble & Hank Azaria": {
+    "miss": true
+  },
+  "Ensemble & Michael MCGrath": {
+    "miss": true
+  },
+  "Ensemble & Tim Curry": {
+    "miss": true
+  },
+  "Ensemble Organum": {
+    "country": "FR",
+    "city": "Gordes",
+    "regionName": null,
+    "mbid": "c4e62b90-88bf-46c6-903d-37836d6a9529"
+  },
+  "Ensemble, Michael MCGrath & Tim Curry": {
+    "miss": true
+  },
+  "Eric Clapton": {
+    "country": "GB",
+    "city": "Ripley",
+    "regionName": null,
+    "mbid": "618b6900-0618-4f1e-b835-bccb17f84294"
+  },
+  "Erik Mongrain": {
+    "country": "CA",
+    "city": "Montréal",
+    "regionName": null,
+    "mbid": "e1626c85-984c-4a25-a9fd-40c6ac28b181"
+  },
+  "Errick Lewis": {
+    "miss": true
+  },
+  "Estradasphere": {
+    "country": null,
+    "city": "Santa Cruz",
+    "regionName": null,
+    "mbid": "7d9c5717-56c5-40eb-97d3-9a80642637e9"
+  },
+  "Eurythmics": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "b4d32cff-f19e-455f-86c4-f347d824ca61"
+  },
+  "Eva Cassidy": {
+    "country": "US",
+    "city": null,
+    "regionName": "Washington, D.C.",
+    "mbid": "6f2dfabb-f0bb-4801-a392-592489a148e7"
+  },
+  "Everly Brothers": {
+    "country": "US",
+    "city": "Knoxville",
+    "regionName": null,
+    "mbid": "091ec508-877f-4e3c-92a3-10903bbbc7ad"
+  },
+  "Everything But The Girl": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Kingston upon Hull",
+    "mbid": "959cf5bf-ee29-4af6-a85a-0b480181d988"
+  },
+  "Faces": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "8c7a8406-f15a-408d-b0f6-23be813bdddc"
+  },
+  "Fairport Convention": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "cc60d937-e80b-4c66-8aa2-e89cb57c8b08"
+  },
+  "Faith No More": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "b15ebd71-a252-417d-9e1c-3e6863da68f8"
+  },
+  "Fatboy Slim": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Bromley",
+    "mbid": "34c63966-445c-4613-afe1-4f0e1e53ae9a"
+  },
+  "Fats Domino": {
+    "country": "US",
+    "city": "New Orleans",
+    "regionName": null,
+    "mbid": "e787de5d-49e2-4b1f-9bde-1fd3a671b971"
+  },
+  "Fats Waller": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "569fc5bf-bcb6-4bc5-9a00-bd0d258e34f1"
+  },
+  "Faust": {
+    "country": "DE",
+    "city": "Hamburg",
+    "regionName": null,
+    "mbid": "0568e321-d42b-4da4-a025-2643c9fc13dd"
+  },
+  "Fela Kuti": {
+    "country": "NG",
+    "city": null,
+    "regionName": "Ogun",
+    "mbid": "6514cffa-fbe0-4965-ad88-e998ead8a82a"
+  },
+  "Fela Kuti & Afrika '70": {
+    "miss": true
+  },
+  "Femi Kuti": {
+    "country": "NG",
+    "city": "London",
+    "regionName": null,
+    "mbid": "702d2b90-eef0-4354-b2c4-6366eba92b7f"
+  },
+  "Finley Quaye": {
+    "country": "GB",
+    "city": "Edinburgh",
+    "regionName": null,
+    "mbid": "e6fbff56-aee6-4f80-8f6f-d8c345694074"
+  },
+  "Fiona Apple": {
+    "country": "US",
+    "city": "Manhattan",
+    "regionName": null,
+    "mbid": "a9ee533f-8871-4f62-a6bb-91eb264abc90"
+  },
+  "fIREHOSE": {
+    "country": "US",
+    "city": "San Pedro",
+    "regionName": null,
+    "mbid": "33e09dd8-a998-4e1a-9e69-1a6567a3803d"
+  },
+  "Fishbone": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "9f3764c0-c9f4-4e20-b7a8-9993124fb1b2"
+  },
+  "Flamin' Groovies": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "c826bda4-4f4f-4746-81ba-5f66ac9c95e5"
+  },
+  "Fleetwood Mac": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "bd13909f-1c29-4c27-a874-d4aaf27c5b1a"
+  },
+  "Foo Fighters": {
+    "country": "US",
+    "city": "Seattle",
+    "regionName": null,
+    "mbid": "67f66c07-6e61-4026-ade5-7e782fad3a5d"
+  },
+  "Frank Black": {
+    "country": "US",
+    "city": "Boston",
+    "regionName": null,
+    "mbid": "98a35a4d-a845-4282-bc7c-5679f2bb9bd2"
+  },
+  "Frank Sinatra": {
+    "country": "US",
+    "city": "Hoboken",
+    "regionName": null,
+    "mbid": "197450cd-0124-4164-b723-3c22dd16494d"
+  },
+  "Frank Zappa": {
+    "country": "US",
+    "city": "Baltimore",
+    "regionName": null,
+    "mbid": "e20747e7-55a4-452e-8766-7b985585082d"
+  },
+  "Frank Zappa & The Mothers of Invention": {
+    "miss": true
+  },
+  "Frankie Goes To Hollywood": {
+    "country": "GB",
+    "city": "Liverpool",
+    "regionName": null,
+    "mbid": "c09c8263-40ef-4352-8031-e438b1ce68fc"
+  },
+  "Franz Ferdinand": {
+    "country": "GB",
+    "city": "Glasgow",
+    "regionName": null,
+    "mbid": "aa7a2827-f74b-473c-bd79-03d065835cf7"
+  },
+  "Fred Frith": {
+    "country": "US",
+    "city": "Heathfield",
+    "regionName": null,
+    "mbid": "4801bad4-1b42-4c9e-84b1-bf61067ab67c"
+  },
+  "Fred Neil": {
+    "country": "US",
+    "city": "Cleveland",
+    "regionName": null,
+    "mbid": "f51a55d0-5f9a-4df9-8a05-ab7bf56fa49d"
+  },
+  "Frederic Chopin": {
+    "miss": true
+  },
+  "Fugazi": {
+    "country": "US",
+    "city": null,
+    "regionName": "Washington, D.C.",
+    "mbid": "233fc3f3-6de2-465c-985e-e721dbabbace"
+  },
+  "Fun Lovin' Criminals": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "1b15e90d-910c-4be4-99cb-463772a6430f"
+  },
+  "Funkadelic": {
+    "country": "US",
+    "city": "Plainfield",
+    "regionName": null,
+    "mbid": "cf042013-3edd-46c4-9b0e-a62faac98d0b"
+  },
+  "G. Love & Special Sauce": {
+    "country": "US",
+    "city": "Philadelphia",
+    "regionName": null,
+    "mbid": "dbf7c761-e332-467b-b4d9-aafe06bbcf8f"
+  },
+  "Gang Of Four": {
+    "country": "GB",
+    "city": "Leeds",
+    "regionName": null,
+    "mbid": "d8661c02-f423-4d72-8044-40ff05daf7a1"
+  },
+  "Gang Starr": {
+    "country": "US",
+    "city": "Boston",
+    "regionName": null,
+    "mbid": "9ef8042a-2528-4f5c-b7c1-5e72b1efe170"
+  },
+  "Garbage": {
+    "country": "US",
+    "city": "Madison",
+    "regionName": null,
+    "mbid": "f9ef7a22-4262-4596-a2a8-1d19345b8e50"
+  },
+  "Gary Numan": {
+    "country": "GB",
+    "city": "Hammersmith",
+    "regionName": null,
+    "mbid": "6cb79cb2-9087-44d4-828b-5c6fdff2c957"
+  },
+  "Gene Clark": {
+    "country": "US",
+    "city": "Tipton",
+    "regionName": null,
+    "mbid": "2b6f3780-6fb6-42c2-95bb-5e080772e38c"
+  },
+  "Genesis": {
+    "country": "GB",
+    "city": "Godalming",
+    "regionName": null,
+    "mbid": "8e3fcd7d-bda1-4ca0-b987-b8528d2ee74e"
+  },
+  "Genius GZA": {
+    "miss": true
+  },
+  "Gentle Giant": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "f795c501-1c41-4be2-bc2a-875eba75aa31"
+  },
+  "George Harrison": {
+    "country": "GB",
+    "city": "Liverpool",
+    "regionName": null,
+    "mbid": "42a8f507-8412-4611-854f-926571049fa0"
+  },
+  "George Jones": {
+    "country": "US",
+    "city": "Saratoga",
+    "regionName": null,
+    "mbid": "f2903be0-79a7-4334-8cc5-e45309482a97"
+  },
+  "George Michael": {
+    "country": "GB",
+    "city": "East Finchley",
+    "regionName": null,
+    "mbid": "ccb8f30e-4d71-40c4-8b1d-846dafe73e2c"
+  },
+  "Giant Sand": {
+    "country": "US",
+    "city": "Tucson",
+    "regionName": null,
+    "mbid": "249eb550-505e-43ef-ac50-e8c605706ff1"
+  },
+  "Gil Scott-Heron": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "b5b89643-c488-4f39-a302-25cab31084a5"
+  },
+  "Gillian Welch": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "2ff49515-1701-4bac-a53a-04345893f3f3"
+  },
+  "Giovanni Pierluigi da Palestrina": {
+    "country": "IT",
+    "city": "Palestrina",
+    "regionName": null,
+    "mbid": "4daeb526-6c4c-4f77-bdf5-4a0fcb714bfe"
+  },
+  "Girls Against Boys": {
+    "country": "US",
+    "city": null,
+    "regionName": "Washington, D.C.",
+    "mbid": "837cd182-8da4-4c1c-924c-03daf72f0237"
+  },
+  "Goldfrapp": {
+    "country": "GB",
+    "city": "Bath",
+    "regionName": null,
+    "mbid": "7b885d42-3c41-4f43-9944-a5855ec5155e"
+  },
+  "Goldie": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Walsall",
+    "mbid": "c5393047-0c44-48eb-b5a8-070759f04371"
+  },
+  "Gorillaz": {
+    "miss": true
+  },
+  "Gotan Project": {
+    "country": "FR",
+    "city": "Paris",
+    "regionName": null,
+    "mbid": "66cc244d-6f96-4668-a6e9-0f9cd5acc940"
+  },
+  "Gram Parsons": {
+    "country": "US",
+    "city": "Winter Haven",
+    "regionName": null,
+    "mbid": "cbc83fb1-2c23-4ad1-9187-594b30da3f21"
+  },
+  "Grandmaster Flash": {
+    "country": "US",
+    "city": "Bridgetown",
+    "regionName": null,
+    "mbid": "7db590cd-d7e6-4b36-b4e7-e8209426b02d"
+  },
+  "Grant Lee Buffalo": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "b2ccf20a-0569-4375-a486-7ca9c5e65afc"
+  },
+  "Grateful Dead": {
+    "country": "US",
+    "city": "Palo Alto",
+    "regionName": null,
+    "mbid": "6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6"
+  },
+  "Green Day": {
+    "country": "US",
+    "city": "Berkeley",
+    "regionName": null,
+    "mbid": "084308bd-1654-436f-ba03-df6697104e19"
+  },
+  "Greg Howe, Victor Wooten & Dennis Chambers": {
+    "miss": true
+  },
+  "Guitarwar": {
+    "miss": true
+  },
+  "Guns N' Roses": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "eeb1195b-f213-4ce1-b28c-8565211f8e43"
+  },
+  "Gustav Mahler": {
+    "country": "AT",
+    "city": "Kaliště",
+    "regionName": null,
+    "mbid": "8d610e51-64b4-4654-b8df-064b0fb7a9d9"
+  },
+  "Haircut One Hundred": {
+    "country": "GB",
+    "city": "Beckenham",
+    "regionName": null,
+    "mbid": "bbb94ad0-3bb7-42af-99cd-e92f5a42c4c5"
+  },
+  "Hanoi Rocks": {
+    "country": "FI",
+    "city": "Helsinki",
+    "regionName": null,
+    "mbid": "fca2e3b9-d29c-4b41-bde9-0ea5fd279843"
+  },
+  "Happy Mondays": {
+    "country": "GB",
+    "city": "Little Hulton",
+    "regionName": null,
+    "mbid": "01f4fb92-6bf0-4de5-83dc-3fe194e763bf"
+  },
+  "Harmonium": {
+    "country": "CA",
+    "city": "Outremont",
+    "regionName": null,
+    "mbid": "0310f78a-3395-46e9-9986-342480de490e"
+  },
+  "Harry Nilsson": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "e5963d26-01fa-40f5-b200-e0127f410a45"
+  },
+  "Hawkwind": {
+    "country": "GB",
+    "city": "Ladbroke Grove",
+    "regionName": null,
+    "mbid": "5a28f8c2-31fb-4047-ae57-c5c326989262"
+  },
+  "Heaven 17": {
+    "country": "GB",
+    "city": "Sheffield",
+    "regionName": null,
+    "mbid": "0796f847-09ca-4526-b17e-44390dd536ba"
+  },
+  "Hector Berlioz": {
+    "country": "FR",
+    "city": "La Côte-Saint-André",
+    "regionName": null,
+    "mbid": "274774a7-1cde-486a-bc3d-375ec54d552d"
+  },
+  "Heinrich Isaac": {
+    "miss": true
+  },
+  "henri dutilleux": {
+    "country": "FR",
+    "city": "Angers",
+    "regionName": null,
+    "mbid": "ee79471f-3ae5-426e-a469-d9f2aa312986"
+  },
+  "Herbie Hancock": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "27613b78-1b9d-4ec3-9db5-fa0743465fdd"
+  },
+  "Herbie Mann & the Bill Evans trio": {
+    "miss": true
+  },
+  "Holger Czukay": {
+    "country": "DE",
+    "city": "Gdańsk",
+    "regionName": null,
+    "mbid": "a48cce8c-8632-4e6f-b46f-40139be33ba0"
+  },
+  "Hollow Reed": {
+    "miss": true
+  },
+  "Horace Silver": {
+    "country": "US",
+    "city": "Norwalk",
+    "regionName": null,
+    "mbid": "d185d986-ee96-4fd3-bd61-8c848a4765b6"
+  },
+  "Howard Goodall": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Bromley",
+    "mbid": "2da182f3-383d-431e-9d70-7a91a525f08c"
+  },
+  "Hugh Masekela": {
+    "country": "ZA",
+    "city": "Witbank",
+    "regionName": null,
+    "mbid": "83a2e0fb-3d9b-46ff-b383-3dde54c15297"
+  },
+  "Hüsker Dü": {
+    "miss": true
+  },
+  "Ian Dury": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Harrow",
+    "mbid": "3d5c6889-2471-43c4-b853-08fc5fda810a"
+  },
+  "Ice-T": {
+    "country": "US",
+    "city": "Newark",
+    "regionName": null,
+    "mbid": "8a75ce0d-1df3-47cc-b076-ce2f4e8250f0"
+  },
+  "Iggy & The Stooges": {
+    "miss": true
+  },
+  "Iggy Pop": {
+    "country": "US",
+    "city": "Muskegon",
+    "regionName": null,
+    "mbid": "f37b3f31-b1f8-4b88-8cb5-b34f709b17d7"
+  },
+  "Igor Stravinsky": {
+    "miss": true
+  },
+  "Imogen Heap": {
+    "country": "GB",
+    "city": "Harold Wood",
+    "regionName": null,
+    "mbid": "328d146c-79f1-4eb6-9e40-8ee5710c14e5"
+  },
+  "Incubus": {
+    "country": "US",
+    "city": "Calabasas",
+    "regionName": null,
+    "mbid": "e3e0abcd-7671-4482-a9d8-462f5acc9be5"
+  },
+  "India.Arie": {
+    "country": null,
+    "city": "Denver",
+    "regionName": null,
+    "mbid": "38c7a3b2-17fb-4166-b964-4e445d69efdd"
+  },
+  "Iron Butterfly": {
+    "country": "US",
+    "city": "San Diego",
+    "regionName": null,
+    "mbid": "3da3e7e1-e817-47e8-8624-635df4aedbe6"
+  },
+  "Iron Maiden": {
+    "country": "GB",
+    "city": "Leyton",
+    "regionName": null,
+    "mbid": "ca891d65-d9b0-4258-89f7-e6ba29d83767"
+  },
+  "Isaac Hayes": {
+    "country": "US",
+    "city": "Covington",
+    "regionName": null,
+    "mbid": "a2361c7d-ddb6-41c1-a9a0-be09fbbb8d21"
+  },
+  "Isotope": {
+    "country": "GB",
+    "city": null,
+    "regionName": null,
+    "mbid": "16a2b5b1-6f41-49df-a7ca-804db3c4bc3f"
+  },
+  "J. S. Bach": {
+    "miss": true
+  },
+  "Jacky Terrasson": {
+    "country": "FR",
+    "city": "Berlin",
+    "regionName": null,
+    "mbid": "be3142ae-6538-45e0-8ed6-9df0751a0873"
+  },
+  "Jacques Brel": {
+    "country": "BE",
+    "city": "Schaerbeek / Schaarbeek",
+    "regionName": null,
+    "mbid": "91eda19b-1437-42cd-b7af-69df24b7f275"
+  },
+  "Jah Wobble’s Invaders of the Heart": {
+    "country": "GB",
+    "city": null,
+    "regionName": null,
+    "mbid": "cd0bb0ae-1fff-4382-87c1-40f4114a2b17"
+  },
+  "Jah Wobble�s Invaders of the Heart": {
+    "miss": true
+  },
+  "James Brown": {
+    "country": "US",
+    "city": "Barnwell",
+    "regionName": null,
+    "mbid": "20ff3303-4fe2-4a47-a1b6-291e26aa3438"
+  },
+  "James Taylor": {
+    "country": "US",
+    "city": "Boston",
+    "regionName": null,
+    "mbid": "107d0c22-d051-4d98-8206-4e14de02132a"
+  },
+  "Jamiroquai": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Ealing",
+    "mbid": "f4857fb9-e255-4dc6-bd01-e4ca7cc68544"
+  },
+  "Jane's Addiction": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "e3434cc7-d348-491a-9dc8-325af3d9086d"
+  },
+  "Janet Jackson": {
+    "country": "US",
+    "city": "Gary",
+    "regionName": null,
+    "mbid": "6be2828f-6c0d-4059-99d4-fa18acf1a296"
+  },
+  "Janis Joplin": {
+    "country": "US",
+    "city": "Port Arthur",
+    "regionName": null,
+    "mbid": "76c9a186-75bd-436a-85c0-823e3efddb7f"
+  },
+  "Japan": {
+    "country": "GB",
+    "city": "Catford",
+    "regionName": null,
+    "mbid": "697e7111-5630-4c77-83f3-39821bacc61a"
+  },
+  "Jason Becker": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "5cec93ac-6c6e-4902-b791-c3227742db15"
+  },
+  "Jean Michel Jarre": {
+    "country": "FR",
+    "city": "Lyon",
+    "regionName": null,
+    "mbid": "86e2e2ad-6d1b-44fd-9463-b6683718a1cc"
+  },
+  "Jeff Beck": {
+    "country": "GB",
+    "city": "Wallington",
+    "regionName": null,
+    "mbid": "14a4bc78-1c2d-4ca7-8d1b-9b58076a2a17"
+  },
+  "Jeff Buckley": {
+    "country": "US",
+    "city": "Anaheim",
+    "regionName": null,
+    "mbid": "e6e879c0-3d56-4f12-b3c5-3ce459661a8e"
+  },
+  "Jeff Hamilton": {
+    "country": "US",
+    "city": "Richmond",
+    "regionName": null,
+    "mbid": "c651405a-bdf8-4028-9400-cd08e9e74b41"
+  },
+  "Jefferson Airplane": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "39c2a93d-9afa-4a22-9bba-c087ab056e1c"
+  },
+  "Jelly Roll Morton": {
+    "country": "US",
+    "city": "New Orleans",
+    "regionName": null,
+    "mbid": "3d094919-071f-4070-95dc-e1f350e4a5f3"
+  },
+  "Jerry Lee Lewis": {
+    "country": "US",
+    "city": "Ferriday",
+    "regionName": null,
+    "mbid": "b59ac58d-036e-4bba-8112-c32a34c4575b"
+  },
+  "Jeru The Damaja": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "6593c2bc-9327-4adf-a8b2-b315e4f5c0bb"
+  },
+  "Jethro Tull": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Luton",
+    "mbid": "ece57992-dc2e-4f67-a269-fa43626c1a3d"
+  },
+  "Jim Hall & Charlie Haden": {
+    "miss": true
+  },
+  "Jim Hall & Pat Metheny": {
+    "miss": true
+  },
+  "Jim Hall & Ron Carter": {
+    "miss": true
+  },
+  "Jimi Hendrix": {
+    "country": "US",
+    "city": "Seattle",
+    "regionName": null,
+    "mbid": "06fb1c8b-566e-4cb2-985b-b467c90781d4"
+  },
+  "Jimi Hendrix Experience": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "33b3c323-77c2-417c-a5b4-af7e6a111cc9"
+  },
+  "Jimmy Smith": {
+    "country": "US",
+    "city": "Norristown",
+    "regionName": null,
+    "mbid": "4f8a0d9b-5777-40da-b29a-e9753d5ae693"
+  },
+  "Joan Armatrading": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Saint Kitts",
+    "mbid": "fa598e78-5cc5-4a8b-a3b5-63934d4712c7"
+  },
+  "Joan Baez": {
+    "country": "US",
+    "city": "Staten Island",
+    "regionName": null,
+    "mbid": "92d37892-6186-4459-9cc1-f0dde57652d0"
+  },
+  "Joe Ely": {
+    "country": "US",
+    "city": "Amarillo",
+    "regionName": null,
+    "mbid": "4682ba8c-e15d-4543-9747-c72860392c76"
+  },
+  "Joe Henderson": {
+    "country": "US",
+    "city": "Lima",
+    "regionName": null,
+    "mbid": "bcab8301-c7e5-4689-a4ad-9ee947b4ce37"
+  },
+  "Joe Pass": {
+    "country": "US",
+    "city": "New Brunswick",
+    "regionName": null,
+    "mbid": "2f43e416-f1bf-4f04-8853-a0019aa12441"
+  },
+  "Johann Sebastian Bach": {
+    "country": "DE",
+    "city": "Eisenach",
+    "regionName": null,
+    "mbid": "24f1766e-9635-4d58-a4d4-9413f9f98a4c"
+  },
+  "Johannes Brahms": {
+    "country": "DE",
+    "city": "Hamburg",
+    "regionName": null,
+    "mbid": "c70d12a2-24fe-4f83-a6e6-57d84f8efb51"
+  },
+  "John Abercrombie": {
+    "country": "US",
+    "city": "Port Chester",
+    "regionName": null,
+    "mbid": "80c75300-9cf2-4daf-bb23-5fe15964e671"
+  },
+  "John Adams": {
+    "country": "US",
+    "city": "Worcester",
+    "regionName": null,
+    "mbid": "94f46f90-f220-458d-acd6-5f14c55ab9b2"
+  },
+  "John Cale": {
+    "country": null,
+    "city": "Garnant",
+    "regionName": null,
+    "mbid": "72c090b6-a68e-4cb9-b330-85278681a714"
+  },
+  "John Coltrane": {
+    "country": "US",
+    "city": "Hamlet",
+    "regionName": null,
+    "mbid": "b625448e-bf4a-41c3-a421-72ad46cdb831"
+  },
+  "John Coltrane Quartet": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "a43270af-bc4a-4552-847e-617b11f38d7b"
+  },
+  "John Lee Hooker": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "b0122194-c49a-46a1-ade7-84d1d76bd8e9"
+  },
+  "John Lennon": {
+    "country": "GB",
+    "city": "Liverpool",
+    "regionName": null,
+    "mbid": "4d5447d7-c61c-4120-ba1b-d7f471d385b9"
+  },
+  "John Luther Adams": {
+    "country": "US",
+    "city": "Meridian",
+    "regionName": null,
+    "mbid": "96681463-98e2-4032-9728-5fbb7b002427"
+  },
+  "John Martyn": {
+    "country": "GB",
+    "city": "New Malden",
+    "regionName": null,
+    "mbid": "e821a756-487f-4931-a02f-27cf11cec7bf"
+  },
+  "John Mayall?s Blues Breakers": {
+    "miss": true
+  },
+  "John McLaughlin": {
+    "country": "US",
+    "city": null,
+    "regionName": "Doncaster",
+    "mbid": "fcbc2086-5863-4659-b03d-44be704697d2"
+  },
+  "John MCLaughlin": {
+    "country": "US",
+    "city": null,
+    "regionName": "Doncaster",
+    "mbid": "fcbc2086-5863-4659-b03d-44be704697d2"
+  },
+  "John Prez": {
+    "miss": true
+  },
+  "John Prine": {
+    "country": "US",
+    "city": "Maywood",
+    "regionName": null,
+    "mbid": "e86492c1-0376-4df0-8042-8ba058c83960"
+  },
+  "John Scofield": {
+    "country": "US",
+    "city": null,
+    "regionName": "Ohio",
+    "mbid": "cbfd7f01-87c3-44bf-a3a2-fe4dbff20ad2"
+  },
+  "John Zorn": {
+    "country": "US",
+    "city": "Queens",
+    "regionName": null,
+    "mbid": "7ec4a553-73e5-4c0d-a071-a82b83a309e6"
+  },
+  "Johnny Cash": {
+    "country": "US",
+    "city": "Kingsland",
+    "regionName": null,
+    "mbid": "d43d12a1-2dc9-4257-a2fd-0a3bb1081b86"
+  },
+  "Johnny Griffin": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "f9625cf4-1436-4f2c-bd5e-743eba86808c"
+  },
+  "Jon Anderson": {
+    "country": "GB",
+    "city": "Accrington",
+    "regionName": null,
+    "mbid": "24202038-7b02-4444-96c2-cf2fc7b81308"
+  },
+  "Jon Anderson & John Paul Jones": {
+    "miss": true
+  },
+  "Jon Connor": {
+    "country": "US",
+    "city": "Flint",
+    "regionName": null,
+    "mbid": "d4a93b0c-361e-4638-89a3-5f32b263136a"
+  },
+  "Joni Mitchell": {
+    "country": "CA",
+    "city": "Fort Macleod",
+    "regionName": null,
+    "mbid": "a6de8ef9-b1a1-4756-97aa-481bbb8a4069"
+  },
+  "Jorge Ben": {
+    "miss": true
+  },
+  "Joy Division": {
+    "country": "GB",
+    "city": "Salford",
+    "regionName": null,
+    "mbid": "9a58fda3-f4ed-4080-a3a5-f457aac9fcdd"
+  },
+  "Judas Priest": {
+    "country": "GB",
+    "city": "Birmingham",
+    "regionName": null,
+    "mbid": "6b335658-22c8-485d-93de-0bc29a1d0349"
+  },
+  "Julian Cope": {
+    "country": "GB",
+    "city": "Deri, Caerphilly",
+    "regionName": null,
+    "mbid": "09d878d8-bc2e-4d04-b4aa-57ab614f93ab"
+  },
+  "Jungle Brothers": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "ce3bc975-a76f-415b-a6cd-1e568c5714dd"
+  },
+  "Junior Senior": {
+    "country": "DK",
+    "city": "Thisted",
+    "regionName": null,
+    "mbid": "258f34b3-e8c3-4621-937f-ffc5a3dc9918"
+  },
+  "Jurassic 5": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "11c6b106-1c1f-429d-8407-b1ee155d7f72"
+  },
+  "Justin Timberlake": {
+    "country": "US",
+    "city": "Memphis",
+    "regionName": null,
+    "mbid": "596ffa74-3d08-44ef-b113-765d43d12738"
+  },
+  "k.d. lang": {
+    "country": "CA",
+    "city": "Edmonton",
+    "regionName": null,
+    "mbid": "675c1c5e-5625-4a5e-97a2-b02aab5db2fc"
+  },
+  "K.D. Lang": {
+    "country": "CA",
+    "city": "Edmonton",
+    "regionName": null,
+    "mbid": "675c1c5e-5625-4a5e-97a2-b02aab5db2fc"
+  },
+  "Kaare Norge": {
+    "country": "DK",
+    "city": null,
+    "regionName": null,
+    "mbid": "ca7a6ef6-26f0-4385-805c-ac11872d8e9a"
+  },
+  "Kaki King": {
+    "country": "US",
+    "city": "Atlanta",
+    "regionName": null,
+    "mbid": "451f8f16-990a-412c-ab3a-b61e5d265b55"
+  },
+  "Kanye West": {
+    "miss": true
+  },
+  "Kate Bush": {
+    "country": null,
+    "city": "Welling",
+    "regionName": "England",
+    "mbid": "4b585938-f271-45e2-b19a-91c634b5e396"
+  },
+  "Kazuhito Yamashita": {
+    "miss": true
+  },
+  "Keith Jarrett": {
+    "country": "US",
+    "city": "Allentown",
+    "regionName": null,
+    "mbid": "061c4920-3ea6-4835-98f6-02f3b82f5e3a"
+  },
+  "Khaled": {
+    "country": "DZ",
+    "city": null,
+    "regionName": "Oran",
+    "mbid": "b4a479aa-4384-4acf-88b0-dee9188faeb5"
+  },
+  "Kid Rock": {
+    "country": "US",
+    "city": "Romeo",
+    "regionName": null,
+    "mbid": "ad0ecd8b-805e-406e-82cb-5b00c3a3a29e"
+  },
+  "Killing Joke": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "f5aca88c-e3c1-4bc2-af33-68a9a9f7b56a"
+  },
+  "King Crimson": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "b38225b8-8e5f-42aa-bcdc-7bae5b5bdab3"
+  },
+  "Kings Of Leon": {
+    "country": "US",
+    "city": "Nashville",
+    "regionName": null,
+    "mbid": "6ffb8ea9-2370-44d8-b678-e9237bbd347b"
+  },
+  "Kiss": {
+    "country": "US",
+    "city": "Queens",
+    "regionName": null,
+    "mbid": "e1f1e33e-2e4c-4d43-b91b-7064068d3283"
+  },
+  "Koffi Olomidé": {
+    "country": "CD",
+    "city": null,
+    "regionName": null,
+    "mbid": "45d921dd-aaf9-4f72-9a8c-101ec24b9186"
+  },
+  "Korn": {
+    "country": "US",
+    "city": "Bakersfield",
+    "regionName": null,
+    "mbid": "ac865b2e-bba8-4f5a-8756-dd40d5e39f46"
+  },
+  "Kronos Quartet": {
+    "country": "US",
+    "city": "Seattle",
+    "regionName": null,
+    "mbid": "f5586dfa-7031-4af0-8042-19b6a1170389"
+  },
+  "Kurt Rosenwinkel": {
+    "country": "US",
+    "city": "Philadelphia",
+    "regionName": null,
+    "mbid": "fc43556b-9657-4680-8809-e50295380f98"
+  },
+  "Ladysmith Black Mambazo": {
+    "country": null,
+    "city": "Ladysmith",
+    "regionName": null,
+    "mbid": "c1982570-8efb-4cf7-bb5b-c9c026c0e8f4"
+  },
+  "Laibach": {
+    "country": "SI",
+    "city": null,
+    "regionName": "Trbovlje",
+    "mbid": "c779e090-909f-4403-a90e-c1d08cdbb719"
+  },
+  "Lambchop": {
+    "country": "US",
+    "city": "Nashville",
+    "regionName": null,
+    "mbid": "f75150f0-d80d-4c34-903b-6acfb47b63ee"
+  },
+  "Laura Gibson": {
+    "country": "US",
+    "city": "Coquille",
+    "regionName": null,
+    "mbid": "002379ce-27d5-4084-9a5d-4fd28335d9cb"
+  },
+  "Laura Nyro": {
+    "country": "US",
+    "city": "The Bronx",
+    "regionName": null,
+    "mbid": "bb0a1e95-9444-4a05-a1bb-22b8d7ed7844"
+  },
+  "Lauryn Hill": {
+    "miss": true
+  },
+  "Le Tigre": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "2d67239c-aa40-4ad5-a807-9052b66857a6"
+  },
+  "Led Zeppelin": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3"
+  },
+  "Leftfield": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "369fbad4-6fa4-4dae-9842-a69826cd359d"
+  },
+  "Lennie Tristano": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "6532800a-a00f-424e-8328-36c7c1c864cc"
+  },
+  "Lenny Breau": {
+    "country": "US",
+    "city": "Auburn",
+    "regionName": null,
+    "mbid": "7c92874a-d81b-43f7-9c55-cc5dfaf9f28f"
+  },
+  "Lenny Breau & Buddy Emmons": {
+    "miss": true
+  },
+  "Lenny Breau & Chet Atkins": {
+    "miss": true
+  },
+  "Lenny Breau And Brad Terry": {
+    "miss": true
+  },
+  "Lenny Breau And Richard Cotten": {
+    "miss": true
+  },
+  "Lenny Breau And Tal Farlow": {
+    "miss": true
+  },
+  "Lenny Breau with Dave Young": {
+    "miss": true
+  },
+  "Lenny Kravitz": {
+    "country": "US",
+    "city": "Manhattan",
+    "regionName": null,
+    "mbid": "0ef3f425-9bd2-4216-9dd2-219d2fe90f1f"
+  },
+  "Leo Kottke": {
+    "country": "US",
+    "city": "Athens",
+    "regionName": null,
+    "mbid": "1a21878d-05b1-4983-a059-7cf3abee04b7"
+  },
+  "Leonard Cohen": {
+    "country": "CA",
+    "city": "Westmount",
+    "regionName": null,
+    "mbid": "65314b12-0e08-43fa-ba33-baaa7b874c15"
+  },
+  "Les Rythmes Digitales": {
+    "country": "GB",
+    "city": "Bedale",
+    "regionName": null,
+    "mbid": "825836b9-af8b-4449-b078-d51fad0db73e"
+  },
+  "Liars": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "03098741-08b3-4dd7-b3f6-1b0bfa2c879c"
+  },
+  "Lightning Bolt": {
+    "country": "US",
+    "city": "Providence",
+    "regionName": null,
+    "mbid": "978a36f7-85c6-44ca-a02e-7564e8fa8284"
+  },
+  "Limp Bizkit": {
+    "country": "US",
+    "city": "Jacksonville",
+    "regionName": null,
+    "mbid": "8f9d6bb2-dba4-4cca-9967-cc02b9f4820c"
+  },
+  "Linkin Park": {
+    "country": "US",
+    "city": "Agoura Hills",
+    "regionName": null,
+    "mbid": "f59c5520-5f46-4d2c-b2c4-822eabf53419"
+  },
+  "Little Brother": {
+    "country": "US",
+    "city": "Durham",
+    "regionName": null,
+    "mbid": "b929c0c9-5de0-4d87-8eb9-365ad1725629"
+  },
+  "Little Richard": {
+    "country": "US",
+    "city": "Macon",
+    "regionName": null,
+    "mbid": "95c2339b-8277-49a6-9aaf-08d8eeeaa0be"
+  },
+  "Living Colour": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "dc6f8c1f-626b-42b0-9115-7e66ae4cecd6"
+  },
+  "Liz Phair": {
+    "country": "US",
+    "city": "New Haven",
+    "regionName": null,
+    "mbid": "149326c2-b8a3-48e3-b3d2-9b5b9593127f"
+  },
+  "LL Cool J": {
+    "country": "US",
+    "city": "Bay Shore",
+    "regionName": null,
+    "mbid": "a4dd0e77-83b8-4e92-89b7-effb0e47fd8c"
+  },
+  "Lloyd Cole & The Commotions": {
+    "miss": true
+  },
+  "Loretta Lynn": {
+    "country": "US",
+    "city": "Butcher Hollow",
+    "regionName": null,
+    "mbid": "613260c3-d620-4645-94cd-33cd55f29b1e"
+  },
+  "Lou Reed": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "9d1ebcfe-4c15-4d18-95d3-d919898638a1"
+  },
+  "Louis CK": {
+    "miss": true
+  },
+  "Louis Prima": {
+    "country": "US",
+    "city": "New Orleans",
+    "regionName": null,
+    "mbid": "b5997eef-2516-491a-a10e-5cee842bbcdc"
+  },
+  "Louvin Brothers": {
+    "country": "US",
+    "city": null,
+    "regionName": "Alabama",
+    "mbid": "8b604d4b-1170-4225-bc9e-d8276d94402e"
+  },
+  "Love": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "34ec9a8d-c65b-48fd-bcdd-aad2f72fdb47"
+  },
+  "LTJ Bukem": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Croydon",
+    "mbid": "28c1b7b7-355a-48b1-b2c4-75b8eb8080ef"
+  },
+  "Luca Marenzio": {
+    "country": "IT",
+    "city": "Coccaglio",
+    "regionName": null,
+    "mbid": "b9827d50-4ba5-45e5-872b-bef97e5d6d56"
+  },
+  "Lucinda Williams": {
+    "country": "US",
+    "city": "Lake Charles",
+    "regionName": null,
+    "mbid": "21685b15-3074-446e-aa1d-ff7157014f53"
+  },
+  "Ludwig Van Beethoven": {
+    "country": "DE",
+    "city": "Bonn",
+    "regionName": null,
+    "mbid": "1f9df192-a621-4f54-8850-2c5373b7eac9"
+  },
+  "Lynyrd Skynyrd": {
+    "country": "US",
+    "city": "Jacksonville",
+    "regionName": null,
+    "mbid": "c544ed4d-2390-4442-a83e-1ea2883b09c8"
+  },
+  "M.I.A.": {
+    "country": null,
+    "city": "Hounslow",
+    "regionName": "England",
+    "mbid": "7cf0ea9d-86b9-4dad-ba9e-2355a64899ea"
+  },
+  "Machito": {
+    "country": null,
+    "city": "La Habana",
+    "regionName": null,
+    "mbid": "8b280260-dacb-4195-a34d-16e5068de288"
+  },
+  "Madness": {
+    "country": "GB",
+    "city": "Camden Town",
+    "regionName": null,
+    "mbid": "5f58803e-8c4c-478e-8b51-477f38483ede"
+  },
+  "Madonna": {
+    "country": "US",
+    "city": "Bay City",
+    "regionName": null,
+    "mbid": "79239441-bfd5-4981-a70c-55c3f15c1287"
+  },
+  "Magazine": {
+    "country": "GB",
+    "city": "Manchester",
+    "regionName": null,
+    "mbid": "043324ca-100d-48ce-8c7c-fd015afc103b"
+  },
+  "Mahavishnu Orchestra": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "a2be74f5-0735-46f7-a295-7e41aab30029"
+  },
+  "Maiko  Watson": {
+    "country": "CA",
+    "city": "Georgetown",
+    "regionName": null,
+    "mbid": "43c79a7e-0490-4a7c-a841-9630748ce64a"
+  },
+  "Maiko Watson": {
+    "country": "CA",
+    "city": "Georgetown",
+    "regionName": null,
+    "mbid": "43c79a7e-0490-4a7c-a841-9630748ce64a"
+  },
+  "Malcolm McLaren": {
+    "country": "GB",
+    "city": "Stoke Newington",
+    "regionName": null,
+    "mbid": "cc3c8231-3f07-49da-88fa-04986e954a9a"
+  },
+  "Manassas": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "6964478b-5f5d-48a4-839a-dfc3886c0843"
+  },
+  "Manic Street Preachers": {
+    "country": "GB",
+    "city": "Blackwood",
+    "regionName": null,
+    "mbid": "32efea44-6cb5-4b4f-bdaa-c8b8f6cef981"
+  },
+  "Manu Chao": {
+    "country": "FR",
+    "city": "Paris",
+    "regionName": null,
+    "mbid": "7570a0dd-5a67-401b-b19a-261eee01a284"
+  },
+  "Marc Johnson": {
+    "country": "US",
+    "city": "Omaha",
+    "regionName": null,
+    "mbid": "c0540872-ad50-4973-be47-f833940aa1b1"
+  },
+  "Mariah Carey": {
+    "country": "US",
+    "city": "Huntington",
+    "regionName": null,
+    "mbid": "494e8d09-f85b-4543-892f-a5096aed1cd4"
+  },
+  "Marianne Faithfull": {
+    "country": "GB",
+    "city": "Hampstead",
+    "regionName": null,
+    "mbid": "14ed9dea-1bb0-4743-ba32-39674a71da89"
+  },
+  "Marilyn Manson": {
+    "country": "US",
+    "city": "Fort Lauderdale",
+    "regionName": null,
+    "mbid": "5dfdca28-9ddc-4853-933c-8bc97d87beec"
+  },
+  "Marsha Ambrosius": {
+    "country": "US",
+    "city": "Liverpool",
+    "regionName": null,
+    "mbid": "24285231-f192-42f1-baea-0f467dd1d8aa"
+  },
+  "Martin Taylor": {
+    "country": "GB",
+    "city": "Harlow",
+    "regionName": null,
+    "mbid": "92ebb02d-2906-4a6d-9e43-21e16b877fa1"
+  },
+  "Marvin Gaye": {
+    "country": "US",
+    "city": null,
+    "regionName": "Washington, D.C.",
+    "mbid": "afdb7919-059d-43c1-b668-ba1d265e7e42"
+  },
+  "Massive Attack": {
+    "country": "GB",
+    "city": "Bristol",
+    "regionName": null,
+    "mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+  },
+  "max basic": {
+    "miss": true
+  },
+  "Maxwell": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "d252cca8-8214-43e5-b81a-101eb4a1447e"
+  },
+  "Mayer Hawthorne": {
+    "country": "US",
+    "city": "Ann Arbor",
+    "regionName": null,
+    "mbid": "029fbb43-ea37-47a0-8c68-803d69abfa5e"
+  },
+  "MC Solaar": {
+    "country": "FR",
+    "city": "Dakar",
+    "regionName": null,
+    "mbid": "bbbd2644-b4cb-4bb5-a442-315310f68a0b"
+  },
+  "MC5": {
+    "country": "US",
+    "city": "Detroit",
+    "regionName": null,
+    "mbid": "08b736bb-1c82-40b4-8b0b-49e2182a067a"
+  },
+  "Meat Loaf": {
+    "country": "US",
+    "city": "Dallas",
+    "regionName": null,
+    "mbid": "b134d1bf-c7c7-4427-93ac-9fdbc2b59ef1"
+  },
+  "Meat Puppets": {
+    "country": null,
+    "city": "Phoenix",
+    "regionName": null,
+    "mbid": "3df040ee-2b8b-446b-937a-3f86f4b2cabf"
+  },
+  "Megadeth": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "a9044915-8be3-4c7e-b11f-9e2d2ea0a91e"
+  },
+  "Mekons": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Leeds",
+    "mbid": "66d2169c-dea5-46d3-b4cb-52ed87b24ab0"
+  },
+  "Mercury Rev": {
+    "country": "US",
+    "city": "Buffalo",
+    "regionName": null,
+    "mbid": "7b1cf87e-c54f-4abc-893d-90245a31900d"
+  },
+  "Merle Haggard": {
+    "country": "US",
+    "city": "Oildale",
+    "regionName": null,
+    "mbid": "deb2448c-6fdf-4d31-921e-757630515dbd"
+  },
+  "Method Man": {
+    "country": "US",
+    "city": "Hempstead",
+    "regionName": null,
+    "mbid": "94dbfe2e-ca48-4e08-a5a8-e1e74136c63d"
+  },
+  "MF Doom": {
+    "country": "US",
+    "city": null,
+    "regionName": "Hounslow",
+    "mbid": "188711ed-c99b-439c-844a-ca831f63a727"
+  },
+  "Michael Bublé": {
+    "country": "CA",
+    "city": "Burnaby",
+    "regionName": null,
+    "mbid": "611700cf-27f0-4dc9-ae80-c513a767853e"
+  },
+  "Michael Bublé": {
+    "country": "CA",
+    "city": "Burnaby",
+    "regionName": null,
+    "mbid": "611700cf-27f0-4dc9-ae80-c513a767853e"
+  },
+  "Michael Hedges": {
+    "country": "US",
+    "city": "Sacramento",
+    "regionName": null,
+    "mbid": "fbaba2b0-3a6f-41b1-9ecd-f89c1a666e99"
+  },
+  "Michael Jackson": {
+    "country": "US",
+    "city": "Gary",
+    "regionName": null,
+    "mbid": "f27ec8db-af05-4f36-916e-3d57f91ecf5e"
+  },
+  "MICHAEL JACKSON": {
+    "country": "US",
+    "city": "Gary",
+    "regionName": null,
+    "mbid": "f27ec8db-af05-4f36-916e-3d57f91ecf5e"
+  },
+  "Michael Manring": {
+    "country": "US",
+    "city": "Annapolis",
+    "regionName": null,
+    "mbid": "211f3cd4-6d55-4933-834c-889ad817e755"
+  },
+  "Michael MCGrath & Tim Curry": {
+    "miss": true
+  },
+  "Mike Ladd": {
+    "country": null,
+    "city": "Boston",
+    "regionName": null,
+    "mbid": "ea734eed-ca0f-42dd-a04f-32f0242a4e8c"
+  },
+  "Mike Oldfield": {
+    "country": "GB",
+    "city": "Reading",
+    "regionName": null,
+    "mbid": "a1684a49-feaa-4150-b758-d9412fc59f12"
+  },
+  "Milcho Leviev & Dave Holland": {
+    "miss": true
+  },
+  "Miles Davis": {
+    "country": "US",
+    "city": "Alton",
+    "regionName": null,
+    "mbid": "561d854a-6a28-4aa7-8c99-323e6ce46c2a"
+  },
+  "Mindless Self Indulgence": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "44f42386-a733-4b51-8298-fe5c807d03aa"
+  },
+  "Ministry": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "13df2a46-f72f-40e7-aa63-26fcf62c7048"
+  },
+  "Minor Threat": {
+    "country": "US",
+    "city": null,
+    "regionName": "Washington, D.C.",
+    "mbid": "09037f07-42bc-46ac-a1ee-37f834451fee"
+  },
+  "Miriam Makeba": {
+    "country": "ZA",
+    "city": "Johannesburg",
+    "regionName": null,
+    "mbid": "bc5c2918-4aba-4ef6-a245-100563a4487f"
+  },
+  "Mitch Hedberg": {
+    "country": "US",
+    "city": "Saint Paul",
+    "regionName": null,
+    "mbid": "843384a8-2fb5-4d21-91d6-3f4b545fca7f"
+  },
+  "Mixalis Tzouganakis": {
+    "miss": true
+  },
+  "MJ Cole": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "6e5c1366-5891-4e01-bb13-6c8b2c8cdd35"
+  },
+  "Moby": {
+    "country": "US",
+    "city": "Harlem",
+    "regionName": null,
+    "mbid": "8970d868-0723-483b-a75b-51088913d3d4"
+  },
+  "Moby Grape": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "bf014765-46f0-4cd9-b658-c79c5c0166f8"
+  },
+  "Modest Mussorgsky": {
+    "miss": true
+  },
+  "Moistboyz": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "3867cba4-766a-4646-befd-010d053551ad"
+  },
+  "Morrissey": {
+    "country": "GB",
+    "city": "Davyhulme",
+    "regionName": null,
+    "mbid": "013fa897-86db-41d3-8e9f-386c8a34f4e6"
+  },
+  "Mothers of Invention": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "fe98e268-4ddd-441b-95a0-b219375f9ae4"
+  },
+  "Motorhead": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "57961a97-3796-4bf7-9f02-a985a8979ae9"
+  },
+  "Mott The Hoople": {
+    "country": "GB",
+    "city": "Hereford",
+    "regionName": null,
+    "mbid": "435f1441-0f43-479d-92db-a506449a686b"
+  },
+  "Mudhoney": {
+    "country": "US",
+    "city": "Seattle",
+    "regionName": null,
+    "mbid": "e675295a-1efe-4247-aa3b-53b78d0cdffc"
+  },
+  "Mylo": {
+    "country": "GB",
+    "city": "Broadford",
+    "regionName": null,
+    "mbid": "a066b730-3809-4b39-a091-2297d40b51db"
+  },
+  "N.E.R.D": {
+    "miss": true
+  },
+  "N.W.A.": {
+    "country": "US",
+    "city": "Compton",
+    "regionName": null,
+    "mbid": "3a54bffa-2314-44a2-927b-60144119c780"
+  },
+  "Nanci Griffith": {
+    "country": "US",
+    "city": "Seguin",
+    "regionName": null,
+    "mbid": "b9ffd0e7-7f95-46db-bc1c-8094d459f084"
+  },
+  "Nas": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "cfbc0924-0035-4d6c-8197-f024653af823"
+  },
+  "Neil Young": {
+    "country": "CA",
+    "city": "Toronto",
+    "regionName": null,
+    "mbid": "75167b8b-44e4-407b-9d35-effe87b223cf"
+  },
+  "Neneh Cherry": {
+    "country": "SE",
+    "city": "Stockholm",
+    "regionName": null,
+    "mbid": "527c65d1-9fdb-4482-8796-dde2980bd63a"
+  },
+  "NEU!": {
+    "country": "DE",
+    "city": "Düsseldorf",
+    "regionName": null,
+    "mbid": "adec1fc3-83c1-48f7-9e49-8347ac6d40b0"
+  },
+  "New Order": {
+    "country": "GB",
+    "city": "Salford",
+    "regionName": null,
+    "mbid": "f1106b17-dcbb-45f6-b938-199ccfab50cc"
+  },
+  "New York Dolls": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "1b96b9c9-0832-40cb-9f8d-7274de3733fc"
+  },
+  "Nick Cave & the Bad Seeds": {
+    "country": "AU",
+    "city": "Melbourne",
+    "regionName": null,
+    "mbid": "172e1f1a-504d-4488-b053-6344ba63e6d0"
+  },
+  "Nick Cave & The Bad Seeds": {
+    "country": "AU",
+    "city": "Melbourne",
+    "regionName": null,
+    "mbid": "172e1f1a-504d-4488-b053-6344ba63e6d0"
+  },
+  "Nick Drake": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Yangon",
+    "mbid": "99ea432a-e3d8-42cb-9d5e-db316a6a8458"
+  },
+  "Nico": {
+    "country": "DE",
+    "city": "Köln",
+    "regionName": null,
+    "mbid": "37c61bf2-5fb1-47ae-9605-80025d956958"
+  },
+  "Nightmares On Wax": {
+    "country": "GB",
+    "city": "Leeds",
+    "regionName": null,
+    "mbid": "b8c5cc4f-239f-4e02-b46f-b040b77c2030"
+  },
+  "Nina Simone": {
+    "country": "US",
+    "city": "Tryon",
+    "regionName": null,
+    "mbid": "2944824d-4c26-476f-a981-be849081942f"
+  },
+  "Nine Inch Nails": {
+    "country": "US",
+    "city": "Cleveland",
+    "regionName": null,
+    "mbid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da"
+  },
+  "Niño Josele": {
+    "miss": true
+  },
+  "Niño Josele": {
+    "country": "ES",
+    "city": null,
+    "regionName": "Almería",
+    "mbid": "3c882f4e-c947-491a-89bf-118d0b434351"
+  },
+  "Nitin Sawhney": {
+    "country": "GB",
+    "city": "Camberwell",
+    "regionName": null,
+    "mbid": "bc3d74c5-9328-4a1b-8014-3ecdb3dababe"
+  },
+  "Norah Jones": {
+    "country": "US",
+    "city": "Bedford–Stuyvesant",
+    "regionName": null,
+    "mbid": "985c709c-7771-4de3-9024-7bda29ebe3f9"
+  },
+  "Notorious B.I.G.": {
+    "country": "US",
+    "city": "Clinton Hill",
+    "regionName": null,
+    "mbid": "d5d97b2b-b83b-4976-814a-056d9076c8c3"
+  },
+  "Nusrat Fateh Ali Khan": {
+    "country": "PK",
+    "city": "Faisalabad",
+    "regionName": null,
+    "mbid": "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+  },
+  "Oliver Nelson": {
+    "country": "US",
+    "city": "St. Louis",
+    "regionName": null,
+    "mbid": "4704f86b-33b0-458a-9460-8f9b52869d74"
+  },
+  "OMD": {
+    "miss": true
+  },
+  "Only Ones": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "812dca85-2b55-4015-a92e-1182251bc621"
+  },
+  "Orange Juice": {
+    "country": "GB",
+    "city": "Bearsden",
+    "regionName": null,
+    "mbid": "e598d30e-4ce1-402e-94a7-6f44779da6b7"
+  },
+  "Orbital": {
+    "country": "GB",
+    "city": "Sevenoaks",
+    "regionName": null,
+    "mbid": "f3e2a7d9-c6bb-4848-95e5-04c0a1e2f511"
+  },
+  "Orchestra": {
+    "miss": true
+  },
+  "Otis Redding": {
+    "country": "US",
+    "city": "Dawson",
+    "regionName": null,
+    "mbid": "82b1f5fd-cd31-41a9-b5d4-7e33f0eb9751"
+  },
+  "Ozomatli": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "7e54639b-ee66-4452-a612-918d4c3c73c4"
+  },
+  "Pantera": {
+    "country": "US",
+    "city": "Arlington",
+    "regionName": null,
+    "mbid": "541f16f5-ad7a-428e-af89-9fa1b16d3c9c"
+  },
+  "Parliament": {
+    "country": "US",
+    "city": "Plainfield",
+    "regionName": null,
+    "mbid": "d1947987-9614-49ae-bd36-8000e6b6f7d0"
+  },
+  "Parton, Ronstadt, Harris": {
+    "miss": true
+  },
+  "Pat Martino": {
+    "country": "US",
+    "city": "Philadelphia",
+    "regionName": null,
+    "mbid": "8b8b7c42-8210-4267-bb93-4c2df5b2c438"
+  },
+  "Pat Metheny": {
+    "country": "US",
+    "city": "Lee's Summit",
+    "regionName": null,
+    "mbid": "7daac7f9-8fcc-485f-a14f-f8091d98cf25"
+  },
+  "Pat Metheny & Charlie Haden": {
+    "miss": true
+  },
+  "Pat Metheny & Jaco Pastorius": {
+    "miss": true
+  },
+  "Pat Metheny Group": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "66a7f1f8-0ad6-4e3a-9346-a643e2739a8c"
+  },
+  "Patrick Moraz": {
+    "country": "CH",
+    "city": "Villars-Sainte-Croix",
+    "regionName": null,
+    "mbid": "c872ab10-fd12-41cc-a6a0-8d1ac7263125"
+  },
+  "Patti Smith": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "d135874d-9cae-4fef-97e3-36acbd9f5a26"
+  },
+  "Paul McCartney": {
+    "country": "GB",
+    "city": "Walton",
+    "regionName": null,
+    "mbid": "ba550d0e-adac-4864-b88b-407cab5e76af"
+  },
+  "Paul McCartney & Wings": {
+    "miss": true
+  },
+  "Paul Revere & The Raiders": {
+    "miss": true
+  },
+  "Paul Simon": {
+    "country": "US",
+    "city": "Newark",
+    "regionName": null,
+    "mbid": "05517043-ff78-4988-9c22-88c68588ebb9"
+  },
+  "Paul Weller": {
+    "country": "GB",
+    "city": "Sheerwater",
+    "regionName": null,
+    "mbid": "c4406045-e640-4cfe-8b88-4732cce314d4"
+  },
+  "Pearl Jam": {
+    "country": "US",
+    "city": "Seattle",
+    "regionName": null,
+    "mbid": "83b9cbe7-9857-49e2-ab8e-b57b01038103"
+  },
+  "Penguin Cafe Orchestra": {
+    "country": "GB",
+    "city": null,
+    "regionName": null,
+    "mbid": "4dfadf48-e15b-4fc2-a800-2b68702a72d5"
+  },
+  "Pentangle": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "a4e31e59-e662-4cf4-bd4f-d7bf712bc21f"
+  },
+  "Pere Ubu": {
+    "country": "US",
+    "city": "Cleveland",
+    "regionName": null,
+    "mbid": "5a54b72e-bfb3-4ca6-944a-e17261399965"
+  },
+  "Peshay": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "f7be8db8-cf51-4266-b4a6-81f0a1d40575"
+  },
+  "Pet Shop Boys": {
+    "country": "GB",
+    "city": "Chelsea",
+    "regionName": null,
+    "mbid": "be540c02-7898-4b79-9acc-c8122c7d9e83"
+  },
+  "Peter Ciluzzi": {
+    "miss": true
+  },
+  "Peter Erskine, Nguyên Lê, Michel Benita": {
+    "miss": true
+  },
+  "Peter Erskine, Nguyên Lê, Michel Benita": {
+    "miss": true
+  },
+  "Peter Frampton": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Bromley",
+    "mbid": "638206ee-0e3d-47cf-9769-d73330b15a87"
+  },
+  "Peter Gabriel": {
+    "country": "GB",
+    "city": "Cobham",
+    "regionName": null,
+    "mbid": "8e66ea2b-b57b-47d9-8df0-df4630aeb8e5"
+  },
+  "Peter Tosh": {
+    "country": "JM",
+    "city": null,
+    "regionName": null,
+    "mbid": "7db6aae5-6644-4513-9bfc-ca2e79d4469c"
+  },
+  "Petteri Sariola": {
+    "country": "FI",
+    "city": null,
+    "regionName": null,
+    "mbid": "1efd844b-4e80-4b05-bc89-9922e33ac5e9"
+  },
+  "PFM": {
+    "country": null,
+    "city": "Lowestoft",
+    "regionName": "Norfolk",
+    "mbid": "5fbdf5fa-af85-4958-b6b6-dbac49b16e71"
+  },
+  "Phil Spector and Artists": {
+    "miss": true
+  },
+  "Philip Glass": {
+    "country": "US",
+    "city": "Baltimore",
+    "regionName": null,
+    "mbid": "5ae54dee-4dba-49c0-802a-a3b3b3adfe9b"
+  },
+  "Piano Overlord": {
+    "miss": true
+  },
+  "Pierre Bensusan": {
+    "country": "FR",
+    "city": null,
+    "regionName": "Oran",
+    "mbid": "3ba0b57d-003a-47fa-8e36-37b847fa9195"
+  },
+  "PJ Harvey": {
+    "country": null,
+    "city": "Bridport",
+    "regionName": "England",
+    "mbid": "e795e03d-b5d5-4a5f-834d-162cfb308a2c"
+  },
+  "PJ Morton": {
+    "country": "US",
+    "city": "New Orleans",
+    "regionName": null,
+    "mbid": "d0bb100a-c0d6-4ef7-bde2-cc5095a31d24"
+  },
+  "PJ Morton m4a": {
+    "miss": true
+  },
+  "Portishead": {
+    "country": "GB",
+    "city": "Bristol",
+    "regionName": null,
+    "mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+  },
+  "POWER TOOLS": {
+    "miss": true
+  },
+  "Prefab Sprout": {
+    "country": "GB",
+    "city": "Witton Gilbert",
+    "regionName": null,
+    "mbid": "1fd87f72-5fbf-4cad-bd9d-f2fec1359cfc"
+  },
+  "Primal Scream": {
+    "country": "GB",
+    "city": "Glasgow",
+    "regionName": null,
+    "mbid": "55704c38-224f-4b75-b29f-d43653f8bc9a"
+  },
+  "Primus": {
+    "country": "US",
+    "city": "El Sobrante",
+    "regionName": null,
+    "mbid": "84dc4f23-c0b8-4fe1-bbca-a3993ddc8fc2"
+  },
+  "Prince And The Revolution": {
+    "miss": true
+  },
+  "Public Image Ltd.": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "68950696-ee9a-49b2-a8c2-d1d6c19355cc"
+  },
+  "Queen": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3"
+  },
+  "Queen Latifah": {
+    "country": "US",
+    "city": "Newark",
+    "regionName": null,
+    "mbid": "7a305f29-539a-456e-93b7-61b0e2ba3ef2"
+  },
+  "Queens Of The Stone Age": {
+    "country": "US",
+    "city": "Palm Desert",
+    "regionName": null,
+    "mbid": "7dc8f5bd-9d0b-4087-9f73-dc164950bbd8"
+  },
+  "Quicksilver Messenger Service": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "cbb5f92c-b4a3-4804-b57d-e14d2c0f95f5"
+  },
+  "R. Kelly": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "c2d25856-a09a-4d15-b404-77dd19c19e63"
+  },
+  "Rachelle Ferrell": {
+    "country": "US",
+    "city": "Philadelphia",
+    "regionName": null,
+    "mbid": "58ef4b35-02f7-4fae-994a-f6324211d2dc"
+  },
+  "Rachelle Ferrell m4a": {
+    "miss": true
+  },
+  "Raekwon": {
+    "country": "US",
+    "city": "Staten Island",
+    "regionName": null,
+    "mbid": "4e954b02-fae2-4bd7-9547-e055a6ac0527"
+  },
+  "Rage Against the Machine": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "3798b104-01cb-484c-a3b0-56adc6399b80"
+  },
+  "Rahul Dev Burman": {
+    "country": "IN",
+    "city": "Kolkata",
+    "regionName": null,
+    "mbid": "0278f30f-266b-4261-ba3a-67491555eab0"
+  },
+  "Ralph Towner": {
+    "country": "US",
+    "city": "Chehalis",
+    "regionName": null,
+    "mbid": "610b8b96-faf7-4633-afd6-d6c338a81144"
+  },
+  "Ramblin' Jack Elliott": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "41ed6db5-7a87-4535-b9f1-67ce54598662"
+  },
+  "Randy Newman": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "da7bb7d8-557d-4635-9ca1-e6e985525bd5"
+  },
+  "Ravi Shankar": {
+    "country": "IN",
+    "city": null,
+    "regionName": "Uttar Pradesh",
+    "mbid": "697f8b9f-0454-40f2-bba2-58f35668cdbe"
+  },
+  "Ray Charles": {
+    "country": "US",
+    "city": "Albany",
+    "regionName": null,
+    "mbid": "2ce02909-598b-44ef-a456-151ba0a3bd70"
+  },
+  "Ray Price": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "c91823bc-3074-48f7-b6fe-ccda9310d2f5"
+  },
+  "Red Snapper": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "89abed31-3a93-407e-a4a3-a94e193488cd"
+  },
+  "Richard Strauss": {
+    "country": "DE",
+    "city": "München",
+    "regionName": null,
+    "mbid": "4cb43d82-824e-4034-b03d-1a98f36f6e16"
+  },
+  "Richard Wagner": {
+    "country": "DE",
+    "city": "Leipzig",
+    "regionName": null,
+    "mbid": "eefd7c1e-abcf-4ccc-ba60-0fd435c9061f"
+  },
+  "Rick Wakeman": {
+    "country": "GB",
+    "city": "Perivale",
+    "regionName": null,
+    "mbid": "2ad06109-0a52-4b7b-8b7a-ca7c10baf597"
+  },
+  "Ride": {
+    "country": "GB",
+    "city": "Oxford",
+    "regionName": null,
+    "mbid": "3f575ecd-627d-4f08-a89f-abd46d469c7e"
+  },
+  "Robert Fripp": {
+    "country": "GB",
+    "city": "Wimborne Minster",
+    "regionName": null,
+    "mbid": "898b645e-eed2-490a-8ce2-0e7a4d2d5bc8"
+  },
+  "Robert Wyatt": {
+    "country": "GB",
+    "city": "Bristol",
+    "regionName": null,
+    "mbid": "9f041c61-f382-4048-a1f1-33105124bb99"
+  },
+  "Rocket From The Crypt": {
+    "country": "US",
+    "city": "San Diego",
+    "regionName": null,
+    "mbid": "e297ecdf-64ec-4e34-899d-80380f5b0c2a"
+  },
+  "Rod Stewart": {
+    "country": "GB",
+    "city": "Highgate",
+    "regionName": null,
+    "mbid": "a35237a0-4f47-40a6-b6f3-1e786db23402"
+  },
+  "Ron Carter & Jim Hall": {
+    "miss": true
+  },
+  "Roni Size & Reprazent": {
+    "miss": true
+  },
+  "Rostropovich": {
+    "miss": true
+  },
+  "Roxy Music": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "331ce348-1b08-40b9-8ed7-0763b92bd003"
+  },
+  "Royksopp": {
+    "country": "NO",
+    "city": "Tromsø",
+    "regionName": null,
+    "mbid": "1c70a3fc-fa3c-4be1-8b55-c3192db8a884"
+  },
+  "Rufus Wainwright": {
+    "country": null,
+    "city": "Rhinebeck",
+    "regionName": null,
+    "mbid": "78e46ae5-9bfd-433b-be3f-19e993d67ecc"
+  },
+  "Run-D.M.C.": {
+    "country": "US",
+    "city": "Hollis",
+    "regionName": null,
+    "mbid": "5ecc3f72-20a6-47a0-8dc5-fb0b3dadeea0"
+  },
+  "Rush": {
+    "country": "CA",
+    "city": "Toronto",
+    "regionName": null,
+    "mbid": "534ee493-bfac-4575-a44a-0ae41e2c3fe4"
+  },
+  "Ryan Adams": {
+    "country": "US",
+    "city": "Jacksonville",
+    "regionName": null,
+    "mbid": "c80f38a6-9980-485d-997c-5c1a9cbd0d64"
+  },
+  "Sabu": {
+    "country": "AR",
+    "city": "Buenos Aires",
+    "regionName": null,
+    "mbid": "08a8e5cb-f9ac-4092-8ecc-dba4a1e435e8"
+  },
+  "Sade": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "67930b3e-e00b-469f-8c74-fd69f20522ec"
+  },
+  "Saint Etienne": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Croydon",
+    "mbid": "3997d4a6-c2bd-4191-8406-eb07f0abb5d2"
+  },
+  "Sam Cooke": {
+    "country": "US",
+    "city": "Clarksdale",
+    "regionName": null,
+    "mbid": "6c8fd0be-d961-454c-aee0-4366a6dbc993"
+  },
+  "Santana": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "9a3bf45c-347d-4630-894d-7cf3e8e0b632"
+  },
+  "Sara Ramirez": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "92f91947-0d8e-4a9c-ae6a-68906e93a079"
+  },
+  "Sara Ramirez & Tim Curry": {
+    "miss": true
+  },
+  "Sarah Vaughan": {
+    "country": "US",
+    "city": "Newark",
+    "regionName": null,
+    "mbid": "351d8bdf-33a1-45e2-8c04-c85fad20da55"
+  },
+  "Sausage": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "32098346-3054-4475-a417-794dbbef74ab"
+  },
+  "Scarlatti, Guiseppe Domenico": {
+    "miss": true
+  },
+  "Scissor Sisters": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "4236d929-9a81-4c8e-97c3-8d3306780f50"
+  },
+  "Scott Walker": {
+    "country": "GB",
+    "city": "Hamilton",
+    "regionName": null,
+    "mbid": "99524243-dc2e-4bf3-82c0-72395391d21f"
+  },
+  "Screaming Trees": {
+    "country": "US",
+    "city": "Ellensburg",
+    "regionName": null,
+    "mbid": "bc5e6e42-73ba-44fa-a41e-3379402f0429"
+  },
+  "Scritti Politti": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Leeds",
+    "mbid": "a2588b38-6532-4186-b0c8-9aff306d56f5"
+  },
+  "Sebadoh": {
+    "country": "US",
+    "city": "Westfield",
+    "regionName": null,
+    "mbid": "d98c8149-0c01-4151-93e1-48fdc3d5027f"
+  },
+  "Serge Gainsbourg": {
+    "country": "FR",
+    "city": "Paris",
+    "regionName": null,
+    "mbid": "b21ef19b-c6aa-4775-90d3-3cc3e067ce6d"
+  },
+  "Sex Pistols": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "e5db18cb-4b1f-496d-a308-548b611090d3"
+  },
+  "Shack": {
+    "country": "GB",
+    "city": "Liverpool",
+    "regionName": null,
+    "mbid": "7f0c013d-e31c-4cfe-9a58-d13bd90d325f"
+  },
+  "Shawn Lane": {
+    "country": "US",
+    "city": "Memphis",
+    "regionName": null,
+    "mbid": "4af1aa09-05c8-40d9-9274-d0667953c6bc"
+  },
+  "Sheryl Crow": {
+    "country": "US",
+    "city": "Kennett",
+    "regionName": null,
+    "mbid": "80ccfede-c258-4575-a7ad-c982e9932e0f"
+  },
+  "Shivkumar Sharma-Brijbushan Kabra-Hariprasad Chaurasia": {
+    "miss": true
+  },
+  "Shuggie Otis": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "ff9542ca-7859-4db2-8796-c1e3c39b9c0a"
+  },
+  "Sigur Rós": {
+    "miss": true
+  },
+  "Silver Jews": {
+    "country": "US",
+    "city": "Charlottesville",
+    "regionName": null,
+    "mbid": "1bc2d696-c0e2-480d-87ed-17b2a82d7983"
+  },
+  "Simon & Garfunkel": {
+    "country": "US",
+    "city": "Kew Gardens Hills",
+    "regionName": null,
+    "mbid": "5d02f264-e225-41ff-83f7-d9b1f0b1874a"
+  },
+  "Simple Minds": {
+    "country": "GB",
+    "city": "Glasgow",
+    "regionName": null,
+    "mbid": "f41490ce-fe39-435d-86c0-ab5ce098b423"
+  },
+  "Simply Red": {
+    "country": "GB",
+    "city": "Manchester",
+    "regionName": null,
+    "mbid": "a9100753-f539-43cf-bcc9-579566fb512e"
+  },
+  "Sinéad O'Connor": {
+    "miss": true
+  },
+  "Siouxsie and the Banshees": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "78ea5ea1-3c4d-4b7e-ac5d-68900319ebe2"
+  },
+  "Sister Sledge": {
+    "country": "US",
+    "city": "Philadelphia",
+    "regionName": null,
+    "mbid": "1ed00158-c6a3-45cd-819c-2f91997fc480"
+  },
+  "Sisters Of Mercy": {
+    "country": "GB",
+    "city": "Leeds",
+    "regionName": null,
+    "mbid": "553d8166-27b0-49fe-b8e4-89a984e2c375"
+  },
+  "Skunk Anansie": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "e212efdf-98b2-4dce-92ed-62cfc1e29854"
+  },
+  "Slade": {
+    "country": "GB",
+    "city": "Wolverhampton",
+    "regionName": null,
+    "mbid": "2e700147-56a3-416b-a95d-381ea42f947f"
+  },
+  "Slayer": {
+    "country": "US",
+    "city": "Huntington Park",
+    "regionName": null,
+    "mbid": "bdacc37b-8633-4bf8-9dd5-4662ee651aec"
+  },
+  "Sleater-Kinney": {
+    "country": "US",
+    "city": "Olympia",
+    "regionName": null,
+    "mbid": "e36e78eb-3ace-4acd-882c-16789e700ab7"
+  },
+  "Slint": {
+    "country": "US",
+    "city": "Louisville",
+    "regionName": null,
+    "mbid": "2869c510-2679-4a3f-bf15-e5e8b49f2f28"
+  },
+  "Slipknot": {
+    "country": "US",
+    "city": "Des Moines",
+    "regionName": null,
+    "mbid": "a466c2a2-6517-42fb-a160-1087c3bafd9f"
+  },
+  "Sly & The Family Stone": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "b7ec4c54-1f93-4bf2-957f-7b9921ab84ea"
+  },
+  "Sly and the Family Stone": {
+    "miss": true
+  },
+  "Smashing Pumpkins": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "ba0d6274-db14-4ef5-b28d-657ebde1a396"
+  },
+  "Snoop Doggy Dogg": {
+    "miss": true
+  },
+  "Socrates": {
+    "country": null,
+    "city": "Manchester",
+    "regionName": null,
+    "mbid": "0085442d-e817-49c4-84f4-976f9479699d"
+  },
+  "Soft Boys": {
+    "country": "GB",
+    "city": "Cambridge",
+    "regionName": null,
+    "mbid": "ae362950-090f-4686-82da-9d22a5f88f2e"
+  },
+  "Soft Cell": {
+    "country": "GB",
+    "city": "Leeds",
+    "regionName": null,
+    "mbid": "7fb50287-029d-47cc-825a-235ca28024b2"
+  },
+  "Soft Machine": {
+    "country": "GB",
+    "city": "Canterbury",
+    "regionName": null,
+    "mbid": "5193ce6b-a315-4c50-ae49-54e69ffbc988"
+  },
+  "Solomon Burke": {
+    "country": "US",
+    "city": "Philadelphia",
+    "regionName": null,
+    "mbid": "d5c79890-36c5-4f1b-bed3-4468eee093f3"
+  },
+  "Somi": {
+    "country": "US",
+    "city": "Champaign",
+    "regionName": null,
+    "mbid": "4543030c-19d5-4d0e-be34-c971fd27009a"
+  },
+  "Sonny Rollins": {
+    "country": "US",
+    "city": "Harlem",
+    "regionName": null,
+    "mbid": "3b47247e-5b57-49b6-a0ed-bad80243802a"
+  },
+  "Soul II Soul": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "9350241a-d698-4489-92bf-41794f383ff3"
+  },
+  "Soulfood 76": {
+    "miss": true
+  },
+  "Soundgarden": {
+    "country": "US",
+    "city": "Seattle",
+    "regionName": null,
+    "mbid": "153c9281-268f-4cf3-8938-f5a4593e5df4"
+  },
+  "Spacemen 3": {
+    "country": "GB",
+    "city": "Rugby",
+    "regionName": null,
+    "mbid": "19e818e4-0bbe-41fc-9589-c444b4165bf1"
+  },
+  "Sparks": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "f319b57a-a494-40f6-a467-3d196d3484e6"
+  },
+  "Spirit": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "ca5db97b-ba17-4e85-a876-46065e2052b3"
+  },
+  "Spiritualized": {
+    "country": "GB",
+    "city": "Rugby",
+    "regionName": null,
+    "mbid": "65041e06-83d2-4987-ae52-c17a915fc82a"
+  },
+  "Stan Getz And Charlie Byrd": {
+    "miss": true
+  },
+  "Stan Getz João Gilberto": {
+    "miss": true
+  },
+  "Stan Getz/Jo�o Gilberto": {
+    "miss": true
+  },
+  "Stanley Clarke, Al Di Meola & Jean-Luc Ponty": {
+    "miss": true
+  },
+  "Stanley Jordan": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "6ba7dd48-a5fe-46a3-947a-057919dbe989"
+  },
+  "Starcastle": {
+    "country": "US",
+    "city": "Champaign",
+    "regionName": null,
+    "mbid": "d325f5ea-dab8-4545-b186-5914f36d88c8"
+  },
+  "Stefan Grossman": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "93d26b9f-2257-466b-9492-a7c51a77ef00"
+  },
+  "Stephen Stills": {
+    "country": "US",
+    "city": "Dallas",
+    "regionName": null,
+    "mbid": "5642774a-72c0-4099-8da4-7c1ab36378a8"
+  },
+  "Stereo MC's": {
+    "country": "GB",
+    "city": "Clapham",
+    "regionName": null,
+    "mbid": "5e0ca89b-f5a6-4034-af31-17f10ff5a7d2"
+  },
+  "Stereolab": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "f1df0431-9250-4ec8-95d8-f19ce7cf7fb6"
+  },
+  "Steve Earle": {
+    "country": "US",
+    "city": "Hampton",
+    "regionName": null,
+    "mbid": "ec863030-7c13-45a3-a025-a69195d3a020"
+  },
+  "Steve Winwood": {
+    "country": "GB",
+    "city": "Handsworth",
+    "regionName": null,
+    "mbid": "885f90ef-6bd9-409a-b2df-e165e553c68e"
+  },
+  "Stills Crosby & Nash": {
+    "miss": true
+  },
+  "Stranglers": {
+    "country": "GB",
+    "city": "Guildford",
+    "regionName": null,
+    "mbid": "a96d82a0-cdca-40bf-b4c8-3d7ec178d85b"
+  },
+  "Suba": {
+    "country": "BR",
+    "city": "Novi Sad",
+    "regionName": null,
+    "mbid": "2022a00f-b22c-4ccd-a069-cdd915685bf7"
+  },
+  "Suede": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "a55c2f1b-3f3f-4d6a-aa30-5e186dbadce6"
+  },
+  "Sugar": {
+    "country": "US",
+    "city": "Minneapolis",
+    "regionName": null,
+    "mbid": "e3347fbd-2595-480e-926d-278566debf9d"
+  },
+  "Suicide": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "7a0f02e0-0ab8-4a62-9e14-c6925cfaed07"
+  },
+  "Sun Ra": {
+    "country": "US",
+    "city": "Birmingham",
+    "regionName": null,
+    "mbid": "c27cac8e-4c4a-48c0-a4ba-41399b9c176d"
+  },
+  "Super Furry Animals": {
+    "country": null,
+    "city": "Cardiff",
+    "regionName": "Wales",
+    "mbid": "c5f5dc27-3059-49c0-ae45-5009a01bb9ec"
+  },
+  "Supergrass": {
+    "country": "GB",
+    "city": "Oxford",
+    "regionName": null,
+    "mbid": "6386ddff-0d13-4685-9f0a-a82bf022fb1c"
+  },
+  "Supertramp": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "d2ff6b6b-fc30-48dc-8952-06f9d8fc64f8"
+  },
+  "Suzanne Vega": {
+    "country": "US",
+    "city": "Santa Monica",
+    "regionName": null,
+    "mbid": "cf119120-7df5-47d7-9dec-49f8837a4e40"
+  },
+  "SWV": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "fffc6a35-ae65-48be-bcc0-9d604e05665e"
+  },
+  "Syd Barrett": {
+    "country": "GB",
+    "city": "Cambridge",
+    "regionName": null,
+    "mbid": "12327d75-47d5-45d9-84c2-3760b9210c17"
+  },
+  "System Of A Down": {
+    "country": "US",
+    "city": "Glendale",
+    "regionName": null,
+    "mbid": "cc0b7089-c08d-4c10-b6b0-873582c17fd6"
+  },
+  "Talk Talk": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "a74f43e4-50c4-4b19-a2ce-c05ce9bccb03"
+  },
+  "Tangerine Dream": {
+    "country": "DE",
+    "city": "Berlin",
+    "regionName": null,
+    "mbid": "23d8426c-18c7-46e6-a51d-7395bd43c641"
+  },
+  "Taylor Grisman Jazz Quartet": {
+    "miss": true
+  },
+  "Tears For Fears": {
+    "country": "GB",
+    "city": "Bath",
+    "regionName": null,
+    "mbid": "7c7f9c94-dee8-4903-892b-6cf44652e2de"
+  },
+  "Teenage Fanclub": {
+    "country": "GB",
+    "city": "Bellshill",
+    "regionName": null,
+    "mbid": "e6f8912b-7df9-4aae-b551-2cd03dc29588"
+  },
+  "Television": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "490bde43-5edb-4a93-b3b3-7a0465fd8909"
+  },
+  "Terence Trent D'Arby": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "91f603ca-b126-42a2-9c29-820ca687347c"
+  },
+  "Tetsuo Sakurai with Greg Howe & Dennis Chambers": {
+    "miss": true
+  },
+  "The Adverts": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "60ec2ff0-d58a-4319-9d8a-2142ad5bf48a"
+  },
+  "The Afghan Whigs": {
+    "country": null,
+    "city": "Cincinnati",
+    "regionName": null,
+    "mbid": "2feb192c-2363-46d6-b476-1c88a25cb294"
+  },
+  "The Allman Brothers Band": {
+    "country": "US",
+    "city": "Macon",
+    "regionName": null,
+    "mbid": "72359492-22be-4ed9-aaa0-efa434fb2b01"
+  },
+  "The Associates": {
+    "country": "GB",
+    "city": "Dundee",
+    "regionName": null,
+    "mbid": "dc78f9b6-afcd-46d6-894e-2149f40a4884"
+  },
+  "The Auteurs": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "c26c3822-451f-4545-b55a-bd09a3c815ae"
+  },
+  "The Avalanches": {
+    "country": "AU",
+    "city": "Melbourne",
+    "regionName": null,
+    "mbid": "a6623d39-2d8e-4f70-8242-0a9553b91e50"
+  },
+  "The B-52's": {
+    "miss": true
+  },
+  "The Bad Plus": {
+    "country": "US",
+    "city": "Minneapolis",
+    "regionName": null,
+    "mbid": "b9bede5d-89b6-4c43-9c45-ca3930cf4db8"
+  },
+  "The Band": {
+    "country": "CA",
+    "city": "Toronto",
+    "regionName": null,
+    "mbid": "8c90ad8c-9150-4c51-a1eb-342232e99d06"
+  },
+  "The Beau Brummels": {
+    "country": "US",
+    "city": "San Francisco",
+    "regionName": null,
+    "mbid": "f6f3a309-9d14-4b7c-895a-166333c25f9c"
+  },
+  "The Beta Band": {
+    "country": "GB",
+    "city": "St Andrews",
+    "regionName": null,
+    "mbid": "0d82f0cd-107a-403f-a726-ac7287cbea65"
+  },
+  "The Bill Evans Trio with Lee Konitz & Warne Marsh": {
+    "miss": true
+  },
+  "The Black Crowes": {
+    "country": "US",
+    "city": "Atlanta",
+    "regionName": null,
+    "mbid": "02ceff75-7363-493e-a78d-912dc86c7460"
+  },
+  "The Boo Radleys": {
+    "country": "GB",
+    "city": "Wallasey",
+    "regionName": null,
+    "mbid": "1b5189d8-28fd-4c97-a04a-37c49b1ccfa6"
+  },
+  "The Byrds": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "2819834e-4e08-47b0-a2c4-b7672318e8f0"
+  },
+  "The Cardigans": {
+    "country": "SE",
+    "city": "Jönköping",
+    "regionName": null,
+    "mbid": "3e55d51d-687f-4a9d-af96-2fabccf802e5"
+  },
+  "The Carpenters": {
+    "miss": true
+  },
+  "The Cars": {
+    "country": "US",
+    "city": "Boston",
+    "regionName": null,
+    "mbid": "092b603f-eb4c-4958-b10e-02420de5885b"
+  },
+  "The Charlatans": {
+    "country": "GB",
+    "city": null,
+    "regionName": "West Midlands",
+    "mbid": "8434409e-baa9-4e12-b4aa-566a91c7d7cf"
+  },
+  "The Chemical Brothers": {
+    "country": "GB",
+    "city": "Manchester",
+    "regionName": null,
+    "mbid": "1946a82a-f927-40c2-8235-38d64f50d043"
+  },
+  "The Cramps": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "96c1edac-1011-4cb8-882c-27248de35071"
+  },
+  "The Crystals": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "c68ea4b4-85ae-481e-8345-959f6cfc1fdc"
+  },
+  "The Cult": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "8846e4ff-0c19-4af2-872b-7a8dc7497f68"
+  },
+  "The Cure": {
+    "country": "GB",
+    "city": "Crawley",
+    "regionName": null,
+    "mbid": "69ee3720-a7cb-4402-b48d-a02c366f2bcf"
+  },
+  "The Damned": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "77d21c13-846f-4f48-9546-873949eff6ae"
+  },
+  "The Dandy Warhols": {
+    "country": "US",
+    "city": "Portland",
+    "regionName": null,
+    "mbid": "5f572b31-8fd9-45ae-9beb-358c98d839df"
+  },
+  "The Darkness": {
+    "country": "GB",
+    "city": "Lowestoft",
+    "regionName": null,
+    "mbid": "81df2271-03a1-46a3-bb30-cce187235312"
+  },
+  "The Dictators": {
+    "country": "US",
+    "city": null,
+    "regionName": "New York",
+    "mbid": "ac5304f2-1787-4e87-8ed7-321f157cc89b"
+  },
+  "The Divine Comedy": {
+    "country": "GB",
+    "city": "Enniskillen",
+    "regionName": null,
+    "mbid": "49c4378b-3c36-4c5a-8999-8d936e74f39b"
+  },
+  "The Doors": {
+    "country": "US",
+    "city": "Venice",
+    "regionName": null,
+    "mbid": "9efff43b-3b29-4082-824e-bc82f646f93d"
+  },
+  "The Eagles": {
+    "country": "GB",
+    "city": null,
+    "regionName": null,
+    "mbid": "a4852e21-7f09-470b-b5ae-9740d939d183"
+  },
+  "The Flying Burrito Bros.": {
+    "miss": true
+  },
+  "The Fugees": {
+    "miss": true
+  },
+  "The Germs": {
+    "miss": true
+  },
+  "The Go-Betweens": {
+    "country": "AU",
+    "city": "Brisbane",
+    "regionName": null,
+    "mbid": "2fb4db11-8349-47ab-b1a6-f04f011699ff"
+  },
+  "The Go-Go's": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "dae9c45a-6f2f-4ab0-ac49-4147568a89cf"
+  },
+  "The Greek Byzantine Choir": {
+    "country": "GR",
+    "city": null,
+    "regionName": null,
+    "mbid": "a298d1e8-3301-448f-a5fd-2463f2c45798"
+  },
+  "The Gun Club": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "e78cc47f-9b89-4ef7-86f8-8f9df4f9dac9"
+  },
+  "The Hives": {
+    "country": "SE",
+    "city": "Fagersta",
+    "regionName": null,
+    "mbid": "487bfd74-71bf-46dd-b89c-80b7a0f06f2f"
+  },
+  "The Human League": {
+    "country": "GB",
+    "city": "Sheffield",
+    "regionName": null,
+    "mbid": "7adaabfb-acfb-47bc-8c7c-59471c2f0db8"
+  },
+  "The Icarus Line": {
+    "country": "US",
+    "city": "Hollywood",
+    "regionName": null,
+    "mbid": "2393d266-0c77-434e-a3d9-86408af14d80"
+  },
+  "The Incredible Bongo Band": {
+    "miss": true
+  },
+  "The Incredible String Band": {
+    "country": "GB",
+    "city": "Edinburgh",
+    "regionName": null,
+    "mbid": "04da193a-a956-4940-a6ca-e6021c7861c2"
+  },
+  "The Isley Brothers": {
+    "country": "US",
+    "city": "Cincinnati",
+    "regionName": null,
+    "mbid": "4a76400d-283f-492e-9754-18ef41755f81"
+  },
+  "The Jam": {
+    "country": "GB",
+    "city": "Woking",
+    "regionName": null,
+    "mbid": "23228f18-01d5-493e-94ce-cfcde82a8db2"
+  },
+  "The Jesus And Mary Chain": {
+    "country": "GB",
+    "city": "East Kilbride",
+    "regionName": null,
+    "mbid": "e938a15c-b17e-4e7a-9f68-ff0d536cab44"
+  },
+  "The Jimi Hendrix Experience": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "33b3c323-77c2-417c-a5b4-af7e6a111cc9"
+  },
+  "The Jon Spencer Blues Explosion": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "d1ab8ca8-fb9f-4e78-a422-3cd5406dc0b1"
+  },
+  "The Killers": {
+    "country": "US",
+    "city": "Las Vegas",
+    "regionName": null,
+    "mbid": "95e1ead9-4d31-4808-a7ac-32c3614c116b"
+  },
+  "The KLF": {
+    "country": "GB",
+    "city": "Liverpool",
+    "regionName": null,
+    "mbid": "8092b8b7-235e-4844-9f72-95a9d5a73dbf"
+  },
+  "The La's": {
+    "country": "GB",
+    "city": "Liverpool",
+    "regionName": null,
+    "mbid": "ff3e88b3-7354-4f30-967c-1a61ebc8c642"
+  },
+  "The Lemonheads": {
+    "country": "US",
+    "city": "Boston",
+    "regionName": null,
+    "mbid": "58a53082-a629-4ff1-a44d-7492d6f6e8fb"
+  },
+  "The Libertines": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "82b304c0-7da4-45d3-896a-0767c7ae1141"
+  },
+  "The Mamas & The Papas": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "ff294730-0315-440d-a543-54005779c15b"
+  },
+  "The Modern Lovers": {
+    "country": "US",
+    "city": "Natick",
+    "regionName": null,
+    "mbid": "535f06f0-7ea2-41a4-a967-743b25558805"
+  },
+  "The Monkees": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "b8549efe-f4fd-4dc0-8ef1-226e9c400233"
+  },
+  "The Monks": {
+    "country": "US",
+    "city": "Gelnhausen",
+    "regionName": null,
+    "mbid": "72bfcd14-0a48-43d9-86cf-e8d0f264fb13"
+  },
+  "The New Broadway Cast": {
+    "miss": true
+  },
+  "The Nitty Gritty Dirt Band": {
+    "miss": true
+  },
+  "The Offspring": {
+    "country": "US",
+    "city": "Huntington Beach",
+    "regionName": null,
+    "mbid": "23a03e33-a603-404e-bcbf-2c00159d7067"
+  },
+  "The Pharcyde": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "d7134426-a937-43bf-bc54-f10ad8102ed9"
+  },
+  "The Pogues": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "d41a6875-b626-4c0f-89a1-aecb643d29ff"
+  },
+  "The Police": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "9e0e2b01-41db-4008-bd8b-988977d6019a"
+  },
+  "The Pretenders": {
+    "miss": true
+  },
+  "The Pretty Things": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "07deede6-db1d-4ede-b19e-5d46df592841"
+  },
+  "The Prodigy": {
+    "country": "GB",
+    "city": "Braintree",
+    "regionName": null,
+    "mbid": "4a4ee089-93b1-4470-af9a-6ff575d32704"
+  },
+  "The Psychedelic Furs": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "9f930ddf-be2f-4de5-a39f-7ae47305752e"
+  },
+  "The Ramones": {
+    "miss": true
+  },
+  "The Replacements": {
+    "country": "US",
+    "city": "Minneapolis",
+    "regionName": null,
+    "mbid": "dc0d05ce-2f47-4962-b4fa-8631a0a51987"
+  },
+  "The Residents": {
+    "country": "US",
+    "city": "Shreveport",
+    "regionName": null,
+    "mbid": "8c9b336e-acc8-4e20-9195-6ed0634da9fc"
+  },
+  "The Rolling Stones": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "b071f9fa-14b0-4217-8e97-eb41da73f598"
+  },
+  "The Ronettes": {
+    "country": "US",
+    "city": "Washington Heights",
+    "regionName": null,
+    "mbid": "393e5448-896f-43e9-b80b-4ee58e1e71a4"
+  },
+  "The Roots": {
+    "country": "US",
+    "city": "Philadelphia",
+    "regionName": null,
+    "mbid": "80b3cf5e-18fe-4c59-98c7-e5bb87210710"
+  },
+  "The Sabres Of Paradise": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "3acb627b-787c-4276-bafe-516a5806aeb8"
+  },
+  "The Saints": {
+    "country": "AU",
+    "city": "Brisbane",
+    "regionName": null,
+    "mbid": "0f1e84e4-2417-4f9e-a3f4-6db2cf11a46d"
+  },
+  "The Sensational Alex Harvey Band": {
+    "country": "GB",
+    "city": "Glasgow",
+    "regionName": null,
+    "mbid": "b304dc15-a567-47f7-9db0-8e9a1aeeba1e"
+  },
+  "The Shamen": {
+    "country": "GB",
+    "city": "Aberdeen",
+    "regionName": null,
+    "mbid": "f22e793d-9a7e-4ec9-9d86-7a8528688abd"
+  },
+  "The Slits": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "ff9ef2ef-73a6-496c-8528-4b12b21afbfd"
+  },
+  "The Small Faces": {
+    "miss": true
+  },
+  "The Smashing Pumpkins": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "ba0d6274-db14-4ef5-b28d-657ebde1a396"
+  },
+  "The Sonics": {
+    "country": "US",
+    "city": "Bremerton",
+    "regionName": null,
+    "mbid": "16346cf4-4d2b-40ec-8393-0fc7296d92fe"
+  },
+  "The Stone Roses": {
+    "country": "GB",
+    "city": "Manchester",
+    "regionName": null,
+    "mbid": "b5fa29f1-6c22-4321-a488-b5f363b06b06"
+  },
+  "The Stooges": {
+    "country": "US",
+    "city": "Ann Arbor",
+    "regionName": null,
+    "mbid": "794c6bf2-3241-416f-9b8f-24e2d84a1c4b"
+  },
+  "The Streets": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Barnet",
+    "mbid": "6f607087-9c46-4bb2-a884-e4efc764554c"
+  },
+  "The Strokes": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "f181961b-20f7-459e-89de-920ef03c7ed0"
+  },
+  "The Style Council": {
+    "country": "GB",
+    "city": "Woking",
+    "regionName": null,
+    "mbid": "34e56f20-ddda-48c9-a4bb-6bb12df57de0"
+  },
+  "The Sugarcubes": {
+    "country": "IS",
+    "city": "Reykjavík",
+    "regionName": null,
+    "mbid": "95303251-46d5-4239-89c8-eaf0b0947a11"
+  },
+  "The Teardrop Explodes": {
+    "country": "GB",
+    "city": "Liverpool",
+    "regionName": null,
+    "mbid": "8002d7ee-2a0e-4ea8-8984-3c69a81a4b7e"
+  },
+  "The Temptations": {
+    "country": "US",
+    "city": "Detroit",
+    "regionName": null,
+    "mbid": "d8df96ae-8fcf-4997-b3e6-e5d1aaf0f69e"
+  },
+  "The The": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "a7409219-a681-4072-adb2-5285106ce6f2"
+  },
+  "The Thrills": {
+    "country": "IE",
+    "city": "Dublin",
+    "regionName": null,
+    "mbid": "048fad7a-10ba-4f9e-b305-580fb3ce32a4"
+  },
+  "The Triffids": {
+    "country": "AU",
+    "city": "Perth",
+    "regionName": null,
+    "mbid": "8f51eb15-9b4d-41cb-aa14-bec4f9234c2a"
+  },
+  "The undertones": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Derry",
+    "mbid": "d188e4cd-d187-4df2-8516-6ff8dfd3735c"
+  },
+  "The Undertones": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Derry",
+    "mbid": "d188e4cd-d187-4df2-8516-6ff8dfd3735c"
+  },
+  "The United States Of America": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "e7fbc24b-744b-4ad3-96bb-685f78d9ef09"
+  },
+  "The Verve": {
+    "country": "GB",
+    "city": "Wigan",
+    "regionName": null,
+    "mbid": "d4d17620-fd97-4574-92a8-a2cb7e72ce42"
+  },
+  "The Vines": {
+    "country": "AU",
+    "city": "Sydney",
+    "regionName": null,
+    "mbid": "4e045c96-538b-46ed-8ea8-7cae20b56574"
+  },
+  "The Waterboys": {
+    "country": "GB",
+    "city": "Edinburgh",
+    "regionName": null,
+    "mbid": "21666405-49f8-44f6-94bb-e064f202f7ba"
+  },
+  "The Who": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "9fdaa16b-a6c4-4831-b87c-bc9ca8ce7eaa"
+  },
+  "The Yardbirds": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "191de76f-a224-445d-b041-54df16d65bf7"
+  },
+  "The Young Gods": {
+    "country": "CH",
+    "city": "Fribourg",
+    "regionName": null,
+    "mbid": "134c8992-069e-4561-8d12-cdebbf5fbc34"
+  },
+  "The Young Rascals": {
+    "miss": true
+  },
+  "The Youngbloods": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "88044f02-113a-4176-b09b-b786ef6ffbb4"
+  },
+  "The Zutons": {
+    "country": "GB",
+    "city": "Liverpool",
+    "regionName": null,
+    "mbid": "6290b769-173d-49d1-990e-660a4e333877"
+  },
+  "Thelonious Monk": {
+    "country": "US",
+    "city": "Rocky Mount",
+    "regionName": null,
+    "mbid": "8e8c7417-c905-46b1-b42a-5260b4274ed4"
+  },
+  "Thin Lizzy": {
+    "country": "IE",
+    "city": "Dublin",
+    "regionName": null,
+    "mbid": "6a726ac6-019e-455c-8bbb-571a77bed52e"
+  },
+  "thom yorke": {
+    "country": null,
+    "city": "Wellingborough",
+    "regionName": "England",
+    "mbid": "8ed2e0b3-aa4c-4e13-bec3-dc7393ed4d6b"
+  },
+  "Throbbing Gristle": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Kingston upon Hull",
+    "mbid": "e135d690-9c53-4333-8f11-98aec8c9f434"
+  },
+  "Throwing Muses": {
+    "country": "US",
+    "city": "Newport",
+    "regionName": null,
+    "mbid": "b1b9d5cc-7975-43e5-960e-670583da7bc8"
+  },
+  "Tig Notaro": {
+    "country": "US",
+    "city": "Jackson",
+    "regionName": null,
+    "mbid": "d35910d2-e04c-4a2f-a8f9-3dd2483a2a2c"
+  },
+  "Tim Buckley": {
+    "country": "US",
+    "city": null,
+    "regionName": "Washington, D.C.",
+    "mbid": "8546949d-f46c-45ab-8391-85b26dda6b65"
+  },
+  "Tina Turner": {
+    "country": "CH",
+    "city": "Nutbush",
+    "regionName": null,
+    "mbid": "9072df14-b61e-42e2-b4f4-6bbb7fdb5586"
+  },
+  "Tito Puente & His Orchestra": {
+    "miss": true
+  },
+  "TLC": {
+    "country": "US",
+    "city": "Atlanta",
+    "regionName": null,
+    "mbid": "99790314-885a-4975-8614-9c5bc890364d"
+  },
+  "Todd Rundgren": {
+    "country": "US",
+    "city": "Upper Darby Township",
+    "regionName": null,
+    "mbid": "1a9a8ca0-ea8e-4e9e-96aa-288155bb2c5d"
+  },
+  "Tom Petty & The Heartbreakers": {
+    "miss": true
+  },
+  "Tom Tom Club": {
+    "country": "US",
+    "city": "Nassau",
+    "regionName": null,
+    "mbid": "3dc66525-d359-406d-9cdf-cdd3a7de289c"
+  },
+  "Tom Waits": {
+    "country": "US",
+    "city": "Pomona",
+    "regionName": null,
+    "mbid": "c3aeb863-7b26-4388-94e8-5a240f2be21b"
+  },
+  "Toninhohorta": {
+    "miss": true
+  },
+  "Tony Williams Lifetime": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "47c2f7ec-a63b-4919-b025-cde1aeddb36c"
+  },
+  "Tori Amos": {
+    "country": "US",
+    "city": "Newton",
+    "regionName": null,
+    "mbid": "c0b2500e-0cef-4130-869d-732b23ed9df5"
+  },
+  "Tortoise": {
+    "country": "US",
+    "city": "Chicago",
+    "regionName": null,
+    "mbid": "e0953daa-860f-4dc8-9f1a-b12587cdaf17"
+  },
+  "Toto": {
+    "country": "US",
+    "city": "Van Nuys",
+    "regionName": null,
+    "mbid": "aab5c954-cabe-432e-899e-1c4f99757327"
+  },
+  "Tracy Chapman": {
+    "country": "US",
+    "city": "Cleveland",
+    "regionName": null,
+    "mbid": "1129817c-488a-4096-80c1-77fc1b107c93"
+  },
+  "Traffic": {
+    "country": "GB",
+    "city": "Birmingham",
+    "regionName": null,
+    "mbid": "9fadfba9-ecae-4383-a4d8-47b043cea19a"
+  },
+  "Travis": {
+    "country": null,
+    "city": "Glasgow",
+    "regionName": "Scotland",
+    "mbid": "22a40b75-affc-4e69-8884-266d087e4751"
+  },
+  "Tricky": {
+    "country": "GB",
+    "city": "Bristol",
+    "regionName": null,
+    "mbid": "5bf64d94-efd9-4334-96fd-e6197b0b02b8"
+  },
+  "Triple M": {
+    "miss": true
+  },
+  "Turbonegro": {
+    "miss": true
+  },
+  "TV On The Radio": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "eb872766-98f6-453d-883f-2ae908a18315"
+  },
+  "U.K.": {
+    "miss": true
+  },
+  "UB40": {
+    "country": "GB",
+    "city": "Birmingham",
+    "regionName": null,
+    "mbid": "7113aab7-628f-4050-ae49-dbecac110ca8"
+  },
+  "Underworld": {
+    "country": "GB",
+    "city": "Romford",
+    "regionName": null,
+    "mbid": "ba2f4f3b-0293-4bc8-bb94-2f73b5207343"
+  },
+  "Van Morrison": {
+    "miss": true
+  },
+  "Various": {
+    "miss": true
+  },
+  "Venom": {
+    "country": "GB",
+    "city": "Newcastle upon Tyne",
+    "regionName": null,
+    "mbid": "d2ad8774-9173-4970-8427-06b04df201c1"
+  },
+  "Violent Femmes": {
+    "country": "US",
+    "city": "Milwaukee",
+    "regionName": null,
+    "mbid": "2aab61bc-67f4-4722-8c6e-e1821b2e32a6"
+  },
+  "WAR": {
+    "country": "US",
+    "city": "Long Beach",
+    "regionName": null,
+    "mbid": "3e6bbdb8-66c8-439c-a3d9-87391ce88740"
+  },
+  "Waylon Jennings": {
+    "country": "US",
+    "city": "Littlefield",
+    "regionName": null,
+    "mbid": "1a46826b-4d73-4e04-8590-f36c9d832f9e"
+  },
+  "Weather Report": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "0f9997bd-e079-429e-8ccd-9378c9b0c746"
+  },
+  "Wendy Carlos": {
+    "country": "US",
+    "city": "Pawtucket",
+    "regionName": null,
+    "mbid": "7e3b3173-2c1f-42c0-8544-0e6d19bb181f"
+  },
+  "Wes Montgomery": {
+    "country": "US",
+    "city": "Indianapolis",
+    "regionName": null,
+    "mbid": "663f8232-8c46-4851-803f-a91d31593b14"
+  },
+  "White Noise": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "eebe62ef-b943-4c63-adc0-c638973a5ae4"
+  },
+  "William Orbit": {
+    "country": "GB",
+    "city": "Shoreditch",
+    "regionName": null,
+    "mbid": "a7412cd0-e0b8-4fa1-8d24-75bb92a84946"
+  },
+  "Willie Colón & Rubén Blades": {
+    "miss": true
+  },
+  "Willie Nelson": {
+    "country": "US",
+    "city": "Abbott",
+    "regionName": null,
+    "mbid": "668fd73c-bf54-4310-a139-305517f05311"
+  },
+  "Wu-Tang Clan": {
+    "country": "US",
+    "city": "Staten Island",
+    "regionName": null,
+    "mbid": "0febdcf7-4e1f-4661-9493-b40427de2c13"
+  },
+  "X": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "ddd553d4-977e-416c-8f57-e4b72c0fc746"
+  },
+  "X-Ray Spex": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "f4c967a4-7591-4bba-8237-82e171a2fa7f"
+  },
+  "X‐Ray Spex": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "f4c967a4-7591-4bba-8237-82e171a2fa7f"
+  },
+  "XTC": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Swindon",
+    "mbid": "97c86b2c-2765-46a2-aef8-76a7e24c430f"
+  },
+  "Yahzarah": {
+    "country": "US",
+    "city": null,
+    "regionName": "Washington, D.C.",
+    "mbid": "91452dff-3579-4e6a-8849-81068cd73831"
+  },
+  "Yann Tiersen": {
+    "country": "FR",
+    "city": "Brest",
+    "regionName": null,
+    "mbid": "12d432a3-feb0-49b1-a107-d20751880764"
+  },
+  "Yeah Yeah Yeahs": {
+    "country": "US",
+    "city": "New York",
+    "regionName": null,
+    "mbid": "584c04d2-4acc-491b-8a0a-e63133f4bfc4"
+  },
+  "Yes": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "c1d4f2ba-cf39-460c-9528-6b827d3417a1"
+  },
+  "YES": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "c1d4f2ba-cf39-460c-9528-6b827d3417a1"
+  },
+  "Yo-Yo Ma & Bobby MCFerrin": {
+    "miss": true
+  },
+  "Youssou N’Dour": {
+    "country": "SN",
+    "city": "Dakar",
+    "regionName": null,
+    "mbid": "af081ea2-7a2c-4fbd-8200-92d62056b5f5"
+  },
+  "Zapp": {
+    "country": "US",
+    "city": "Dayton",
+    "regionName": null,
+    "mbid": "e89e79d4-04c1-4bc3-9be1-a15899c93d8f"
+  },
+  "Zapp & Roger": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "d5b38919-f3b3-4edc-bcd6-417a1139ae3f"
+  },
+  "Zero 7": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "c23b637b-97c6-41eb-8ef6-6c724efc80a8"
+  },
+  "Zombies": {
+    "country": "GB",
+    "city": "City of St Albans",
+    "regionName": null,
+    "mbid": "230ca093-1d00-4c57-9235-147942f66930"
+  },
+  "Zoot Sims with Joe Pass": {
+    "miss": true
+  },
+  "ZZ Top": {
+    "country": "US",
+    "city": "Houston",
+    "regionName": null,
+    "mbid": "a81259a0-a2f5-464b-866e-71220f2739f1"
+  },
+  "Alice In Chains": {
+    "country": "US",
+    "city": "Seattle",
+    "regionName": null,
+    "mbid": "4bd95eea-b9f6-4d70-a36c-cfea77431553",
+    "source": "musicbrainz"
+  },
+  "At The Drive-In": {
+    "country": "US",
+    "city": "El Paso",
+    "regionName": null,
+    "mbid": "7e13cd1c-0300-4d03-bd8e-5f86dd99d74f",
+    "source": "musicbrainz"
+  },
+  "Bastian": {
+    "country": "NL",
+    "city": "Haarlem",
+    "regionName": null,
+    "mbid": "3153a150-891e-43e3-aec9-d37d7695a3ad",
+    "source": "musicbrainz"
+  },
+  "Big Black": {
+    "country": "US",
+    "city": "Evanston",
+    "regionName": null,
+    "mbid": "9463868f-edc8-427e-ac07-ea89698e5f15",
+    "source": "musicbrainz"
+  },
+  "Bill Evans & Claus Ogerman": {
+    "miss": true
+  },
+  "Biscuits & Gravy": {
+    "country": null,
+    "city": "Boston",
+    "regionName": null,
+    "mbid": "21325e72-2304-44c8-83e2-ec9d7f36ea41",
+    "source": "musicbrainz"
+  },
+  "Björk & The Brodsky Quartet": {
+    "miss": true
+  },
+  "Bob Marley": {
+    "country": "JM",
+    "city": "Nine Mile",
+    "regionName": null,
+    "mbid": "ed2ac1e9-d51d-4eff-a2c2-85e81abd6360",
+    "source": "musicbrainz"
+  },
+  "Christie Lenee": {
+    "miss": true
+  },
+  "Christopher Sieber & Sara Ramirez": {
+    "miss": true
+  },
+  "Count Basie": {
+    "country": "US",
+    "city": "Red Bank",
+    "regionName": null,
+    "mbid": "0dbd6300-efdc-420b-857e-895e18fad317",
+    "source": "musicbrainz"
+  },
+  "Earl Klugh & George Benson": {
+    "miss": true
+  },
+  "Eazy-E feat. Ice Cube": {
+    "miss": true
+  },
+  "Elastica": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "46693641-1e2e-4aae-80ed-6b28170de63a",
+    "source": "musicbrainz"
+  },
+  "Emerson, Lake & Palmer": {
+    "country": "GB",
+    "city": "Bournemouth",
+    "regionName": null,
+    "mbid": "ad996aef-cc1c-42ac-af5c-619c370f4b8a",
+    "source": "musicbrainz"
+  },
+  "Georges Gershwin": {
+    "miss": true
+  },
+  "Itzhak Perlman - violin": {
+    "miss": true
+  },
+  "Marty Robbins": {
+    "country": "US",
+    "city": "Glendale",
+    "regionName": null,
+    "mbid": "2c2add7c-9a99-4812-a20e-870d331f01fd",
+    "source": "musicbrainz"
+  },
+  "May Palmer": {
+    "miss": true
+  },
+  "Mike Stern": {
+    "country": "US",
+    "city": "Boston",
+    "regionName": null,
+    "mbid": "38e82a3d-4e11-4e0b-92d5-6b3a3f93f276",
+    "source": "musicbrainz"
+  },
+  "Ms Dynamite": {
+    "country": "GB",
+    "city": "Archway",
+    "regionName": null,
+    "mbid": "c0c5e158-d61d-4043-a0eb-dc6cc1e0a539",
+    "source": "musicbrainz"
+  },
+  "Pilot": {
+    "country": "GB",
+    "city": "Edinburgh",
+    "regionName": null,
+    "mbid": "3ff99b4e-3824-40d4-8acb-0147c6eae948",
+    "source": "musicbrainz"
+  },
+  "Raymond Scott": {
+    "country": "US",
+    "city": "Brooklyn",
+    "regionName": null,
+    "mbid": "1807480c-c81e-401a-8016-300758f51008",
+    "source": "musicbrainz"
+  },
+  "Richard & Linda Thompson": {
+    "country": "GB",
+    "city": null,
+    "regionName": null,
+    "mbid": "fc60e1ff-04f2-4417-8d33-dde3aae9d8e9",
+    "source": "musicbrainz"
+  },
+  "Robbie Williams": {
+    "country": "GB",
+    "city": null,
+    "regionName": "Stoke-on-Trent",
+    "mbid": "db4624cf-0e44-481e-a9dc-2142b833ec2f",
+    "source": "musicbrainz"
+  },
+  "Steely Dan": {
+    "country": null,
+    "city": "Annandale-on-Hudson",
+    "regionName": null,
+    "mbid": "e01c3376-15fa-40d7-b747-5f219bdefdd7",
+    "source": "musicbrainz"
+  },
+  "T. Rex": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "c842d29f-a297-48cd-bb71-4f77fd672b16",
+    "source": "musicbrainz"
+  },
+  "Talvin Singh": {
+    "country": "GB",
+    "city": "London",
+    "regionName": null,
+    "mbid": "4fafdd2b-4cd0-4cc7-a338-cd94cfceeea4",
+    "source": "musicbrainz"
+  },
+  "The Arcade Fire": {
+    "miss": true
+  },
+  "The Bees": {
+    "country": "GB",
+    "city": "Ventnor",
+    "regionName": null,
+    "mbid": "276cfa71-caa8-4bf4-b522-39a8086e7c6b",
+    "source": "musicbrainz"
+  },
+  "The Bill Evans Trio": {
+    "miss": true
+  },
+  "The Birthday Party": {
+    "country": null,
+    "city": "Melbourne",
+    "regionName": null,
+    "mbid": "cbcd4d49-e892-4fc6-a313-35f275a153d2",
+    "source": "musicbrainz"
+  },
+  "The Blue Nile": {
+    "country": "GB",
+    "city": "Glasgow",
+    "regionName": null,
+    "mbid": "13453b40-1d9c-4281-b73f-b7c1b45c7ebd",
+    "source": "musicbrainz"
+  },
+  "The Game": {
+    "country": "US",
+    "city": "Los Angeles",
+    "regionName": null,
+    "mbid": "07cc14fb-4784-4a25-804b-2686ed5ef52c",
+    "source": "musicbrainz"
+  },
+  "Ute Lemper": {
+    "country": "DE",
+    "city": "Münster",
+    "regionName": null,
+    "mbid": "65d509a1-7e8c-47c2-ae57-14fdd882b16a",
+    "source": "musicbrainz"
+  },
+  "Vangelis O": {
+    "miss": true
+  }
+}

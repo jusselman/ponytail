@@ -24,7 +24,8 @@ export const logout = async () => {
 // `display_name` becomes the musician's public artist/stage name.
 //
 // `musicianProfile`, if provided, carries the extra musician-onboarding answers —
-// location (city), genre, subgenre, mood, soundDescription (Tag 5) — which seed
+// location (city label) + locationPlaceId (the picked places row, which the
+// backend turns into coordinates), genre, subgenre, mood, soundDescription (Tag 5) — which seed
 // both the personalized radio station and every track that musician later
 // uploads (see uploadTrack, which no longer takes its own genre for this reason).
 export const register = async (email, username, password, is_artist = false, display_name = null, musicianProfile = null) => {
@@ -35,6 +36,7 @@ export const register = async (email, username, password, is_artist = false, dis
     is_artist,
     display_name,
     location: musicianProfile?.location || null,
+    location_place_id: musicianProfile?.locationPlaceId || null,
     genre: musicianProfile?.genre || null,
     subgenre: musicianProfile?.subgenre || null,
     mood: musicianProfile?.mood || null,
