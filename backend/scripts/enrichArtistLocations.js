@@ -7,9 +7,12 @@
 //      (P740) or where a musician was born (P19). Fast, no per-artist calls.
 //   3. MusicBrainz — only for artists Wikidata couldn't place in a city,
 //      1 request/second, waiting and retrying when it says "slow down"
-//   4. Collaborations ("Bill Evans & Claus Ogerman") that still have no city
-//      fall back to the first-named artist ("Bill Evans"), when that artist
-//      is also in the catalog
+//   4. Collaborations ("Ella Fitzgerald & Joe Pass") that still have no city
+//      take the city of the first named member we can place
+//
+// Small towns and neighbourhoods the lookups return ("Brixton", "Fort
+// Macleod") are found in assets/geo/gazetteer.tsv.gz and snapped to the
+// nearest city.
 //
 // Answers are cached in assets/geo/wikidata_cache.json and
 // musicbrainz_cache.json, so re-runs only ask about what's still missing.
@@ -27,6 +30,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 const fetch = require('node-fetch');
 const { pool } = require('../src/config/db');
 const { cityLabel, distanceSql } = require('../src/services/geo');
@@ -34,6 +38,7 @@ const { cityLabel, distanceSql } = require('../src/services/geo');
 const OVERRIDES_PATH = path.join(__dirname, '../assets/geo/artist_locations.json');
 const MB_CACHE_PATH = path.join(__dirname, '../assets/geo/musicbrainz_cache.json');
 const WD_CACHE_PATH = path.join(__dirname, '../assets/geo/wikidata_cache.json');
+const GAZETTEER_PATH = path.join(__dirname, '../assets/geo/gazetteer.tsv.gz');
 const OFFLINE = process.argv.includes('--offline');
 const SKIP_MB = OFFLINE || process.argv.includes('--skip-musicbrainz');
 const REDO = process.argv.includes('--redo');
@@ -47,13 +52,17 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const norm = (s) => String(s || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const readJson = (p, fallback) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return fallback; } };
 const writeJson = (p, v) => fs.writeFileSync(p, JSON.stringify(v, null, 2));
-const hasCity = (loc) => !!(loc && !loc.miss && (loc.city || loc.lat != null));
 
-// ── "Bill Evans & Claus Ogerman" → "Bill Evans". Only used after the full
-// name found nothing, because "Simon & Garfunkel" is a real act. ──
-function primaryArtist(name) {
-  const first = name.split(/\s+(?:&|and|feat\.?|featuring|ft\.?|with|vs\.?|x)\s+|\s*[\/+,]\s*/i)[0].trim();
-  return first && first !== name ? first : null;
+// ── "Ella Fitzgerald & Joe Pass" → ["Ella Fitzgerald", "Joe Pass"]. Only used
+// after the full name found no city, because "Simon & Garfunkel" is a real
+// act. A member only counts if it's an artist in the catalog, or at least two
+// words that don't start with The/His/Her — so "Simon", "The Crickets" and
+// "His Orchestra" are never looked up as if they were people. ──
+const MEMBER_SPLIT = /\s+(?:&|and|feat\.?|featuring|ft\.?|with|vs\.?|meets|x)\s+|\s*[\/+,;]\s*/i;
+function memberNames(name, isCatalogArtist) {
+  const parts = name.split(MEMBER_SPLIT).map(p => p.trim()).filter(Boolean);
+  if (parts.length < 2) return [];
+  return parts.filter(p => isCatalogArtist(p) || (p.split(/\s+/).length >= 2 && !/^(the|his|her|their)\s/i.test(p)));
 }
 
 // ── Label variants Wikidata might use: as written, and with small words
@@ -229,31 +238,100 @@ async function lookupMusicBrainzAll(names, cache) {
 }
 
 // ──────────────────────────── places matching ───────────────────────────
-// ── A location guess → the columns to write. Tries: city name in that
-// country, then (Wikidata) the nearest known city to its coordinates, then
-// the region, then just the country. ──
+// ── Gazetteer: every GeoNames place over 500 people (small towns, suburbs,
+// some neighbourhoods). Lookup only — it finds coordinates for hometowns
+// like "Brixton" or "Fort Macleod" that the places table (cities over
+// 15,000) doesn't hold; the artist is then snapped to the nearest city. ──
+let gazetteer = null;
+function loadGazetteer() {
+  if (gazetteer) return gazetteer;
+  gazetteer = new Map();
+  let text;
+  try {
+    text = zlib.gunzipSync(fs.readFileSync(GAZETTEER_PATH)).toString('utf8');
+  } catch (err) {
+    console.log(`(No gazetteer at ${path.basename(GAZETTEER_PATH)} — small towns will stay country-only.)`);
+    return gazetteer;
+  }
+  for (const line of text.split('\n')) {
+    if (!line || line.startsWith('#') || line.startsWith('name\t')) continue;
+    const [name, asciiName, country, admin1, lat, lng, population] = line.split('\t');
+    const entry = { name, country, admin1, lat: parseFloat(lat), lng: parseFloat(lng), population: parseInt(population, 10) || 0 };
+    for (const key of new Set([name.toLowerCase(), asciiName.toLowerCase()])) {
+      if (!gazetteer.has(key)) gazetteer.set(key, []);
+      gazetteer.get(key).push(entry); // file is sorted by population, so lists are too
+    }
+  }
+  return gazetteer;
+}
+
+const stripAccents = (s) => s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+
+// ── Spellings to try for a place name: as given, known aliases, and
+// "St." / "St" written out as "Saint" (GeoNames' convention) ──
+const PLACE_ALIASES = { 'new york': 'New York City', 'washington, d.c.': 'Washington', 'washington d.c.': 'Washington', 'washington, dc': 'Washington', 'la habana': 'Havana' };
+function placeNameVariants(name) {
+  const out = [name];
+  const alias = PLACE_ALIASES[name.toLowerCase()];
+  if (alias) out.unshift(alias);
+  if (/^St\.?\s/i.test(name)) out.push(name.replace(/^St\.?\s/i, 'Saint '));
+  if (name.includes(',')) out.push(name.split(',')[0].trim());
+  if (name.includes(' / ')) out.push(...name.split(' / ').map(p => p.trim())); // "Schaerbeek / Schaarbeek"
+  return [...new Set(out)];
+}
+
+async function nearestCity(lat, lng) {
+  const d = distanceSql('lat', 'lng', '$1::float8', '$2::float8');
+  const r = await pool.query(
+    `SELECT *, ${d} AS dist FROM places WHERE kind = 'city' AND ${d} <= $3 ORDER BY dist LIMIT 1`,
+    [lat, lng, NEAREST_CITY_MI]
+  );
+  return r.rows[0] || null;
+}
+
+// ── A location guess → the columns to write. Tries, in order:
+//   1. the city name (and its variants) in the places table
+//   2. the name in the gazetteer → its coordinates
+//   3. coordinates the source gave us (Wikidata)
+//   4. the region, then just the country
+// MusicBrainz's "country" is the artist's, not the place's, and is often
+// missing — so with no country the biggest place of that name wins, but a
+// place is never looked up in a different country than the one given. ──
 async function resolveToColumns(loc) {
   if (!loc || loc.miss) return null;
-  if (loc.city && loc.country) {
-    const r = await pool.query(
-      `SELECT * FROM places
-       WHERE kind = 'city' AND country_code = $2
-         AND (lower(ascii_name) = lower($1) OR lower(name) = lower($3))
-       ORDER BY (admin1_code = $4) DESC NULLS LAST, population DESC
-       LIMIT 1`,
-      [loc.city.normalize('NFKD').replace(/[̀-ͯ]/g, ''), loc.country, loc.city, loc.region || '']
-    );
-    const p = r.rows[0];
-    if (p) return { label: cityLabel(p), lat: p.lat, lng: p.lng, country: p.country_code, region: p.admin1_code };
+
+  // MusicBrainz files some cities as a "subdivision" (Washington, D.C.,
+  // Kingston upon Hull), so a region name gets tried as a place name too.
+  const placeNames = [loc.city, loc.regionName].filter(Boolean);
+  for (const placeName of placeNames) {
+    const variants = placeNameVariants(placeName);
+    for (const v of variants) {
+      const r = await pool.query(
+        `SELECT * FROM places
+         WHERE kind = 'city' AND ($2::text IS NULL OR country_code = $2)
+           AND (lower(ascii_name) = lower($1) OR lower(name) = lower($3))
+         ORDER BY (admin1_code = $4) DESC NULLS LAST, population DESC
+         LIMIT 1`,
+        [stripAccents(v), loc.country || null, v, loc.region || '']
+      );
+      const p = r.rows[0];
+      if (p) return { label: cityLabel(p), lat: p.lat, lng: p.lng, country: p.country_code, region: p.admin1_code };
+    }
+    const gaz = loadGazetteer();
+    for (const v of variants) {
+      const hits = (gaz.get(v.toLowerCase()) || gaz.get(stripAccents(v).toLowerCase()) || [])
+        .filter(g => !loc.country || g.country === loc.country);
+      if (!hits.length) continue;
+      const g = hits.find(h => loc.region && h.admin1 === loc.region) || hits[0];
+      const near = await nearestCity(g.lat, g.lng);
+      const where = near ? (near.country_code === 'US' && near.admin1_code ? near.admin1_code : near.country_name) : g.country;
+      return { label: `${g.name}, ${where}`, lat: g.lat, lng: g.lng, country: g.country, region: near ? near.admin1_code : null };
+    }
   }
+
   if (loc.lat != null && loc.lng != null) {
-    const d = distanceSql('lat', 'lng', '$1::float8', '$2::float8');
-    const r = await pool.query(
-      `SELECT *, ${d} AS dist FROM places WHERE kind = 'city' AND ${d} <= $3 ORDER BY dist LIMIT 1`,
-      [loc.lat, loc.lng, NEAREST_CITY_MI]
-    );
-    const p = r.rows[0];
-    // Keep Wikidata's own point (e.g. a neighbourhood) but borrow the nearby city's label/region
+    const p = await nearestCity(loc.lat, loc.lng);
+    // Keep the source's own point (e.g. a neighbourhood) but borrow the nearby city's label/region
     if (p) return { label: cityLabel(p), lat: loc.lat, lng: loc.lng, country: p.country_code, region: p.admin1_code };
     if (loc.country) return { label: loc.city || loc.country, lat: loc.lat, lng: loc.lng, country: loc.country, region: null };
   }
@@ -294,51 +372,87 @@ async function enrich() {
     console.log('Tip: set MUSICBRAINZ_CONTACT in .env so Wikidata and MusicBrainz know who is calling.');
   }
 
-  // ── The best answer so far for a name, across every source ──
-  const bestFor = (name) => {
-    const candidates = [override(name), wdCache[name], mbCache[name]].filter(l => l && !l.miss);
-    return candidates.find(hasCity) || candidates[0] || null;
+  // ── Every source's answer for a name, resolved against the places table and
+  // gazetteer. The first one that pins down a city wins; otherwise the first
+  // that at least gives a country. Cached per name for this run. ──
+  const resolved = new Map();
+  const bestFor = async (name) => {
+    if (resolved.has(name)) return resolved.get(name);
+    let fallback = null;
+    let best = null;
+    for (const loc of [override(name), wdCache[name], mbCache[name]]) {
+      if (!loc || loc.miss) continue;
+      const cols = await resolveToColumns(loc);
+      if (!cols) continue;
+      const answer = { cols, source: loc.source || 'musicbrainz' };
+      if (cols.lat != null) { best = answer; break; }
+      if (!fallback) fallback = answer;
+    }
+    const out = best || fallback;
+    resolved.set(name, out);
+    return out;
   };
+  const cityKnown = async (name) => { const b = await bestFor(name); return !!(b && b.cols.lat != null); };
+  const needCity = async (names) => {
+    const out = [];
+    for (const n of names) if (!(await cityKnown(n))) out.push(n);
+    return out;
+  };
+  const forget = (names) => names.forEach(n => resolved.delete(n)); // after new lookups arrive
 
-  const needCity = (names) => names.filter(n => !hasCity(bestFor(n)));
+  if (!OFFLINE) {
+    const todo = await needCity(artists);
+    await lookupWikidata(todo, wdCache);
+    forget(todo);
+  }
+  if (!SKIP_MB) {
+    const todo = await needCity(artists);
+    await lookupMusicBrainzAll(todo, mbCache);
+    forget(todo);
+  }
 
-  if (!OFFLINE) await lookupWikidata(needCity(artists), wdCache);
-  if (!SKIP_MB) await lookupMusicBrainzAll(needCity(artists), mbCache);
-
-  // ── Collaborations: fall back to the first-named artist ──
-  // Only when the first name is itself an artist in the catalog, so
-  // "Simon & Garfunkel" never turns into some unrelated "Simon".
-  const allArtists = new Set(artistRows.rows.map(r => r.artist.normalize('NFC').toLowerCase()));
-  const primaries = new Map();
-  needCity(artists).forEach(a => {
-    const p = primaryArtist(a);
-    if (p && allArtists.has(p.normalize('NFC').toLowerCase())) primaries.set(a, p);
-  });
-  const primaryNames = [...new Set(primaries.values())];
-  if (!OFFLINE && primaryNames.length) {
-    console.log(`Trying ${primaryNames.length} first-named artists for collaborations...`);
-    await lookupWikidata(needCity(primaryNames), wdCache);
-    if (!SKIP_MB) await lookupMusicBrainzAll(needCity(primaryNames), mbCache);
+  // ── Collaborations: use the first named member we can place in a city ──
+  const catalogKeys = new Set(artistRows.rows.map(r => r.artist.normalize('NFC').toLowerCase()));
+  const catalogName = new Map(artistRows.rows.map(r => [r.artist.normalize('NFC').toLowerCase(), r.artist]));
+  const isCatalogArtist = (p) => catalogKeys.has(p.normalize('NFC').toLowerCase());
+  const members = new Map();
+  for (const a of await needCity(artists)) {
+    const m = memberNames(a, isCatalogArtist).map(p => catalogName.get(p.normalize('NFC').toLowerCase()) || p);
+    if (m.length) members.set(a, m);
+  }
+  const memberList = [...new Set([...members.values()].flat())];
+  if (memberList.length && !OFFLINE) {
+    console.log(`Looking up ${memberList.length} collaboration members...`);
+    let todo = await needCity(memberList);
+    await lookupWikidata(todo, wdCache);
+    forget(todo);
+    if (!SKIP_MB) {
+      todo = await needCity(memberList);
+      await lookupMusicBrainzAll(todo, mbCache);
+      forget(todo);
+    }
   }
 
   // ── Write everything ──
   const stats = { city: 0, countryOnly: 0, unknown: 0, bySource: {} };
   for (let i = 0; i < artists.length; i++) {
     const artist = artists[i];
-    let loc = bestFor(artist);
-    if (!hasCity(loc) && primaries.has(artist)) {
-      const viaPrimary = bestFor(primaries.get(artist));
-      if (hasCity(viaPrimary) || (!loc && viaPrimary)) loc = viaPrimary;
+    let answer = await bestFor(artist);
+    if (!(answer && answer.cols.lat != null) && members.has(artist)) {
+      for (const m of members.get(artist)) {
+        const viaMember = await bestFor(m);
+        if (viaMember && viaMember.cols.lat != null) { answer = { cols: viaMember.cols, source: 'collaboration member' }; break; }
+      }
     }
-    const cols = await resolveToColumns(loc);
-    if (cols) {
+    if (answer) {
+      const cols = answer.cols;
       await pool.query(
         `UPDATE seed_tracks SET location = $2, location_lat = $3, location_lng = $4, location_country = $5, location_region = $6
          WHERE artist = $1 AND is_user_upload IS NOT TRUE`,
         [artist, cols.label, cols.lat, cols.lng, cols.country, cols.region]
       );
       if (cols.lat != null) stats.city++; else stats.countryOnly++;
-      stats.bySource[loc.source || 'musicbrainz'] = (stats.bySource[loc.source || 'musicbrainz'] || 0) + 1;
+      stats.bySource[answer.source] = (stats.bySource[answer.source] || 0) + 1;
     } else stats.unknown++;
     process.stdout.write(`\r  Saving: ${i + 1}/${artists.length}   `);
   }

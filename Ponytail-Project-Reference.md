@@ -319,4 +319,6 @@ node scripts/importPlaces.js              # ~34k cities + regions + countries
 node scripts/enrichArtistLocations.js     # catalog artists → hometowns (hand-checked list, then MusicBrainz at 1 req/s)
 node scripts/backfillUserLocations.js     # existing musicians' typed cities → coordinates
 ```
+Later additions: `assets/geo/gazetteer.tsv.gz` (GeoNames places over 500 people) lets the script place small towns and neighbourhoods and snap them to the nearest city; collaborations take the city of the first named member that can be placed; `node scripts/fixArtistNames.js` is a one-off repair for artist names that did not match their mp3 folders (the "m4a" names and the Björk Gling-Gló album). Use `node scripts/enrichArtistLocations.js --redo` to re-place every artist after editing the hand-checked list. Scene tiles are a fixed list in `src/services/geo.js` (the eight places with the most tracks); personalized scenes and letting a collaboration track appear under every member city are deferred until after the MVP.
+
 Hand-checked hometowns live in `assets/geo/artist_locations.json` (add artists there and re-run to fix or fill gaps). MusicBrainz answers are cached in `assets/geo/musicbrainz_cache.json`; set `MUSICBRAINZ_CONTACT` in `.env` first.

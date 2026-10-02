@@ -11,6 +11,11 @@
       "country": "US",
       "region": "TX"
     },
+    "50 Cent": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
     "A Tribe Called Quest": {
       "city": "New York City",
       "country": "US",
@@ -20,15 +25,38 @@
       "city": "Versailles",
       "country": "FR"
     },
+    "Aphrodite's Child": {
+      "city": "Athens",
+      "country": "GR"
+    },
     "Aretha Franklin": {
       "city": "Detroit",
       "country": "US",
       "region": "MI"
     },
+    "Attention Deficit": {
+      "city": "San Francisco",
+      "country": "US",
+      "region": "CA"
+    },
+    "Barry Adamson": {
+      "city": "Manchester",
+      "country": "GB",
+      "region": "ENG"
+    },
     "Beastie Boys": {
       "city": "New York City",
       "country": "US",
       "region": "NY"
+    },
+    "Bee Gees": {
+      "city": "Redcliffe",
+      "country": "AU"
+    },
+    "Beth Orton": {
+      "city": "Norwich",
+      "country": "GB",
+      "region": "ENG"
     },
     "Big Star": {
       "city": "Memphis",
@@ -44,10 +72,54 @@
       "country": "GB",
       "region": "ENG"
     },
+    "Buddy Holly & The Crickets": {
+      "city": "Lubbock",
+      "country": "US",
+      "region": "TX"
+    },
+    "Cappella Romana": {
+      "city": "Portland",
+      "country": "US",
+      "region": "OR"
+    },
+    "Chicago Transit Authority": {
+      "city": "Chicago",
+      "country": "US",
+      "region": "IL"
+    },
+    "Country Joe & the Fish": {
+      "city": "Berkeley",
+      "country": "US",
+      "region": "CA"
+    },
     "Creedence Clearwater Revival": {
       "city": "El Cerrito",
       "country": "US",
       "region": "CA"
+    },
+    "Derek & the Dominos": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Dexy's Midnight Runners": {
+      "city": "Birmingham",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Dire Straits": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Disposable Heroes Of Hiphopris": {
+      "city": "San Francisco",
+      "country": "US",
+      "region": "CA"
+    },
+    "Dmitry Shostakovich": {
+      "city": "Saint Petersburg",
+      "country": "RU"
     },
     "Doves": {
       "city": "Manchester",
@@ -59,8 +131,23 @@
       "country": "US",
       "region": "CA"
     },
+    "Dusty Springfield": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
     "Echo & The Bunnymen": {
       "city": "Liverpool",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Eels": {
+      "city": "Los Angeles",
+      "country": "US",
+      "region": "CA"
+    },
+    "Elvis Costello": {
+      "city": "London",
       "country": "GB",
       "region": "ENG"
     },
@@ -69,10 +156,54 @@
       "country": "US",
       "region": "TX"
     },
+    "Estradasphere": {
+      "city": "Santa Cruz",
+      "country": "US",
+      "region": "CA"
+    },
+    "Frank Zappa & The Mothers of Invention": {
+      "city": "Los Angeles",
+      "country": "US",
+      "region": "CA"
+    },
+    "Fred Frith": {
+      "city": "Heathfield",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Frederic Chopin": {
+      "city": "Warsaw",
+      "country": "PL"
+    },
+    "Genius GZA": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "George Michael": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Georges Gershwin": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "Girls Against Boys": {
+      "city": "Washington",
+      "country": "US",
+      "region": "DC"
+    },
     "Guided By Voices": {
       "city": "Dayton",
       "country": "US",
       "region": "OH"
+    },
+    "Hawkwind": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
     },
     "Hella": {
       "city": "Sacramento",
@@ -84,24 +215,66 @@
       "country": "US",
       "region": "CA"
     },
+    "Hüsker Dü": {
+      "city": "Saint Paul",
+      "country": "US",
+      "region": "MN"
+    },
     "Ice Cube": {
       "city": "Los Angeles",
       "country": "US",
       "region": "CA"
+    },
+    "J. S. Bach": {
+      "city": "Eisenach",
+      "country": "DE"
     },
     "Jay-Z": {
       "city": "New York City",
       "country": "US",
       "region": "NY"
     },
+    "John Mayall?s Blues Breakers": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Kanye West": {
+      "city": "Chicago",
+      "country": "US",
+      "region": "IL"
+    },
     "Kraftwerk": {
       "city": "Düsseldorf",
       "country": "DE"
+    },
+    "Lloyd Cole & The Commotions": {
+      "city": "Glasgow",
+      "country": "GB",
+      "region": "SCT"
+    },
+    "Machito": {
+      "city": "Havana",
+      "country": "CU"
+    },
+    "Malcolm McLaren": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "MC Solaar": {
+      "city": "Paris",
+      "country": "FR"
     },
     "Metallica": {
       "city": "Los Angeles",
       "country": "US",
       "region": "CA"
+    },
+    "MF Doom": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
     },
     "Milton Nascimento & Lô Borges": {
       "city": "Belo Horizonte",
@@ -117,6 +290,15 @@
       "country": "US",
       "region": "VA"
     },
+    "Modest Mussorgsky": {
+      "city": "Saint Petersburg",
+      "country": "RU"
+    },
+    "Morrissey": {
+      "city": "Manchester",
+      "country": "GB",
+      "region": "ENG"
+    },
     "Muddy Waters": {
       "city": "Chicago",
       "country": "US",
@@ -126,8 +308,18 @@
       "city": "Dublin",
       "country": "IE"
     },
+    "N.E.R.D": {
+      "city": "Virginia Beach",
+      "country": "US",
+      "region": "VA"
+    },
     "Napalm Death": {
       "city": "Birmingham",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Nick Drake": {
+      "city": "Solihull",
       "country": "GB",
       "region": "ENG"
     },
@@ -135,6 +327,16 @@
       "city": "Seattle",
       "country": "US",
       "region": "WA"
+    },
+    "Norah Jones": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "Notorious B.I.G.": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
     },
     "Oasis": {
       "city": "Manchester",
@@ -151,10 +353,25 @@
       "country": "US",
       "region": "GA"
     },
+    "Pat Metheny Group": {
+      "city": "Kansas City",
+      "country": "US",
+      "region": "MO"
+    },
+    "Paul Revere & The Raiders": {
+      "city": "Boise",
+      "country": "US",
+      "region": "ID"
+    },
     "Pavement": {
       "city": "Stockton",
       "country": "US",
       "region": "CA"
+    },
+    "Penguin Cafe Orchestra": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
     },
     "Pink Floyd": {
       "city": "London",
@@ -201,6 +418,20 @@
       "country": "US",
       "region": "CA"
     },
+    "Rod Stewart": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Roni Size & Reprazent": {
+      "city": "Bristol",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Scarlatti, Guiseppe Domenico": {
+      "city": "Naples",
+      "country": "IT"
+    },
     "Sepultura": {
       "city": "Belo Horizonte",
       "country": "BR"
@@ -210,7 +441,22 @@
       "country": "US",
       "region": "CA"
     },
+    "Sly and the Family Stone": {
+      "city": "San Francisco",
+      "country": "US",
+      "region": "CA"
+    },
+    "Snoop Doggy Dogg": {
+      "city": "Long Beach",
+      "country": "US",
+      "region": "CA"
+    },
     "Sonic Youth": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "Steely Dan": {
       "city": "New York City",
       "country": "US",
       "region": "NY"
@@ -220,10 +466,19 @@
       "country": "US",
       "region": "MI"
     },
+    "Stills Crosby & Nash": {
+      "city": "Los Angeles",
+      "country": "US",
+      "region": "CA"
+    },
     "Talking Heads": {
       "city": "New York City",
       "country": "US",
       "region": "NY"
+    },
+    "The Arcade Fire": {
+      "city": "Montréal",
+      "country": "CA"
     },
     "The Beach Boys": {
       "city": "Hawthorne",
@@ -235,10 +490,20 @@
       "country": "GB",
       "region": "ENG"
     },
+    "The Beta Band": {
+      "city": "Edinburgh",
+      "country": "GB",
+      "region": "SCT"
+    },
     "The Clash": {
       "city": "London",
       "country": "GB",
       "region": "ENG"
+    },
+    "The Eagles": {
+      "city": "Los Angeles",
+      "country": "US",
+      "region": "CA"
     },
     "The Fall": {
       "city": "Manchester",
@@ -250,8 +515,23 @@
       "country": "US",
       "region": "OK"
     },
+    "The Flying Burrito Bros.": {
+      "city": "Los Angeles",
+      "country": "US",
+      "region": "CA"
+    },
     "The Fucking Champs": {
       "city": "San Francisco",
+      "country": "US",
+      "region": "CA"
+    },
+    "The Fugees": {
+      "city": "South Orange",
+      "country": "US",
+      "region": "NJ"
+    },
+    "The Go-Go's": {
+      "city": "Los Angeles",
       "country": "US",
       "region": "CA"
     },
@@ -270,6 +550,26 @@
       "country": "US",
       "region": "TX"
     },
+    "The New Broadway Cast": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "The Nitty Gritty Dirt Band": {
+      "city": "Long Beach",
+      "country": "US",
+      "region": "CA"
+    },
+    "The Ramones": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "The Small Faces": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
     "The Smiths": {
       "city": "Manchester",
       "country": "GB",
@@ -279,6 +579,16 @@
       "city": "Coventry",
       "country": "GB",
       "region": "ENG"
+    },
+    "The Streets": {
+      "city": "Birmingham",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "The undertones": {
+      "city": "Derry",
+      "country": "GB",
+      "region": "NIR"
     },
     "The Velvet Underground": {
       "city": "New York City",
@@ -290,10 +600,35 @@
       "country": "US",
       "region": "MI"
     },
+    "The Young Rascals": {
+      "city": "Garfield",
+      "country": "US",
+      "region": "NJ"
+    },
+    "Tito Puente & His Orchestra": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
+    "Todd Rundgren": {
+      "city": "Philadelphia",
+      "country": "US",
+      "region": "PA"
+    },
+    "Tony Williams Lifetime": {
+      "city": "New York City",
+      "country": "US",
+      "region": "NY"
+    },
     "Tool": {
       "city": "Los Angeles",
       "country": "US",
       "region": "CA"
+    },
+    "U.K.": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
     },
     "U2": {
       "city": "Dublin",
@@ -309,8 +644,28 @@
       "country": "US",
       "region": "IL"
     },
+    "William Orbit": {
+      "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Willie Nelson": {
+      "city": "Austin",
+      "country": "US",
+      "region": "TX"
+    },
     "Wire": {
       "city": "London",
+      "country": "GB",
+      "region": "ENG"
+    },
+    "Zapp & Roger": {
+      "city": "Dayton",
+      "country": "US",
+      "region": "OH"
+    },
+    "Zombies": {
+      "city": "St Albans",
       "country": "GB",
       "region": "ENG"
     }

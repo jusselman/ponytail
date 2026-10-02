@@ -804,5 +804,635 @@
   },
   "Zoot Sims with Joe Pass": {
     "miss": true
+  },
+  "Allan Holdsworth, Anders Johansson, Jens Johansson,": {
+    "miss": true
+  },
+  "Aquarius": {
+    "miss": true
+  },
+  "B.B. King": {
+    "miss": true
+  },
+  "Bebel Gilberto": {
+    "city": "New York City",
+    "country": "US",
+    "lat": 40.712777777,
+    "lng": -74.006111111,
+    "source": "wikidata"
+  },
+  "Bert Jansch & John Renbourn": {
+    "miss": true
+  },
+  "Bill Evans & Charles Mingus": {
+    "miss": true
+  },
+  "Bill Evans & Claus Ogerman": {
+    "miss": true
+  },
+  "Bill Evans & Eddie Gomez": {
+    "miss": true
+  },
+  "Bill Evans & Jim Hall": {
+    "miss": true
+  },
+  "Bill Evans & Monica Zetterlund": {
+    "miss": true
+  },
+  "Bill Evans & Toots Thielemans": {
+    "miss": true
+  },
+  "Bill Evans/Tony Bennett": {
+    "miss": true
+  },
+  "Billy Bragg & Wilco": {
+    "miss": true
+  },
+  "Björk & The Brodsky Quartet": {
+    "miss": true
+  },
+  "Björk & Tríó Guðmundar Ingólfssonar Guðmundsdóttir": {
+    "miss": true
+  },
+  "Bob Marley": {
+    "city": "Nine Mile",
+    "country": "JM",
+    "lat": 18.2978,
+    "lng": -77.2781,
+    "source": "wikidata"
+  },
+  "Burning Spear": {
+    "city": "Saint Ann's Bay",
+    "country": "JM",
+    "lat": 18.435,
+    "lng": -77.20166667,
+    "source": "wikidata"
+  },
+  "Charlie Parker & Dizzy Gillespie": {
+    "miss": true
+  },
+  "Charlie Parker & Miles Davis": {
+    "miss": true
+  },
+  "Christian Borle, Christopher Sieber, David Hyde Pierce, Ensemble & Hank Azaria": {
+    "miss": true
+  },
+  "Christian Borle, David Hyde Pierce, Ensemble & Hank Azaria": {
+    "miss": true
+  },
+  "Curtis Mayfield ft. The Staple Singers": {
+    "miss": true
+  },
+  "Dolly Parton": {
+    "miss": true
+  },
+  "Donovan": {
+    "city": "Glasgow",
+    "country": "GB",
+    "lat": 55.861111111,
+    "lng": -4.25,
+    "source": "wikidata"
+  },
+  "Ella Fitzgerald & Joe Pass": {
+    "miss": true
+  },
+  "Femi Kuti": {
+    "city": "London",
+    "country": "GB",
+    "lat": 51.507222222,
+    "lng": -0.1275,
+    "source": "wikidata"
+  },
+  "Gustav Mahler": {
+    "city": "Kaliště",
+    "country": "CZ",
+    "lat": 49.592655395,
+    "lng": 15.30409944,
+    "source": "wikidata"
+  },
+  "Holger Czukay": {
+    "city": "Gdańsk",
+    "country": "PL",
+    "lat": 54.3482907,
+    "lng": 18.6540233,
+    "source": "wikidata"
+  },
+  "Hugh Masekela": {
+    "city": "Witbank",
+    "country": "ZA",
+    "lat": -25.876583333,
+    "lng": 29.200972222,
+    "source": "wikidata"
+  },
+  "Jacky Terrasson": {
+    "city": "Berlin",
+    "country": "DE",
+    "lat": 52.516666666,
+    "lng": 13.383333333,
+    "source": "wikidata"
+  },
+  "John Cale": {
+    "city": "Garnant",
+    "country": "GB",
+    "lat": 51.802,
+    "lng": -3.902,
+    "source": "wikidata"
+  },
+  "Jon Anderson & John Paul Jones": {
+    "miss": true
+  },
+  "Lenny Breau & Buddy Emmons": {
+    "miss": true
+  },
+  "Lenny Breau & Chet Atkins": {
+    "miss": true
+  },
+  "Lenny Breau And Brad Terry": {
+    "miss": true
+  },
+  "Lenny Breau And Richard Cotten": {
+    "miss": true
+  },
+  "Lenny Breau And Tal Farlow": {
+    "miss": true
+  },
+  "Lenny Breau with Dave Young": {
+    "miss": true
+  },
+  "Loretta Lynn": {
+    "city": "Butcher Hollow",
+    "country": "US",
+    "lat": 37.778,
+    "lng": -82.717,
+    "source": "wikidata"
+  },
+  "Marianne Faithfull": {
+    "city": "Hampstead",
+    "country": "GB",
+    "lat": 51.5541,
+    "lng": -0.1744,
+    "source": "wikidata"
+  },
+  "Pat Metheny & Charlie Haden": {
+    "miss": true
+  },
+  "Pat Metheny & Jaco Pastorius": {
+    "miss": true
+  },
+  "Patrick Moraz": {
+    "city": "Morges",
+    "country": "CH",
+    "lat": 46.509447222,
+    "lng": 6.498611111,
+    "source": "wikidata"
+  },
+  "Prince And The Revolution": {
+    "city": "Minneapolis",
+    "country": "US",
+    "lat": 44.981944444,
+    "lng": -93.269166666,
+    "source": "wikidata"
+  },
+  "Richard Strauss": {
+    "city": "Munich",
+    "country": "DE",
+    "lat": 48.1375,
+    "lng": 11.575,
+    "source": "wikidata"
+  },
+  "Rick Wakeman": {
+    "city": "Perivale",
+    "country": "GB",
+    "lat": 51.5383,
+    "lng": -0.3192,
+    "source": "wikidata"
+  },
+  "Steve Winwood": {
+    "city": "Birmingham",
+    "country": "GB",
+    "lat": 52.48,
+    "lng": -1.9025,
+    "source": "wikidata"
+  },
+  "Suba": {
+    "miss": true
+  },
+  "Tina Turner": {
+    "city": "Brownsville",
+    "country": "US",
+    "lat": 35.590558,
+    "lng": -89.260902,
+    "source": "wikidata"
+  },
+  "Ali Farka Touré": {
+    "miss": true
+  },
+  "Ry Cooder": {
+    "city": "Los Angeles",
+    "country": "US",
+    "lat": 34.05223,
+    "lng": -118.24368,
+    "source": "wikidata"
+  },
+  "Jens Johansson": {
+    "city": "Stockholm",
+    "country": "SE",
+    "lat": 59.329444444,
+    "lng": 18.068611111,
+    "source": "wikidata"
+  },
+  "Astor Piazzola": {
+    "miss": true
+  },
+  "Gary Burton": {
+    "city": "Anderson",
+    "country": "US",
+    "lat": 40.1,
+    "lng": -85.68139,
+    "source": "wikidata"
+  },
+  "Mansour Seck": {
+    "city": "Podor",
+    "country": "SN",
+    "lat": 16.648888888,
+    "lng": -14.960555555,
+    "source": "wikidata"
+  },
+  "John Renbourn": {
+    "city": "Marylebone",
+    "country": "GB",
+    "lat": 51.5177,
+    "lng": -0.147,
+    "source": "wikidata"
+  },
+  "Claus Ogerman": {
+    "city": "Racibórz",
+    "country": "PL",
+    "lat": 50.091944444,
+    "lng": 18.219166666,
+    "source": "wikidata"
+  },
+  "Eddie Gomez": {
+    "city": "Santurce",
+    "country": "US",
+    "lat": 18.440833333,
+    "lng": -66.047222222,
+    "source": "wikidata"
+  },
+  "Jim Hall": {
+    "city": "Buffalo",
+    "country": "US",
+    "lat": 42.886388888,
+    "lng": -78.878055555,
+    "source": "wikidata"
+  },
+  "Monica Zetterlund": {
+    "city": "Hagfors parish",
+    "country": "SE",
+    "lat": 60.032166666,
+    "lng": 13.697055555,
+    "source": "wikidata"
+  },
+  "Toots Thielemans": {
+    "city": "Marolles - Marollen",
+    "country": "BE",
+    "lat": 50.837,
+    "lng": 4.346,
+    "source": "wikidata"
+  },
+  "Tony Bennett": {
+    "city": "Queens",
+    "country": "US",
+    "lat": 40.713611111,
+    "lng": -73.828055555,
+    "source": "wikidata"
+  },
+  "Bireli Lagrene": {
+    "miss": true
+  },
+  "Sylvain Luc": {
+    "city": "Bayonne",
+    "country": "FR",
+    "lat": 43.4925,
+    "lng": -1.476388888,
+    "source": "wikidata"
+  },
+  "Gravy m4a": {
+    "miss": true
+  },
+  "Tríó Guðmundar Ingólfssonar Guðmundsdóttir": {
+    "miss": true
+  },
+  "Bob B. Soxx": {
+    "miss": true
+  },
+  "Brad Bradley": {
+    "miss": true
+  },
+  "David Hyde Pierce": {
+    "city": "Saratoga Springs",
+    "country": "US",
+    "lat": 43.075277777,
+    "lng": -73.7825,
+    "source": "wikidata"
+  },
+  "Emily Hsu": {
+    "miss": true
+  },
+  "Greg Reuter": {
+    "miss": true
+  },
+  "Buster Jones": {
+    "miss": true
+  },
+  "Thom Bresh": {
+    "city": "Southern California",
+    "country": "US",
+    "lat": 34,
+    "lng": -117,
+    "source": "wikidata"
+  },
+  "Cannonball Adderley": {
+    "city": null,
+    "country": "US",
+    "lat": 27.9475,
+    "lng": -82.458611111,
+    "source": "wikidata"
+  },
+  "Chet Atkins": {
+    "city": "Luttrell",
+    "country": "US",
+    "lat": 36.203055555,
+    "lng": -83.745833333,
+    "source": "wikidata"
+  },
+  "Tommy Emmanuel": {
+    "city": "Muswellbrook",
+    "country": "AU",
+    "lat": -32.265,
+    "lng": 150.8844444,
+    "source": "wikidata"
+  },
+  "Christopher Sieber": {
+    "city": "Saint Paul",
+    "country": "US",
+    "lat": 44.944166666,
+    "lng": -93.093611111,
+    "source": "wikidata"
+  },
+  "Hank Azaria": {
+    "city": "Queens",
+    "country": "US",
+    "lat": 40.713611111,
+    "lng": -73.828055555,
+    "source": "wikidata"
+  },
+  "Michael MCGrath": {
+    "miss": true
+  },
+  "Steve Rosen": {
+    "miss": true
+  },
+  "Tim Curry": {
+    "city": "Grappenhall",
+    "country": "GB",
+    "lat": 53.3725,
+    "lng": -2.543,
+    "source": "wikidata"
+  },
+  "Coleman Hawkins": {
+    "city": "St. Joseph",
+    "country": "US",
+    "lat": 39.768611111,
+    "lng": -94.846638888,
+    "source": "wikidata"
+  },
+  "Billy Byers": {
+    "city": "Los Angeles",
+    "country": "US",
+    "lat": 34.05223,
+    "lng": -118.24368,
+    "source": "wikidata"
+  },
+  "Earl Klugh": {
+    "city": "Detroit",
+    "country": "US",
+    "lat": 42.331666666,
+    "lng": -83.0475,
+    "source": "wikidata"
+  },
+  "Afrika '70": {
+    "miss": true
+  },
+  "Greg Howe": {
+    "city": "Easton",
+    "country": "US",
+    "lat": 40.688333333,
+    "lng": -75.216388888,
+    "source": "wikidata"
+  },
+  "Victor Wooten": {
+    "city": "Mountain Home",
+    "country": "US",
+    "lat": 43.136944444,
+    "lng": -115.694444444,
+    "source": "wikidata"
+  },
+  "Dennis Chambers": {
+    "city": "Baltimore",
+    "country": "US",
+    "lat": 39.286388888,
+    "lng": -76.615,
+    "source": "wikidata"
+  },
+  "Herbie Mann": {
+    "city": "Brooklyn",
+    "country": "US",
+    "lat": 40.650833333,
+    "lng": -73.949722222,
+    "source": "wikidata"
+  },
+  "Charlie Haden": {
+    "city": "Shenandoah",
+    "country": "US",
+    "lat": 40.762222222,
+    "lng": -95.370833333,
+    "source": "wikidata"
+  },
+  "Ron Carter": {
+    "city": "Ferndale",
+    "country": "US",
+    "lat": 42.4606,
+    "lng": -83.1347,
+    "source": "wikidata"
+  },
+  "John Paul Jones": {
+    "city": "Sidcup",
+    "country": "GB",
+    "lat": 51.4263,
+    "lng": 0.1024,
+    "source": "wikidata"
+  },
+  "Buddy Emmons": {
+    "city": "Mishawaka",
+    "country": "US",
+    "lat": 41.6675,
+    "lng": -86.171388888,
+    "source": "wikidata"
+  },
+  "Richard Cotten": {
+    "miss": true
+  },
+  "Tal Farlow": {
+    "city": "Greensboro",
+    "country": "US",
+    "lat": 36.0725,
+    "lng": -79.790277777,
+    "source": "wikidata"
+  },
+  "Milcho Leviev": {
+    "city": "Plovdiv",
+    "country": "BG",
+    "lat": 42.142086,
+    "lng": 24.741454,
+    "source": "wikidata"
+  },
+  "Dave Holland": {
+    "city": "Wolverhampton",
+    "country": "GB",
+    "lat": 52.584166666,
+    "lng": -2.125277777,
+    "source": "wikidata"
+  },
+  "Jaco Pastorius": {
+    "city": "Norristown",
+    "country": "US",
+    "lat": 40.12,
+    "lng": -75.3417,
+    "source": "wikidata"
+  },
+  "Peter Erskine": {
+    "city": "Somers Point",
+    "country": "US",
+    "lat": 39.317225,
+    "lng": -74.60637,
+    "source": "wikidata"
+  },
+  "Nguyên Lê": {
+    "miss": true
+  },
+  "Michel Benita": {
+    "city": "Algiers",
+    "country": "DZ",
+    "lat": 36.776388888,
+    "lng": 3.058611111,
+    "source": "wikidata"
+  },
+  "Nguyên Lê": {
+    "city": "Paris",
+    "country": "FR",
+    "lat": 48.856666666,
+    "lng": 2.352222222,
+    "source": "wikidata"
+  },
+  "Phil Spector": {
+    "city": "New York City",
+    "country": "US",
+    "lat": 40.712777777,
+    "lng": -74.006111111,
+    "source": "wikidata"
+  },
+  "Linda Thompson": {
+    "city": "Memphis",
+    "country": "US",
+    "lat": 35.146111111,
+    "lng": -90.051944444,
+    "source": "wikidata"
+  },
+  "Stan Getz": {
+    "city": "Philadelphia",
+    "country": "US",
+    "lat": 39.952777777,
+    "lng": -75.163611111,
+    "source": "wikidata"
+  },
+  "Charlie Byrd": {
+    "city": "Suffolk",
+    "country": "US",
+    "lat": 36.728194444,
+    "lng": -76.583194444,
+    "source": "wikidata"
+  },
+  "Jo�o Gilberto": {
+    "miss": true
+  },
+  "Stanley Clarke": {
+    "city": "Philadelphia",
+    "country": "US",
+    "lat": 39.952777777,
+    "lng": -75.163611111,
+    "source": "wikidata"
+  },
+  "Al Di Meola": {
+    "city": "Jersey City",
+    "country": "US",
+    "lat": 40.71,
+    "lng": -74.06,
+    "source": "wikidata"
+  },
+  "Jean-Luc Ponty": {
+    "city": "Avranches",
+    "country": "FR",
+    "lat": 48.684444444,
+    "lng": -1.356944444,
+    "source": "wikidata"
+  },
+  "Tetsuo Sakurai": {
+    "city": "Tokyo",
+    "country": "JP",
+    "lat": 35.689444444,
+    "lng": 139.691666666,
+    "source": "wikidata"
+  },
+  "Lee Konitz": {
+    "city": "Chicago",
+    "country": "US",
+    "lat": 41.881944444,
+    "lng": -87.627777777,
+    "source": "wikidata"
+  },
+  "Warne Marsh": {
+    "city": "Los Angeles",
+    "country": "US",
+    "lat": 34.05223,
+    "lng": -118.24368,
+    "source": "wikidata"
+  },
+  "Tom Petty": {
+    "city": "Gainesville",
+    "country": "US",
+    "lat": 29.665277777,
+    "lng": -82.336111111,
+    "source": "wikidata"
+  },
+  "Willie Colón": {
+    "miss": true
+  },
+  "Rubén Blades": {
+    "miss": true
+  },
+  "Yo-Yo Ma": {
+    "city": "Paris",
+    "country": "FR",
+    "lat": 48.856666666,
+    "lng": 2.352222222,
+    "source": "wikidata"
+  },
+  "Zoot Sims": {
+    "city": "Inglewood",
+    "country": "US",
+    "lat": 33.9575,
+    "lng": -118.346111111,
+    "source": "wikidata"
   }
 }

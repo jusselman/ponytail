@@ -5059,5 +5059,104 @@
   },
   "Vangelis O": {
     "miss": true
+  },
+  "Ali Farka Touré": {
+    "country": "ML",
+    "city": null,
+    "regionName": "Tombouctou",
+    "mbid": "9be2a5ac-8201-489b-b5f6-91f958bf9060",
+    "source": "musicbrainz"
+  },
+  "Astor Piazzola": {
+    "miss": true
+  },
+  "Bireli Lagrene": {
+    "country": "FR",
+    "city": "Soufflenheim",
+    "regionName": null,
+    "mbid": "57e0894c-d70d-4026-a001-cf212f8550f2",
+    "source": "musicbrainz"
+  },
+  "Gravy m4a": {
+    "miss": true
+  },
+  "Tríó Guðmundar Ingólfssonar Guðmundsdóttir": {
+    "miss": true
+  },
+  "Bob B. Soxx": {
+    "miss": true
+  },
+  "Brad Bradley": {
+    "miss": true
+  },
+  "Emily Hsu": {
+    "miss": true
+  },
+  "Greg Reuter": {
+    "country": null,
+    "city": "Janesville",
+    "regionName": null,
+    "mbid": "14da148b-8c8c-4acd-a167-c34124bda1bc",
+    "source": "musicbrainz"
+  },
+  "Buster Jones": {
+    "miss": true
+  },
+  "Michael MCGrath": {
+    "country": "US",
+    "city": "Worcester",
+    "regionName": null,
+    "mbid": "4cc4feb1-37de-44f0-b203-e76dfa970c14",
+    "source": "musicbrainz"
+  },
+  "Steve Rosen": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "0c26f189-dca7-48b5-8e8d-324f1095f313",
+    "source": "musicbrainz"
+  },
+  "George Benson": {
+    "country": "US",
+    "city": "Pittsburgh",
+    "regionName": null,
+    "mbid": "467f69b6-8d6d-4d2c-bfad-e89adf2806ff",
+    "source": "musicbrainz"
+  },
+  "Afrika '70": {
+    "miss": true
+  },
+  "Brad Terry": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "bf00bd94-65a6-4939-b1c0-222b3c663d96",
+    "source": "musicbrainz"
+  },
+  "Richard Cotten": {
+    "country": "US",
+    "city": null,
+    "regionName": null,
+    "mbid": "5156a16e-54a7-4ec5-95c1-c08ff73d3965",
+    "source": "musicbrainz"
+  },
+  "Dave Young": {
+    "country": "CA",
+    "city": "Winnipeg",
+    "regionName": null,
+    "mbid": "b3e44ccf-25af-41e8-ae4a-a4eef475e662",
+    "source": "musicbrainz"
+  },
+  "Nguyên Lê": {
+    "miss": true
+  },
+  "Jo�o Gilberto": {
+    "miss": true
+  },
+  "Willie Colón": {
+    "miss": true
+  },
+  "Rubén Blades": {
+    "miss": true
   }
 }

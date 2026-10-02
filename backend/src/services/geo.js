@@ -12,17 +12,20 @@ const NEAR_RADII_MI = [25, 100, 250, 500];
 const MAX_PLACES = 3;                  // same cap the panel enforces
 const EARTH_RADIUS_MI = 3958.8;
 
-// ── Scenes shown as tiles in the Place tab. Resolved to places rows by name +
-// country (largest population wins), so they survive a places re-import. ──
+// ── Scenes shown as tiles in the Place tab: the eight places with the most
+// located tracks in the catalog (checked Oct 2026), biggest first. A fixed
+// list for the MVP — counts and artist names on each tile are still live.
+// Resolved to places rows by name + country (largest population wins), so
+// they survive a places re-import. ──
 const SCENES = [
-  { kind: 'metro', name: 'Bay Area', country: 'US', hue: 170 },
-  { kind: 'city', name: 'Manchester', country: 'GB', hue: 215 },
-  { kind: 'city', name: 'Atlanta', country: 'US', hue: 20 },
+  { kind: 'city', name: 'London', country: 'GB', hue: 240 },
   { kind: 'city', name: 'New York City', country: 'US', hue: 280, label: 'New York' },
   { kind: 'city', name: 'Los Angeles', country: 'US', hue: 340 },
-  { kind: 'city', name: 'London', country: 'GB', hue: 240 },
-  { kind: 'city', name: 'Detroit', country: 'US', hue: 45 },
-  { kind: 'city', name: 'Belo Horizonte', country: 'BR', hue: 130 },
+  { kind: 'city', name: 'Liverpool', country: 'GB', hue: 130 },
+  { kind: 'city', name: 'Chicago', country: 'US', hue: 20 },
+  { kind: 'metro', name: 'Bay Area', country: 'US', hue: 170 },
+  { kind: 'city', name: 'Manchester', country: 'GB', hue: 215 },
+  { kind: 'city', name: 'Seattle', country: 'US', hue: 45 },
 ];
 
 // ── Haversine distance in miles between a lat/lng column pair and two
