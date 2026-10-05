@@ -2,14 +2,20 @@ import { useState, useEffect, useRef } from "react";
 import {
   getMe, getHotInHere, getMyStation,
   getRadioStations, createRadioStation, deleteRadioStation,
-  getStationTracks, setGoat as apiSetGoat, getGoatTracks,
-  searchArtists, rateTrack,
+  getStationTracks, saveStationSettings, searchTags,
+  searchArtists, rateTrack, getTrackRatings, saveStationStyle,
 } from '../services/authService';
 import FooterNav from '../components/FooterNav';
 import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
 import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
 import MessagesLayer from '../components/MessagesLayer';
+import StationNameEditor from '../components/StationNameEditor';
+import CityPickerSheet from '../components/CityPickerSheet';
+import { setHomeCity } from '../services/placesService';
+import {
+  DEFAULT_STATION_STYLE, loadStationFonts, fontStack, fontWeightFor, fontScaleFor, neonSign,
+} from '../constants/stationFonts';
 import { usePlayer, usePlaybackProgress } from '../context/PlayerContext';
 
 // ─── Radio — board-directed "neon tuner" look. The whole screen is the
@@ -18,7 +24,9 @@ import { usePlayer, usePlaybackProgress } from '../context/PlayerContext';
 // transport controls. The app header and mini player are intentionally not
 // rendered here (the screen itself is the player); the footer nav stays so
 // you can still leave. Station details live in the Station Panel, opened by
-// tapping the station name, the goat badge, the gear, or "+". ──
+// tapping the station name, the goat badge, the gear, or "+". Tapping the
+// name inside that panel opens the Edit Station Name sheet, where the sign's
+// font and color (and, for the listener's own stations, its name) are set. ──
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const colors = {
@@ -37,13 +45,13 @@ const colors = {
 };
 
 const kanit = "'Kanit', sans-serif";
-const signFont = "'Knewave', 'Permanent Marker', 'Kanit', sans-serif";   // station name, frequency, mode
+const signFont = "'Knewave', 'Permanent Marker', 'Kanit', sans-serif";   // frequency + mode (the station name uses the listener's chosen font)
 const markerFont = "'Permanent Marker', 'Kanit', sans-serif";            // description, track title
 
 // ─── Neon text. paint-order puts the dark outline behind the pale fill, and
-// the text-shadow supplies the glow, so each one reads as a lit tube. ──
+// the text-shadow supplies the glow, so each one reads as a lit tube. The
+// station name's neon is built from its chosen color by neonSign(). ──
 const neon = {
-  yellow: { color: "#ffffa6", WebkitTextStroke: "7px #6d6a12", paintOrder: "stroke fill", textShadow: "0 0 14px rgba(255,255,70,0.95), 0 0 36px rgba(255,255,0,0.65)" },
   blue: { color: "#ececff", WebkitTextStroke: "6px #1616c4", paintOrder: "stroke fill", textShadow: "0 0 10px rgba(70,70,255,0.95), 0 0 22px rgba(40,40,255,0.6)" },
   green: { color: "#dcffdc", WebkitTextStroke: "4px #1d6a2b", paintOrder: "stroke fill", textShadow: "0 0 10px rgba(90,255,130,0.85), 0 0 20px rgba(60,220,100,0.5)" },
 };
@@ -182,9 +190,7 @@ const GoatBadge = ({ size = 34, ungoat = false }) => (
   </div>
 );
 
-// ─── Artist search input — used by the Station Panel's Artist / Goat /
-// UN-GOAT fields. Debounced against GET /artists/search; onSelectArtist
-// fires with a plain artist-name string. ──
+// ─── Station Panel fields (Goat Mode) ──
 const panelFieldStyle = (focused) => ({
   width: "100%", padding: "9px 12px",
   borderRadius: "8px", backgroundColor: "rgba(255,255,255,0.08)",
@@ -193,58 +199,156 @@ const panelFieldStyle = (focused) => ({
   fontFamily: kanit, boxSizing: "border-box", transition: "border-color 0.15s ease",
 });
 
-const ArtistSearchInput = ({ value, onChange, onSelectArtist, placeholder, disabled = false }) => {
+const EMPTY_SETTINGS = { artist: null, tags: [], goat: null, ungoat: [] };
+
+// One line for what a station plays, from its four fields
+const describeSettings = (st) => {
+  const parts = [];
+  if (st?.artist) parts.push(`Sounds like ${st.artist}`);
+  if (st?.tags?.length) parts.push(st.tags.join(', '));
+  if (st?.goat) parts.push(`Goat: ${st.goat}`);
+  return parts.join(' · ') || 'Nothing picked yet';
+};
+
+const findArtists = async (q) => (await searchArtists(q)).artists || [];
+const findTags = async (q) => ((await searchTags(q)).tags || []).map(t => ({ ...t, meta: `${t.tracks} track${t.tracks === 1 ? '' : 's'}` }));
+
+// A Station Panel field: type a few letters, pick from the menu that drops
+// down. `multi` fields (Tags, Un-Goat) collect several picks as chips under
+// the field; the others hold one pick, shown in the field with an ✕ to clear.
+//   value     string | null, or string[] when multi
+//   onChange  (next) => void, same shape as value
+//   search    async (text) => [{ id, name, coverUrl?, meta? }]
+const StationField = ({ label, search, value, onChange, multi = false, minChars = 2, disabled = false, danger = false, thumbs = true }) => {
+  const picked = multi ? (value || []) : [];
+  const single = multi ? "" : (value || "");
+  const [text, setText] = useState(single);
   const [results, setResults] = useState([]);
+  const [searched, setSearched] = useState(false);
   const [focused, setFocused] = useState(false);
   const debounceRef = useRef(null);
+  const requestRef = useRef(0);
+  const inputRef = useRef(null);
+  const singleRef = useRef(single);
+  singleRef.current = single;
+
+  // The field shows whatever is saved, whenever that changes
+  useEffect(() => { if (!multi) setText(single); }, [single, multi]);
+
+  const query = text.trim();
+  const searching = focused && !disabled && query.length >= minChars && (multi || query !== single);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!focused || !value || value.trim().length < 2) {
+    if (!searching) {
       setResults([]);
+      setSearched(false);
       return undefined;
     }
+    const request = ++requestRef.current;
     debounceRef.current = setTimeout(async () => {
       try {
-        const data = await searchArtists(value.trim());
-        setResults(data.artists || []);
+        const found = await search(query);
+        if (request !== requestRef.current) return;
+        setResults(found);
+        setSearched(true);
       } catch (err) {
-        console.log('Artist search failed:', err);
+        console.log('Station field search failed:', err);
       }
-    }, 250);
+    }, 220);
     return () => clearTimeout(debounceRef.current);
-  }, [value, focused]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, searching]);
+
+  const has = (name) => picked.some(p => p.toLowerCase() === name.toLowerCase());
+  const options = results.filter(r => !has(r.name));
+
+  const pick = (name) => {
+    setResults([]);
+    setSearched(false);
+    if (multi) {
+      if (!has(name)) onChange([...picked, name]);
+      setText("");
+    } else {
+      onChange(name);
+      inputRef.current?.blur();
+    }
+  };
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ opacity: disabled ? 0.42 : 1 }}>
+      <div style={{ position: "relative" }}>
       <input
+        ref={inputRef}
         className="radio-panel-field"
-        style={{ ...panelFieldStyle(focused), opacity: disabled ? 0.6 : 1 }}
-        placeholder={placeholder}
-        value={value}
+        style={{ ...panelFieldStyle(focused && !disabled), paddingRight: !multi && single ? "92px" : "12px" }}
+        placeholder={label}
+        value={text}
         readOnly={disabled}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter' && options.length > 0) pick(options[0].name); }}
         onFocus={() => setFocused(true)}
-        onBlur={() => setTimeout(() => setFocused(false), 150)}
+        // Leaving without picking puts the saved value back
+        onBlur={() => setTimeout(() => { setFocused(false); if (!multi) setText(singleRef.current); }, 150)}
       />
-      {focused && results.length > 0 && (
+      {!multi && single && !disabled && (
+        <div style={{ position: "absolute", right: "6px", top: 0, bottom: 0, display: "flex", alignItems: "center", gap: "4px" }}>
+          <span style={{ fontSize: "9.5px", letterSpacing: "0.6px", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", fontFamily: kanit }}>{label}</span>
+          <div
+            onMouseDown={(e) => { e.preventDefault(); onChange(null); }}
+            title={`Clear ${label}`}
+            style={{ width: "22px", height: "22px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.8)", fontSize: "15px", lineHeight: 1 }}
+          >×</div>
+        </div>
+      )}
+      {searching && (options.length > 0 || searched) && (
         <div style={{
           position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 80,
           backgroundColor: "#1c1c1c", borderRadius: "8px", overflow: "hidden",
           border: "1px solid rgba(255,255,255,0.25)", maxHeight: "150px", overflowY: "auto",
         }}>
-          {results.map((a) => (
+          {options.length === 0 && (
+            <div style={{ padding: "9px 12px", fontSize: "12.5px", color: "rgba(255,255,255,0.55)", fontFamily: kanit }}>No matches</div>
+          )}
+          {options.map((item) => (
             <div
-              key={a.id}
-              onMouseDown={(e) => { e.preventDefault(); onSelectArtist(a.name); setResults([]); }}
+              key={item.id}
+              onMouseDown={(e) => { e.preventDefault(); pick(item.name); }}
               style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", cursor: "pointer" }}
             >
-              <div style={{ width: 24, height: 24, borderRadius: "5px", overflow: "hidden", flexShrink: 0, backgroundColor: colors.bgCardHover }}>
-                {a.coverUrl && <img src={a.coverUrl} alt={a.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+              {thumbs && (
+                <div style={{ width: 24, height: 24, borderRadius: "5px", overflow: "hidden", flexShrink: 0, backgroundColor: colors.bgCardHover }}>
+                  {item.coverUrl && <img src={item.coverUrl} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0, fontSize: "13px", color: colors.text, fontFamily: kanit, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {item.name}
               </div>
-              <div style={{ fontSize: "13px", color: colors.text, fontFamily: kanit, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {a.name}
-              </div>
+              {item.meta && <div style={{ fontSize: "10.5px", color: "rgba(255,255,255,0.5)", fontFamily: kanit, flexShrink: 0 }}>{item.meta}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+      </div>
+      {multi && picked.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginTop: "6px" }}>
+          {picked.map((name) => (
+            <div
+              key={name}
+              style={{
+                display: "flex", alignItems: "center", gap: "5px", maxWidth: "100%", padding: "3px 5px 3px 10px", borderRadius: "14px",
+                backgroundColor: danger ? "rgba(255,90,90,0.16)" : "rgba(93,235,215,0.14)",
+                border: `1px solid ${danger ? "rgba(255,120,120,0.55)" : "rgba(93,235,215,0.5)"}`,
+              }}
+            >
+              <span style={{ fontSize: "11.5px", color: colors.text, fontFamily: kanit, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
+              {!disabled && (
+                <span
+                  onClick={() => onChange(picked.filter(p => p !== name))}
+                  title={`Remove ${name}`}
+                  style={{ width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.8)", fontSize: "14px", lineHeight: 1, flexShrink: 0 }}
+                >×</span>
+              )}
             </div>
           ))}
         </div>
@@ -435,10 +539,14 @@ export default function RadioScreen({ setScreen }) {
   const [user, setUser] = useState(null);
   const [hotInHere, setHotInHere] = useState([]);
   const [hotInHereLocation, setHotInHereLocation] = useState(null);
+  // true while the listener has no city of their own and the backend is
+  // assuming San Francisco for them
+  const [hotInHereIsDefault, setHotInHereIsDefault] = useState(false);
   const [hotInHereLoaded, setHotInHereLoaded] = useState(false);
   const [myStation, setMyStation] = useState(null);
   const [customStations, setCustomStations] = useState([]);
-  const [goatState, setGoatState] = useState({ artist: null, mode: 'goat' });
+  // The built-in stations' Station Panel fields, by station id
+  const [builtInSettings, setBuiltInSettings] = useState({});
 
   const [tunedId, setTunedId] = useState(null);
   const [tunedTracks, setTunedTracks] = useState([]);
@@ -448,15 +556,23 @@ export default function RadioScreen({ setScreen }) {
   // Station Panel: null (closed), { mode: 'new' } or { mode: 'edit', stationId }
   const [panel, setPanel] = useState(null);
   const [deleteArmed, setDeleteArmed] = useState(false);
+  // Sign style (font + color) per station id, saved on the user — see
+  // migration 012. A station with no entry uses DEFAULT_STATION_STYLE.
+  const [stationStyles, setStationStyles] = useState({});
+  // Set Your City sheet, opened from the Station Panel's location button
+  const [cityPickerOpen, setCityPickerOpen] = useState(false);
+  // Edit Station Name sheet: null (closed), 'new', or a station id
+  const [nameEditorFor, setNameEditorFor] = useState(null);
+  // The style picked for a station that hasn't been created yet
+  const [newStationStyle, setNewStationStyle] = useState(DEFAULT_STATION_STYLE);
 
   // Station Panel fields. Name + seed artist create a station today; the
   // description and tags are placeholders until that part is built out.
   const [newStationName, setNewStationName] = useState("");
-  const [newStationArtist, setNewStationArtist] = useState("");
   const [panelDescription, setPanelDescription] = useState("");
-  const [panelTags, setPanelTags] = useState("");
-  const [goatInput, setGoatInput] = useState("");
-  const [ungoatInput, setUngoatInput] = useState("");
+  // The four fields of a station that hasn't been saved yet
+  const [draftSettings, setDraftSettings] = useState(EMPTY_SETTINGS);
+  const [panelError, setPanelError] = useState("");
 
   const [ratings, setRatings] = useState({});
 
@@ -474,19 +590,33 @@ export default function RadioScreen({ setScreen }) {
     loadUser();
   }, []);
 
+  // ── Hot in Here's pool: artists within 10 miles of the listener's city (San
+  // Francisco until they set one). Returns the tracks so a caller can use
+  // them straight away instead of waiting for the state to update. ──
+  const loadHotInHere = async () => {
+    try {
+      const data = await getHotInHere();
+      const tracks = (data.tracks || []).map(t => ({ ...t, track: t.title }));
+      setHotInHereLocation(data.location || null);
+      setHotInHereIsDefault(!!data.isDefaultLocation);
+      setHotInHere(tracks);
+      return tracks;
+    } catch (err) {
+      console.log('Failed to fetch Hot in Here:', err);
+      return null;
+    } finally {
+      setHotInHereLoaded(true);
+    }
+  };
+
+  const hotInHereQueue = (tracks) => tracks.map(t => ({
+    title: t.track, artist: t.artist, album: t.album || t.genre, genre: t.genre,
+    coverUrl: t.coverUrl || null, audioUrl: t.audioUrl || "http://localhost:5000/audio/dummy.mp3",
+  }));
+
   useEffect(() => {
-    const fetchHotInHere = async () => {
-      try {
-        const data = await getHotInHere();
-        setHotInHereLocation(data.location || null);
-        setHotInHere((data.tracks || []).map(t => ({ ...t, track: t.title })));
-      } catch (err) {
-        console.log('Failed to fetch Hot in Here:', err);
-      } finally {
-        setHotInHereLoaded(true);
-      }
-    };
-    fetchHotInHere();
+    loadHotInHere();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -506,7 +636,8 @@ export default function RadioScreen({ setScreen }) {
       try {
         const data = await getRadioStations();
         setCustomStations(data.stations || []);
-        setGoatState(data.goat || { artist: null, mode: 'goat' });
+        setBuiltInSettings(data.settings || {});
+        setStationStyles(data.styles || {});
       } catch (err) {
         console.log('Failed to fetch radio stations:', err);
       }
@@ -514,31 +645,45 @@ export default function RadioScreen({ setScreen }) {
     fetchStations();
   }, []);
 
+  // Thumbs the listener has already given, so they show lit on return.
+  // Merged under anything tapped while this was loading.
+  useEffect(() => {
+    const fetchRatings = async () => {
+      try {
+        const data = await getTrackRatings();
+        const saved = {};
+        (data.ratings || []).forEach(r => { saved[trackKey(r)] = r.rating; });
+        setRatings(prev => ({ ...saved, ...prev }));
+      } catch (err) {
+        console.log('Failed to fetch ratings:', err);
+      }
+    };
+    fetchRatings();
+  }, []);
+
   // ── Every station on the dial — built-ins first, then the user's own ──
+  // Your Station names itself unless the listener has renamed it, and it
+  // can be taken off the dial. Hot in Here can't.
+  const yourStationAutoName = 'Your Station';
+  const autoNames = { 'your-station': yourStationAutoName };
+  const isHidden = (id) => !!stationStyles[id]?.hidden;
+  const hiddenStations = [
+    ...(user?.is_artist && isHidden('your-station') ? [{ id: 'your-station', name: yourStationAutoName }] : []),
+  ];
+
   const allStations = [
     {
       id: 'hot-in-here', kind: 'hot-in-here', name: 'Hot in Here',
       hue: HOT_IN_HERE_HUE, position: HOT_IN_HERE_POSITION,
       subtitle: HOT_IN_HERE_BLURB,
     },
-    ...(user?.is_artist ? [{
-      id: 'your-station', kind: 'your-station', name: 'Your Station',
+    ...(user?.is_artist && !isHidden('your-station') ? [{
+      id: 'your-station', kind: 'your-station', name: stationStyles['your-station']?.name || yourStationAutoName,
       hue: YOUR_STATION_HUE, position: YOUR_STATION_POSITION,
       subtitle: 'Your uploads + similar artists',
     }] : []),
-    {
-      id: 'goat', kind: 'goat',
-      name: goatState.mode === 'ungoat' ? 'UN-GOAT' : (goatState.artist ? `GOAT · ${goatState.artist}` : 'GOAT'),
-      hue: goatState.mode === 'ungoat' ? UNGOAT_HUE : GOAT_HUE,
-      position: GOAT_POSITION,
-      subtitle: !goatState.artist
-        ? 'Pick your greatest of all time'
-        : (goatState.mode === 'ungoat'
-          ? `Muting ${goatState.artist} + similar everywhere`
-          : `${goatState.artist} + similar artists`),
-    },
     ...customStations.map(s => ({
-      ...s, kind: 'custom', subtitle: `Seeded by ${s.seedArtist}`,
+      ...s, kind: 'custom', subtitle: describeSettings(s.settings),
     })),
   ];
 
@@ -556,33 +701,11 @@ export default function RadioScreen({ setScreen }) {
     setInfoOpen(false);
 
     if (station.kind === 'hot-in-here') {
-      setTunedTracks(hotInHere.map(t => ({
-        title: t.track, artist: t.artist, album: t.genre, genre: t.genre,
-        coverUrl: t.coverUrl || null, audioUrl: t.audioUrl || "http://localhost:5000/audio/dummy.mp3",
-      })));
+      setTunedTracks(hotInHereQueue(hotInHere));
       return;
     }
     if (station.kind === 'your-station') {
       setTunedTracks(myStation ? [...myStation.ownTracks, ...myStation.matchedTracks] : []);
-      return;
-    }
-    if (station.kind === 'goat') {
-      if (!goatState.artist) {
-        // No GOAT picked yet — the Station Panel is where you pick one
-        setTunedTracks([]);
-        openPanel({ mode: 'edit', stationId: 'goat' });
-        return;
-      }
-      setTunedLoading(true);
-      try {
-        const data = await getGoatTracks();
-        setTunedTracks(data.tracks || []);
-      } catch (err) {
-        console.log('Failed to load GOAT station:', err);
-        setTunedTracks([]);
-      } finally {
-        setTunedLoading(false);
-      }
       return;
     }
     // Custom station
@@ -619,11 +742,19 @@ export default function RadioScreen({ setScreen }) {
   const handleRate = async (value) => {
     if (!currentTrack || !isTunedActive) return;
     const key = trackKey(currentTrack);
-    setRatings(prev => ({ ...prev, [key]: value }));
+    const previous = ratings[key];
+    // Tapping the thumb that is already lit takes the rating back
+    const next = previous === value ? 0 : value;
+    const rated = currentTrack;
+    setRatings(prev => ({ ...prev, [key]: next || null }));
+    // A thumbs down moves straight on to the next track
+    if (next === -1) nextTrack();
     try {
-      await rateTrack(currentTrack, value);
+      await rateTrack(rated, next);
     } catch (err) {
+      // Not saved: put the thumb back rather than show a rating that will vanish
       console.log('Failed to rate track:', err);
+      setRatings(prev => ({ ...prev, [key]: previous }));
     }
   };
 
@@ -639,19 +770,69 @@ export default function RadioScreen({ setScreen }) {
     setInfoOpen(false);
     setDeleteArmed(false);
     setNewStationName("");
-    setNewStationArtist("");
     setPanelDescription("");
-    setPanelTags("");
-    setGoatInput("");
-    setUngoatInput("");
+    setDraftSettings(EMPTY_SETTINGS);
+    setPanelError("");
+    setNewStationStyle(DEFAULT_STATION_STYLE);
+    setNameEditorFor(null);
   };
-  const closePanel = () => { setPanel(null); setDeleteArmed(false); };
+  const closePanel = () => { setPanel(null); setDeleteArmed(false); setNameEditorFor(null); setCityPickerOpen(false); };
+
+  // ── Save the listener's city to their account (it persists across sessions
+  // and devices), then reload Hot in Here for the new spot. If the dial is on
+  // Hot in Here, its queue is swapped right away. Errors are thrown back to
+  // the sheet so it can say the save failed. ──
+  const handlePickCity = async (city) => {
+    await setHomeCity(city.id);
+    const tracks = await loadHotInHere();
+    if (tracks && tunedId === 'hot-in-here') setTunedTracks(hotInHereQueue(tracks));
+    setCityPickerOpen(false);
+  };
+
+  const styleFor = (stationId) => (stationStyles[stationId]?.font ? stationStyles[stationId] : DEFAULT_STATION_STYLE);
+
+  // ── Fonts are fetched only when a sign actually uses them ──
+  useEffect(() => {
+    loadStationFonts([DEFAULT_STATION_STYLE.font, newStationStyle.font, ...Object.values(stationStyles).map(st => st?.font)]);
+  }, [stationStyles, newStationStyle]);
+
+  // ── Save from the Edit Station Name sheet. A station being created just
+  // remembers the name + style until it's saved; an existing station is
+  // updated straight away. Hot in Here only ever takes the style. Your
+  // Station and GOAT keep naming themselves until given a name of their own. ──
+  const handleSaveName = async ({ name, font, color }) => {
+    if (nameEditorFor === 'new') {
+      setNewStationName(name);
+      setNewStationStyle({ font, color });
+      setNameEditorFor(null);
+      return;
+    }
+    try {
+      // Leaving a built-in's automatic name untouched isn't a rename
+      const sentName = autoNames[nameEditorFor] === name ? '' : name;
+      const data = await saveStationStyle(nameEditorFor, { font, color, name: sentName });
+      setStationStyles(data.styles || {});
+      if (data.station) {
+        setCustomStations(prev => prev.map(st => (st.id === data.station.id ? { ...st, ...data.station } : st)));
+      }
+      setNameEditorFor(null);
+    } catch (err) {
+      console.log('Failed to save station style:', err);
+    }
+  };
 
   const handleCreateStation = async () => {
-    if (!newStationName.trim() || !newStationArtist.trim()) return;
+    if (!canSaveNew) return;
     try {
-      const data = await createRadioStation(newStationName.trim(), newStationArtist.trim());
+      const data = await createRadioStation(newStationName.trim(), draftSettings);
       setCustomStations(prev => [...prev, data.station]);
+      // Carry over the sign style picked before the station existed
+      try {
+        const styled = await saveStationStyle(data.station.id, newStationStyle);
+        setStationStyles(styled.styles || {});
+      } catch (err) {
+        console.log('Failed to save the new station style:', err);
+      }
       closePanel();
       handleTune({ ...data.station, kind: 'custom' });
     } catch (err) {
@@ -661,8 +842,14 @@ export default function RadioScreen({ setScreen }) {
 
   const handleDeleteStation = async (id) => {
     try {
-      await deleteRadioStation(id);
+      const data = await deleteRadioStation(id);
       setCustomStations(prev => prev.filter(s => s.id !== id));
+      if (data.styles) {
+        // Your Station: taken off the dial
+        setStationStyles(data.styles);
+      } else {
+        setStationStyles(prev => { const next = { ...prev }; delete next[id]; return next; });
+      }
       closePanel();
       if (tunedId === id) handleTune({ id: 'hot-in-here', kind: 'hot-in-here' });
     } catch (err) {
@@ -670,43 +857,64 @@ export default function RadioScreen({ setScreen }) {
     }
   };
 
-  const handleSetGoat = async (artistName, mode) => {
+  // Put a removed Your Station back on the dial
+  const handleRestoreStation = async (id) => {
     try {
-      const data = await apiSetGoat({ artist: artistName, mode });
-      setGoatState(data.goat);
-      setGoatInput("");
-      setUngoatInput("");
+      const data = await saveStationStyle(id, DEFAULT_STATION_STYLE);
+      setStationStyles(data.styles || {});
     } catch (err) {
-      console.log('Failed to set GOAT:', err);
+      console.log('Failed to restore station:', err);
     }
   };
 
-  const handleToggleGoatMode = async () => {
-    if (!goatState.artist) return;
-    const nextMode = goatState.mode === 'goat' ? 'ungoat' : 'goat';
-    try {
-      const data = await apiSetGoat({ mode: nextMode });
-      setGoatState(data.goat);
-    } catch (err) {
-      console.log('Failed to toggle GOAT mode:', err);
-    }
+  // ── Station Panel fields. A station being created just collects them; an
+  // existing station saves each change as it's made and, if the dial is on
+  // it, rebuilds its queue so the change can be heard straight away. ──
+  const settingsOf = (station) => {
+    if (!station) return EMPTY_SETTINGS;
+    const saved = station.kind === 'custom' ? station.settings : builtInSettings[station.id];
+    return { ...EMPTY_SETTINGS, ...(saved || {}) };
   };
 
-  // ── Changing the GOAT while tuned to the GOAT station reloads its tracks ──
-  useEffect(() => {
-    if (tunedId === 'goat' && goatState.artist) handleTune({ id: 'goat', kind: 'goat' });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goatState.artist, goatState.mode]);
+  const handleSettingsChange = async (patch) => {
+    setPanelError("");
+    if (panel?.mode === 'new') {
+      setDraftSettings(prev => ({ ...prev, ...patch }));
+      return;
+    }
+    const station = allStations.find(s => s.id === panel?.stationId);
+    if (!station) return;
+    try {
+      const data = await saveStationSettings(station.id, { ...settingsOf(station), ...patch });
+      if (station.kind === 'custom') {
+        setCustomStations(prev => prev.map(st => (st.id === data.station.id ? { ...st, ...data.station } : st)));
+        if (tunedId === station.id) handleTune({ ...data.station, kind: 'custom' });
+      } else {
+        setBuiltInSettings(data.builtIn || {});
+        if (station.kind === 'hot-in-here') {
+          const tracks = await loadHotInHere();
+          if (tracks && tunedId === 'hot-in-here') setTunedTracks(hotInHereQueue(tracks));
+        } else if (station.kind === 'your-station') {
+          const mine = await getMyStation();
+          setMyStation(mine);
+          if (tunedId === 'your-station') setTunedTracks([...mine.ownTracks, ...mine.matchedTracks]);
+        }
+      }
+    } catch (err) {
+      console.log('Failed to save station settings:', err);
+      setPanelError(err?.response?.data?.error || "Couldn't save that change.");
+    }
+  };
 
   const ratingKey = currentTrack ? trackKey(currentTrack) : null;
   const currentRating = isTunedActive && ratingKey ? ratings[ratingKey] : null;
-  const isUngoat = goatState.mode === 'ungoat';
 
   // ── Sign text: the station name, sized to fit two lines ──
   const signText = tunedStation
     ? (tunedStation.kind === 'hot-in-here' ? 'Hot in Here!!!' : tunedStation.name)
     : 'Ponytail Radio';
-  const signSize = signText.length <= 14 ? 52 : signText.length <= 22 ? 38 : 29;
+  const signStyle = tunedStation ? styleFor(tunedStation.id) : DEFAULT_STATION_STYLE;
+  const signSize = Math.round((signText.length <= 14 ? 50 : signText.length <= 22 ? 38 : 29) * fontScaleFor(signStyle.font));
   const frequency = tunedStation ? tunedStation.position.toFixed(1) : "0.0";
 
   const emptyMessage = !tunedStation
@@ -714,16 +922,20 @@ export default function RadioScreen({ setScreen }) {
     : tunedLoading
       ? "Tuning in..."
       : tunedStation.kind === 'hot-in-here'
-        ? (hotInHereLocation ? "No artists near you are on the air yet" : "Set your city to hear artists near you")
-        : tunedStation.kind === 'goat' && !goatState.artist
-          ? "Tap the goat to pick your GOAT"
-          : tunedStation.kind === 'goat' && isUngoat
-            ? "UN-GOAT is muting, not playing"
-            : "Nothing on this frequency yet";
+        ? (hotInHereLocation ? `No artists within 10 miles of ${hotInHereLocation} yet` : "Couldn't load artists near you")
+        : "Nothing on this frequency yet";
 
   const panelStation = panel?.mode === 'edit' ? (allStations.find(s => s.id === panel.stationId) || null) : null;
   const isNewStation = panel?.mode === 'new';
-  const canSaveNew = !!newStationName.trim() && !!newStationArtist.trim();
+  const canSaveNew = !!newStationName.trim() && !!(draftSettings.artist || draftSettings.goat || draftSettings.tags.length);
+  const panelSettings = isNewStation ? draftSettings : settingsOf(panelStation);
+  // Hot in Here plays whoever is local, so Un-Goat is the one field it takes
+  const soundFieldsLocked = panelStation?.kind === 'hot-in-here';
+  const panelSignStyle = isNewStation ? newStationStyle : styleFor(panelStation?.id);
+  const panelSignText = panelStation?.kind === 'hot-in-here' ? 'Hot in Here!!!' : (panelStation?.name || '');
+  // What the Edit Station Name sheet is working on
+  const editorStation = nameEditorFor && nameEditorFor !== 'new' ? (allStations.find(st => st.id === nameEditorFor) || null) : null;
+  const editorNameLocked = editorStation?.kind === 'hot-in-here';
 
   return (
     <>
@@ -732,9 +944,12 @@ export default function RadioScreen({ setScreen }) {
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
         body { background: #222222; }
         @keyframes radioFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes radioBreathe { from { transform: scale(1); } to { transform: scale(1.14); } }
+        .radio-backdrop-img { animation: radioBreathe 22s ease-in-out infinite alternate; will-change: transform; }
+        @media (prefers-reduced-motion: reduce) { .radio-backdrop-img { animation: none; } }
+        @keyframes stationSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         ::-webkit-scrollbar { display: none; }
         .radio-panel-field::placeholder { color: rgba(255,255,255,0.5); }
-        .radio-sign-input::placeholder { color: #ffffa6; opacity: 1; }
         .radio-desc-input::placeholder { color: #dcffdc; opacity: 1; }
       `}</style>
 
@@ -747,15 +962,18 @@ export default function RadioScreen({ setScreen }) {
         }}>
 
           {/* ── Tuner (everything above the footer) ── */}
-          <div style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden", borderRadius: "40px 40px 0 0", display: "flex", flexDirection: "column" }}>
 
-            {/* Backdrop: the cover, blurred edge to edge, under a grey veil */}
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #5a5a66, #3a3a40)" }}>
+            {/* Backdrop: the cover, blurred edge to edge, under a grey veil.
+                It carries its own rounded clip: a blurred, animated layer can
+                otherwise paint past the phone frame's rounded corners. */}
+            <div style={{ position: "absolute", inset: 0, overflow: "hidden", borderRadius: "40px 40px 0 0", clipPath: "inset(0 round 40px 40px 0 0)", isolation: "isolate", transform: "translateZ(0)", background: "linear-gradient(160deg, #5a5a66, #3a3a40)" }}>
               {displayTrack?.coverUrl && (
                 <img
                   src={displayTrack.coverUrl}
                   alt=""
                   draggable={false}
+                  className="radio-backdrop-img"
                   style={{ position: "absolute", inset: "-12%", width: "124%", height: "124%", objectFit: "cover", filter: "blur(22px)" }}
                 />
               )}
@@ -779,7 +997,8 @@ export default function RadioScreen({ setScreen }) {
               }}
             >
               <div style={{
-                ...neon.yellow, fontFamily: signFont, fontSize: `${signSize}px`, lineHeight: 0.98,
+                ...neonSign(signStyle.color, 7), fontFamily: fontStack(signStyle.font), fontWeight: fontWeightFor(signStyle.font),
+                fontSize: `${signSize}px`, lineHeight: 1.02,
                 textAlign: "center", textTransform: "uppercase", transform: "rotate(-3deg) skewX(-6deg)",
                 letterSpacing: "0.5px", overflowWrap: "anywhere",
               }}>
@@ -792,10 +1011,10 @@ export default function RadioScreen({ setScreen }) {
               <div style={{ ...neon.blue, fontFamily: signFont, fontSize: "25px", lineHeight: 1 }}>{frequency}</div>
               <div style={{ ...neon.blue, WebkitTextStroke: "4px #1616c4", fontFamily: signFont, fontSize: "15px", lineHeight: 1, marginTop: "5px" }}>μHz</div>
               <div onClick={() => tunedStation && openPanel({ mode: 'edit', stationId: tunedStation.id })} style={{ cursor: "pointer" }}>
-                <GoatBadge size={36} ungoat={isUngoat} />
+                <GoatBadge size={36} />
               </div>
               <div style={{ ...neon.blue, WebkitTextStroke: "5px #1616c4", fontFamily: signFont, fontSize: "17px", lineHeight: 1 }}>
-                {isUngoat ? "Un-Goat Mode" : "Goat Mode"}
+                Goat Mode
               </div>
             </div>
 
@@ -928,28 +1147,26 @@ export default function RadioScreen({ setScreen }) {
           {infoOpen && (
             <DarkOverlay onClose={() => setInfoOpen(false)}>
               <div style={{ padding: "58px 30px 24px", overflowY: "auto", flex: 1 }}>
-                <div style={{ ...neon.yellow, WebkitTextStroke: "5px #6d6a12", fontFamily: signFont, fontSize: "26px", textAlign: "center", transform: "rotate(-2deg)" }}>
+                <div style={{ ...neonSign(signStyle.color, 5), fontFamily: fontStack(signStyle.font), fontWeight: fontWeightFor(signStyle.font), fontSize: `${Math.round(26 * fontScaleFor(signStyle.font))}px`, textAlign: "center", transform: "rotate(-2deg)", overflowWrap: "anywhere" }}>
                   {tunedStation ? tunedStation.name : "Ponytail Radio"}
                 </div>
                 <div style={{ marginTop: "18px", fontSize: "12.5px", color: "rgba(255,255,255,0.86)", fontFamily: kanit, lineHeight: 1.6, textAlign: "center" }}>
                   {!tunedStation && <>Drag the dial or pick a station below.</>}
                   {tunedStation?.kind === 'hot-in-here' && (
                     hotInHereLocation
-                      ? <>Musicians uploading tracks near <strong style={{ color: colors.text }}>{hotInHereLocation}</strong>. It always sits at the very start of the dial.</>
-                      : <>Set a city on your profile to start hearing artists uploading near you.</>
+                      ? <>Artists from within 10 miles of <strong style={{ color: colors.text }}>{hotInHereLocation}</strong>, Ponytail musicians first. It always sits at the very start of the dial.{hotInHereIsDefault && <> You haven't set a city yet, so it's tuned to San Francisco for now. Tap the location button in the station panel to set yours.</>}</>
+                      : <>Couldn't load the artists near you. Check that the backend is running.</>
                   )}
                   {tunedStation?.kind === 'your-station' && (
-                    <>Built from your own uploads, plus catalog tracks matched to your genre, subgenre, mood, or similar-artist tags.</>
-                  )}
-                  {tunedStation?.kind === 'goat' && (
-                    !goatState.artist
-                      ? <>Pick the musician you want to hear most. Open the station panel and search under Goat.</>
-                      : isUngoat
-                        ? <><strong style={{ color: colors.text }}>{goatState.artist}</strong> and every artist similar to them are muted across every other station on your dial.</>
-                        : <>Plays <strong style={{ color: colors.text }}>{goatState.artist}</strong> plus the artists most similar to them.</>
+                    <>Built from your own uploads, plus catalog tracks matched to your genre, subgenre, mood, or similar-artist tags. The station panel fields add to it.</>
                   )}
                   {tunedStation?.kind === 'custom' && (
-                    <>Seeded from <strong style={{ color: colors.text }}>{tunedStation.seedArtist}</strong>: their catalog plus similar artists.</>
+                    <>
+                      {tunedStation.settings?.artist && <>Plays music that sounds like <strong style={{ color: colors.text }}>{tunedStation.settings.artist}</strong>. </>}
+                      {tunedStation.settings?.tags?.length > 0 && <>Tagged <strong style={{ color: colors.text }}>{tunedStation.settings.tags.join(', ')}</strong>. </>}
+                      {tunedStation.settings?.goat && <><strong style={{ color: colors.text }}>{tunedStation.settings.goat}</strong> is the Goat here and comes round about every third track. </>}
+                      {tunedStation.settings?.ungoat?.length > 0 && <>Never plays {tunedStation.settings.ungoat.join(', ')}.</>}
+                    </>
                   )}
                 </div>
 
@@ -975,6 +1192,16 @@ export default function RadioScreen({ setScreen }) {
                       <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)", fontFamily: kanit, flexShrink: 0 }}>{s.position.toFixed(1)} μHz</div>
                     </div>
                   ))}
+                  {hiddenStations.map((s) => (
+                    <div
+                      key={`restore-${s.id}`}
+                      onClick={() => handleRestoreStation(s.id)}
+                      style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", cursor: "pointer", border: "1.5px dashed rgba(255,255,255,0.22)", marginTop: "4px" }}
+                    >
+                      <div style={{ flex: 1, fontSize: "12.5px", color: "rgba(255,255,255,0.7)", fontFamily: kanit }}>{s.name} was removed</div>
+                      <div style={{ fontSize: "11.5px", fontWeight: "500", color: colors.teal, fontFamily: kanit, flexShrink: 0 }}>Bring back</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </DarkOverlay>
@@ -985,26 +1212,19 @@ export default function RadioScreen({ setScreen }) {
             <DarkOverlay onClose={closePanel}>
               <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "30px 34px 22px" }}>
 
-                {/* Name */}
-                <div style={{ padding: "0 26px", textAlign: "center" }}>
-                  {isNewStation ? (
-                    <input
-                      className="radio-sign-input"
-                      value={newStationName}
-                      onChange={(e) => setNewStationName(e.target.value)}
-                      placeholder="New Station*"
-                      maxLength={40}
-                      style={{
-                        ...neon.yellow, WebkitTextStroke: "5px #6d6a12", fontFamily: signFont, fontSize: "25px",
-                        width: "100%", textAlign: "center", background: "none", border: "none", outline: "none",
-                        transform: "rotate(-2deg)", padding: "8px 0",
-                      }}
-                    />
-                  ) : (
-                    <div style={{ ...neon.yellow, WebkitTextStroke: "5px #6d6a12", fontFamily: signFont, fontSize: "25px", transform: "rotate(-2deg)", padding: "8px 0", overflowWrap: "anywhere" }}>
-                      {panelStation?.name}
-                    </div>
-                  )}
+                {/* Name — tap to open the Edit Station Name sheet */}
+                <div
+                  onClick={() => setNameEditorFor(isNewStation ? 'new' : panelStation?.id)}
+                  title="Edit name and style"
+                  style={{ padding: "0 26px", textAlign: "center", cursor: "pointer" }}
+                >
+                  <div style={{
+                    ...neonSign(panelSignStyle.color, 5), fontFamily: fontStack(panelSignStyle.font), fontWeight: fontWeightFor(panelSignStyle.font),
+                    fontSize: `${Math.round(25 * fontScaleFor(panelSignStyle.font))}px`, lineHeight: 1.1,
+                    transform: "rotate(-2deg)", padding: "8px 0", overflowWrap: "anywhere", textTransform: "uppercase",
+                  }}>
+                    {isNewStation ? (newStationName.trim() || "New Station*") : panelSignText}
+                  </div>
                 </div>
 
                 {/* Description */}
@@ -1047,55 +1267,62 @@ export default function RadioScreen({ setScreen }) {
 
                 {/* Options */}
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: "22px" }}>
-                  <div
-                    onClick={handleToggleGoatMode}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", width: "70px", cursor: goatState.artist ? "pointer" : "default" }}
-                    title={goatState.artist ? "Switch between Goat and Un-Goat" : "Pick a Goat below first"}
-                  >
-                    <GoatBadge size={46} ungoat={isUngoat} />
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", width: "70px" }}>
+                    <GoatBadge size={46} />
                     <div style={{ fontSize: "10.5px", color: "rgba(255,255,255,0.88)", fontFamily: kanit, whiteSpace: "nowrap" }}>
-                      {isUngoat ? "Un-Goat mode" : "Goat mode"}
+                      Goat mode
                     </div>
                   </div>
                   <RoundOption label="AA 100%">
                     <span style={{ fontSize: "27px", fontWeight: "700", color: "#fff", fontFamily: kanit, lineHeight: 1 }}>A</span>
                   </RoundOption>
-                  <RoundOption label={hotInHereLocation || "No location"} ring={false}>
-                    <PinIcon />
+                  <RoundOption label={hotInHereLocation || "No location"} ring={false} onClick={() => setCityPickerOpen(true)}>
+                    <PinIcon color={hotInHereIsDefault || !hotInHereLocation ? colors.text : "#f5cf00"} />
                   </RoundOption>
                   <RoundOption label="Locale">
                     <HeartIcon />
                   </RoundOption>
                 </div>
 
-                {/* Fields */}
+                {/* Fields — Goat Mode */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "9px", marginTop: "20px" }}>
-                  <ArtistSearchInput
-                    value={isNewStation ? newStationArtist : (panelStation?.seedArtist || "")}
-                    onChange={setNewStationArtist}
-                    onSelectArtist={setNewStationArtist}
-                    placeholder="Artist"
-                    disabled={!isNewStation}
+                  <StationField
+                    label="Artist"
+                    search={findArtists}
+                    value={panelSettings.artist}
+                    onChange={(artist) => handleSettingsChange({ artist })}
+                    disabled={soundFieldsLocked}
                   />
-                  <input
-                    className="radio-panel-field"
-                    style={panelFieldStyle(false)}
-                    placeholder="Tags"
-                    value={panelTags}
-                    onChange={(e) => setPanelTags(e.target.value)}
+                  <StationField
+                    label="Tags"
+                    multi
+                    minChars={1}
+                    thumbs={false}
+                    search={findTags}
+                    value={panelSettings.tags}
+                    onChange={(tags) => handleSettingsChange({ tags })}
+                    disabled={soundFieldsLocked}
                   />
-                  <ArtistSearchInput
-                    value={goatInput}
-                    onChange={setGoatInput}
-                    onSelectArtist={(name) => handleSetGoat(name, 'goat')}
-                    placeholder={goatState.artist && !isUngoat ? `Goat: ${goatState.artist}` : "Goat"}
+                  <StationField
+                    label="Goat"
+                    search={findArtists}
+                    value={panelSettings.goat}
+                    onChange={(goat) => handleSettingsChange({ goat })}
+                    disabled={soundFieldsLocked}
                   />
-                  <ArtistSearchInput
-                    value={ungoatInput}
-                    onChange={setUngoatInput}
-                    onSelectArtist={(name) => handleSetGoat(name, 'ungoat')}
-                    placeholder={goatState.artist && isUngoat ? `UN-GOAT: ${goatState.artist}` : "UN-GOAT"}
+                  <StationField
+                    label="UN-GOAT"
+                    multi
+                    danger
+                    search={findArtists}
+                    value={panelSettings.ungoat}
+                    onChange={(ungoat) => handleSettingsChange({ ungoat })}
                   />
+                  {(panelError || soundFieldsLocked) && (
+                    <div style={{ fontSize: "11px", color: panelError ? colors.danger : "rgba(255,255,255,0.55)", fontFamily: kanit, lineHeight: 1.4 }}>
+                      {panelError || "Hot in Here plays whoever is local, so Un-Goat is the only field it takes."}
+                    </div>
+                  )}
                 </div>
 
                 {/* Save / delete */}
@@ -1115,7 +1342,7 @@ export default function RadioScreen({ setScreen }) {
                   <RoundAction
                     title={isNewStation ? "Discard" : "Delete station"}
                     danger={deleteArmed}
-                    disabled={!isNewStation && panelStation?.kind !== 'custom'}
+                    disabled={!isNewStation && (!panelStation || panelStation.kind === 'hot-in-here')}
                     onClick={() => {
                       if (isNewStation) { closePanel(); return; }
                       if (!deleteArmed) { setDeleteArmed(true); return; }
@@ -1127,6 +1354,31 @@ export default function RadioScreen({ setScreen }) {
                 </div>
               </div>
             </DarkOverlay>
+          )}
+
+          {/* ── Set Your City (the Station Panel's location button) ── */}
+          {cityPickerOpen && (
+            <CityPickerSheet
+              currentCity={hotInHereLocation}
+              isDefault={hotInHereIsDefault}
+              onPick={handlePickCity}
+              onCancel={() => setCityPickerOpen(false)}
+            />
+          )}
+
+          {/* ── Edit Station Name (font, color and — for your own stations — the name) ── */}
+          {nameEditorFor && (nameEditorFor === 'new' || editorStation) && (
+            <StationNameEditor
+              key={nameEditorFor}
+              stationName={nameEditorFor === 'new'
+                ? newStationName
+                : (editorStation.kind === 'hot-in-here' ? 'Hot in Here!!!' : editorStation.name)}
+              nameLocked={editorNameLocked}
+              lockedHint="Hot in Here always keeps its name and its spot at 0 on the dial. Its look is yours to change."
+              initialStyle={nameEditorFor === 'new' ? newStationStyle : styleFor(nameEditorFor)}
+              onSave={handleSaveName}
+              onCancel={() => setNameEditorFor(null)}
+            />
           )}
 
         </div>

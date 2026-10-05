@@ -322,3 +322,24 @@ node scripts/backfillUserLocations.js     # existing musicians' typed cities →
 Later additions: `assets/geo/gazetteer.tsv.gz` (GeoNames places over 500 people) lets the script place small towns and neighbourhoods and snap them to the nearest city; collaborations take the city of the first named member that can be placed; `node scripts/fixArtistNames.js` is a one-off repair for artist names that did not match their mp3 folders (the "m4a" names and the Björk Gling-Gló album). Use `node scripts/enrichArtistLocations.js --redo` to re-place every artist after editing the hand-checked list. Scene tiles are a fixed list in `src/services/geo.js` (the eight places with the most tracks); personalized scenes and letting a collaboration track appear under every member city are deferred until after the MVP.
 
 Hand-checked hometowns live in `assets/geo/artist_locations.json` (add artists there and re-run to fix or fill gaps). MusicBrainz answers are cached in `assets/geo/musicbrainz_cache.json`; set `MUSICBRAINZ_CONTACT` in `.env` first.
+
+## Radio — station sign styles
+
+Each station name on the Radio screen is a neon sign with its own font and color. Tapping the name in the Station Panel opens the Edit Station Name sheet (`frontend/src/components/StationNameEditor.jsx`): 51 starter fonts, 10 more behind More Fonts, font search across all of them, a color picker, and Surprise me. Fonts and color helpers live in `frontend/src/constants/stationFonts.js` and load from Google Fonts only when used.
+
+Styles are saved per user in `users.radio_station_styles` (migration `012_radio_station_styles.sql`), keyed by station id, through `PUT /api/auth/radio/stations/:id/style`. The same call renames a custom station. Built-in stations (Hot in Here, Your Station, GOAT) take a style but keep their names; Hot in Here also keeps its spot at 0 on the dial and cannot be deleted.
+
+Setup: `psql "$DATABASE_URL" -f backend/src/db/migrations/012_radio_station_styles.sql`
+
+## Radio: Goat Mode station fields (migration 013)
+
+Goat Mode is the first of three planned station modes (Goat, Pony, Duck). Each station keeps four Station Panel fields:
+
+- **Artist** (one): plays music that sounds like them. Similar-artist tags in both directions plus their subgenre; their own tracks are in the mix with no special place.
+- **Tags** (several): matched against each track's genre, subgenre, mood and tag5.
+- **Goat** (one): nudges the mix like Artist at a lighter weight, and the Goat's own tracks are dealt in about every third track.
+- **Un-Goat** (several): those artists never play on that station.
+
+Storage: custom stations keep them on `radio_stations` (`seed_artist`, `tags`, `goat_artist`, `ungoat_artists`); Hot in Here and Your Station keep theirs in `users.radio_station_settings`. Hot in Here only takes Un-Goat. A custom station must keep an Artist, a Tag or a Goat.
+
+API: `POST /api/auth/radio/stations` `{ name, settings }`, `PUT /radio/stations/:id/settings`, `GET /radio/tags?q=`. Queue building is `goatModePool` / `mixInGoat` in `authRoutes.js`; thumbs down drops a track, thumbs up lifts it. The old account-wide Goat slot (`users.goat_artist`, `goat_mode`) and its dial station are no longer used.

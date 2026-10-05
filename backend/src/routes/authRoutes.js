@@ -288,39 +288,55 @@ router.put('/tracks/:id', requireAuth, upload.single('cover'), async (req, res) 
   }
 });
 
-// ── Hot in Here — other musicians uploading tracks "in the vicinity." For now
-// vicinity just means the same city string (case-insensitive/trimmed match) since
-// there's no geocoding or lat/long anywhere in the app yet (see migration
-// 007_musician_profile_tags.sql). Swap the WHERE clause below for a real distance
-// calculation once lat/long columns exist — nothing else here needs to change. ──
+// ── Hot in Here — the station at 0 on the Radio dial: artists within 10 miles
+// of the listener. The centre is the listener's own city when they have one
+// (users.location_lat/lng, see migration 011) and San Francisco otherwise
+// (geo.DEFAULT_HOME), so the station always has somewhere to broadcast from.
+//
+// The pool is every located track inside the radius: Ponytail musicians'
+// uploads first (newest first — they're who the station is for), then catalog
+// artists from the area, better-known tracks more likely to surface. No artist
+// gets more than a handful of slots, so one big local catalog can't take over,
+// and the listener's own uploads are left out. ──
+const HOT_IN_HERE_LIMIT = 40;
+const HOT_IN_HERE_PER_ARTIST = 4;
+
 router.get('/radio/hot-in-here', requireAuth, async (req, res) => {
   try {
-    const meResult = await pool.query('SELECT location FROM users WHERE id = $1', [req.user.id]);
-    const myLocation = meResult.rows[0]?.location;
-
-    if (!myLocation || !myLocation.trim()) {
-      return res.json({ location: null, tracks: [] });
-    }
+    const home = (await geo.userHome(req.user.id)) || geo.DEFAULT_HOME;
+    const usingDefault = home === geo.DEFAULT_HOME;
+    const distance = geo.distanceSql('st.location_lat', 'st.location_lng', '$2::float8', '$3::float8');
 
     const result = await pool.query(
-      `SELECT st.id, st.title, st.artist, st.album, st.genre, st.location,
-              st.is_user_upload, st.uploaded_audio_url, st.uploaded_cover_url, st.cover, st.filename,
-              u.username, u.display_name
-       FROM seed_tracks st
-       JOIN users u ON u.id = st.uploader_user_id
-       WHERE st.is_user_upload = TRUE
-         AND u.is_artist = TRUE
-         AND u.id != $1
-         AND LOWER(TRIM(u.location)) = LOWER(TRIM($2))
-       ORDER BY st.created_at DESC
-       LIMIT 30`,
-      [req.user.id, myLocation]
+      `SELECT * FROM (
+         SELECT st.id, st.title, st.artist, st.album, st.genre, st.location,
+                st.is_user_upload, st.uploaded_audio_url, st.uploaded_cover_url, st.cover, st.filename,
+                st.created_at, st.popularity,
+                u.username, u.display_name,
+                ROW_NUMBER() OVER (
+                  PARTITION BY lower(st.artist)
+                  ORDER BY st.is_user_upload DESC NULLS LAST, RANDOM()
+                ) AS artist_rank
+         FROM seed_tracks st
+         LEFT JOIN users u ON u.id = st.uploader_user_id
+         WHERE st.location_lat IS NOT NULL
+           AND ${distance} <= $4
+           AND (st.uploader_user_id IS NULL OR st.uploader_user_id != $1)
+       ) nearby
+       WHERE artist_rank <= $5
+       ORDER BY is_user_upload DESC NULLS LAST,
+                CASE WHEN is_user_upload THEN EXTRACT(EPOCH FROM created_at) END DESC NULLS LAST,
+                -- catalog: random, nudged toward more popular tracks
+                (COALESCE(popularity, 0) + 20) * RANDOM() DESC
+       LIMIT $6`,
+      [req.user.id, home.lat, home.lng, geo.HOT_IN_HERE_RADIUS_MI, HOT_IN_HERE_PER_ARTIST, HOT_IN_HERE_LIMIT]
     );
 
-    // ── UN-GOAT exclusion ─ filter out the user's excluded artist (+ everyone
-    // similar_artist-matched to them) if they've toggled GOAT mode to 'ungoat' ──
-    const excluded = new Set((await getExcludedArtists(req.user.id)).map(a => a.toLowerCase()));
-    const tracks = result.rows
+    // ── Un-Goat: artists the listener never wants on this station ──
+    const hotSettings = (await getBuiltInSettings(req.user.id))['hot-in-here'];
+    const excluded = new Set(hotSettings.ungoat.map(a => a.toLowerCase()));
+    const ratings = await getUserRatings(req.user.id);
+    const pool40 = result.rows
       .filter(row => !excluded.has((row.artist || '').toLowerCase()))
       .map(row => ({
         id: row.id,
@@ -329,13 +345,25 @@ router.get('/radio/hot-in-here', requireAuth, async (req, res) => {
         album: row.album,
         genre: row.genre,
         location: row.location,
+        isUpload: !!row.is_user_upload,
         musicianUsername: row.username,
         musicianDisplayName: row.display_name,
         coverUrl: getCoverUrl(row),
         audioUrl: getAudioUrl(row),
       }));
+    // Uploads stay ahead of the catalog; ratings reorder within each
+    const tracks = [
+      ...shapeByRatings(pool40.filter(t => t.isUpload), ratings),
+      ...shapeByRatings(pool40.filter(t => !t.isUpload), ratings),
+    ];
 
-    res.json({ location: myLocation, tracks });
+    res.json({
+      location: home.label,
+      // true while the listener has no city of their own and we assume San Francisco
+      isDefaultLocation: usingDefault,
+      radiusMiles: geo.HOT_IN_HERE_RADIUS_MI,
+      tracks,
+    });
   } catch (err) {
     console.error('Hot in here error:', err);
     res.status(500).json({ error: 'Failed to load Hot in Here.' });
@@ -397,13 +425,26 @@ router.get('/radio/my-station', requireAuth, async (req, res) => {
       [artistName, profile.genre, profile.subgenre, profile.mood]
     );
 
+    const myRatings = await getUserRatings(req.user.id);
+    // The Station Panel fields add to the profile matches: Artist and Tags
+    // widen the pool, the Goat comes round often, Un-Goats never play.
+    const mySettings = (await getBuiltInSettings(req.user.id))['your-station'];
+    const muted = new Set(mySettings.ungoat.map(a => a.toLowerCase()));
+    const notMuted = (t) => !muted.has((t.artist || '').toLowerCase());
+    const fromFields = await goatModePool(mySettings, myRatings);
+    const seen = new Set();
+    const matched = [...fromFields.others, ...shapeByRatings(matchedResult.rows.map(mapRow), myRatings)]
+      .filter(notMuted)
+      .filter(t => t.artist !== artistName && (mySettings.goat || '').toLowerCase() !== (t.artist || '').toLowerCase())
+      .filter(t => (seen.has(t.id) ? false : (seen.add(t.id), true)));
     res.json({
       artistName,
       genre: profile.genre,
       subgenre: profile.subgenre,
       mood: profile.mood,
-      ownTracks: ownTracksResult.rows.map(mapRow),
-      matchedTracks: matchedResult.rows.map(mapRow),
+      ownTracks: shapeByRatings(ownTracksResult.rows.map(mapRow), myRatings),
+      matchedTracks: mixInGoat(matched, fromFields.goatTracks),
+      settings: mySettings,
     });
   } catch (err) {
     console.error('My station error:', err);
@@ -413,47 +454,191 @@ router.get('/radio/my-station', requireAuth, async (req, res) => {
 
 // ─── Frequency-dial Radio tab ─ custom stations + GOAT/UN-GOAT ──────────────────────
 
-// A station's track pool ─ the seed artist's own catalog rows plus tracks
-// similar_artist-matched to them (same pattern /radio/my-station and
-// /albums/discover already use), optionally filtering out an UN-GOAT'd
-// artist + their similar-artist matches.
-async function buildArtistStationTracks(seedArtist, excludeArtists = []) {
-  const ownResult = await pool.query(
-    `SELECT id, title, artist, album, genre, subgenre, mood,
-            is_user_upload, uploaded_audio_url, uploaded_cover_url, cover, filename
-     FROM seed_tracks
-     WHERE artist = $1`,
-    [seedArtist]
-  );
+// ─── Goat Mode ─ how the four Station Panel fields turn into a queue ──────────
+//   Artist   plays music that sounds like them: artists tagged as similar to
+//            them, the artists they are tagged as similar to, and their
+//            subgenre. Their own tracks are in the mix but get no special place.
+//   Tags     each tag a track carries (genre, subgenre, mood, tag5) adds to it.
+//   Goat     nudges the mix the way Artist does, at a lighter weight, and the
+//            Goat's own tracks are dealt in at a fixed rhythm: about 1 in 3.
+//   Un-Goat  those artists never play.
+const MAX_STATION_TAGS = 8;
+const MAX_STATION_UNGOATS = 25;
+const STATION_QUEUE_OTHERS = 30;
+const GOAT_EVERY = 3;
 
-  const matchedResult = await pool.query(
-    `SELECT id, title, artist, album, genre, subgenre, mood,
-            is_user_upload, uploaded_audio_url, uploaded_cover_url, cover, filename
-     FROM seed_tracks
-     WHERE similar_artist = $1 AND artist != $1
-     ORDER BY random()
-     LIMIT 40`,
-    [seedArtist]
-  );
-
-  const excludeSet = new Set(excludeArtists.map(a => a.toLowerCase()));
-  const filterExcluded = (rows) => excludeSet.size === 0
-    ? rows
-    : rows.filter(r => !excludeSet.has((r.artist || '').toLowerCase()));
-
-  const mapRow = (row) => ({
-    id: row.id,
-    title: row.title,
-    artist: row.artist,
-    album: row.album,
-    genre: row.genre,
-    subgenre: row.subgenre,
-    mood: row.mood,
-    coverUrl: getCoverUrl(row),
-    audioUrl: getAudioUrl(row),
+const cleanText = (v) => (typeof v === 'string' ? v.trim().slice(0, 255) : '');
+const cleanList = (v, max) => {
+  const seen = new Set();
+  const out = [];
+  (Array.isArray(v) ? v : []).forEach((item) => {
+    const text = cleanText(item);
+    if (!text || seen.has(text.toLowerCase())) return;
+    seen.add(text.toLowerCase());
+    out.push(text);
   });
+  return out.slice(0, max);
+};
+// Whatever arrives (a request body, a JSON column) → the four fields, tidy
+const cleanStationSettings = (raw) => ({
+  artist: cleanText(raw?.artist) || null,
+  tags: cleanList(raw?.tags, MAX_STATION_TAGS),
+  goat: cleanText(raw?.goat) || null,
+  ungoat: cleanList(raw?.ungoat, MAX_STATION_UNGOATS),
+});
+// Does the station have anything to play from? (Un-Goat alone only removes.)
+const settingsHaveSound = (st) => !!(st.artist || st.goat || st.tags.length);
+const stationRowSettings = (row) => cleanStationSettings({
+  artist: row.seed_artist, tags: row.tags, goat: row.goat_artist, ungoat: row.ungoat_artists,
+});
 
-  return [...filterExcluded(ownResult.rows), ...filterExcluded(matchedResult.rows)].map(mapRow);
+// The built-in stations' fields, saved on the user. Hot in Here only takes Un-Goat.
+async function getBuiltInSettings(userId) {
+  const result = await pool.query(`SELECT radio_station_settings FROM users WHERE id = $1`, [userId]);
+  const saved = result.rows[0]?.radio_station_settings || {};
+  return {
+    'hot-in-here': { artist: null, tags: [], goat: null, ungoat: cleanStationSettings(saved['hot-in-here']).ungoat },
+    'your-station': cleanStationSettings(saved['your-station']),
+  };
+}
+
+const STATION_TRACK_COLUMNS = `id, title, artist, album, genre, subgenre, mood,
+  is_user_upload, uploaded_audio_url, uploaded_cover_url, cover, filename`;
+const mapStationRow = (row) => ({
+  id: row.id,
+  title: row.title,
+  artist: row.artist,
+  album: row.album,
+  genre: row.genre,
+  subgenre: row.subgenre,
+  mood: row.mood,
+  coverUrl: getCoverUrl(row),
+  audioUrl: getAudioUrl(row),
+});
+
+// The two halves of a Goat Mode queue: the Goat's own tracks, and everything
+// else the fields call for, already in play order.
+async function goatModePool(settings, ratings) {
+  if (!settingsHaveSound(settings)) return { others: [], goatTracks: [] };
+  const artist = settings.artist ? settings.artist.toLowerCase() : null;
+  const goat = settings.goat ? settings.goat.toLowerCase() : null;
+  const tags = settings.tags.map(t => t.toLowerCase());
+  const ungoat = settings.ungoat.map(a => a.toLowerCase());
+  const disliked = (t) => ratings && ratings.get(ratingKey(t.title, t.artist)) === -1;
+  const liked = (t) => ratings && ratings.get(ratingKey(t.title, t.artist)) === 1;
+
+  const result = await pool.query(
+    `WITH a_sim AS (SELECT DISTINCT lower(similar_artist) AS a FROM seed_tracks WHERE lower(artist) = $1 AND similar_artist IS NOT NULL),
+          a_sub AS (SELECT DISTINCT lower(subgenre) AS s FROM seed_tracks WHERE lower(artist) = $1 AND subgenre IS NOT NULL),
+          g_sim AS (SELECT DISTINCT lower(similar_artist) AS a FROM seed_tracks WHERE lower(artist) = $2 AND similar_artist IS NOT NULL),
+          g_sub AS (SELECT DISTINCT lower(subgenre) AS s FROM seed_tracks WHERE lower(artist) = $2 AND subgenre IS NOT NULL),
+          scored AS (
+            SELECT ${STATION_TRACK_COLUMNS},
+              (CASE WHEN lower(artist) = $1 THEN 3 ELSE 0 END)
+              + (CASE WHEN lower(similar_artist) = $1 THEN 4 ELSE 0 END)
+              + (CASE WHEN lower(artist) IN (SELECT a FROM a_sim) THEN 4 ELSE 0 END)
+              + (CASE WHEN lower(subgenre) IN (SELECT s FROM a_sub) THEN 2 ELSE 0 END)
+              + (CASE WHEN lower(similar_artist) = $2 THEN 2 ELSE 0 END)
+              + (CASE WHEN lower(artist) IN (SELECT a FROM g_sim) THEN 2 ELSE 0 END)
+              + (CASE WHEN lower(subgenre) IN (SELECT s FROM g_sub) THEN 1 ELSE 0 END)
+              + 3 * (SELECT COUNT(*) FROM unnest($3::text[]) AS tag
+                     WHERE tag IN (lower(genre), lower(subgenre), lower(mood), lower(tag5)))
+              AS score
+            FROM seed_tracks
+            WHERE NOT (lower(artist) = ANY($4::text[]))
+              AND ($2::text IS NULL OR lower(artist) <> $2)
+          ),
+          ranked AS (
+            SELECT *, ROW_NUMBER() OVER (PARTITION BY lower(artist) ORDER BY RANDOM()) AS artist_rank
+            FROM scored WHERE score > 0
+          )
+     SELECT * FROM ranked WHERE artist_rank <= 4
+     ORDER BY score * (0.4 + RANDOM()) DESC
+     LIMIT 90`,
+    [artist, goat, tags, ungoat]
+  );
+
+  // Strongest matches lead, with enough chance in it that no two visits to
+  // the station sound the same; a thumbs up lifts a track, a thumbs down drops it
+  const others = result.rows
+    .filter(row => !disliked(row))
+    .map(row => ({ row, weight: Number(row.score) * (0.4 + Math.random()) * (liked(row) ? 1.6 : 1) }))
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, STATION_QUEUE_OTHERS)
+    .map(({ row }) => mapStationRow(row));
+  spreadArtists(others);
+
+  let goatTracks = [];
+  if (goat && !ungoat.includes(goat)) {
+    const goatResult = await pool.query(
+      `SELECT ${STATION_TRACK_COLUMNS} FROM seed_tracks WHERE lower(artist) = $1 ORDER BY RANDOM() LIMIT 40`,
+      [goat]
+    );
+    goatTracks = shapeByRatings(goatResult.rows.map(mapStationRow), ratings);
+  }
+  return { others, goatTracks };
+}
+
+// Keep one artist from playing twice in a row where the queue allows it:
+// a track that would repeat the artist before it trades places with the next
+// track further on that wouldn't.
+function spreadArtists(tracks) {
+  const same = (a, b) => (a.artist || '').toLowerCase() === (b.artist || '').toLowerCase();
+  for (let i = 1; i < tracks.length; i += 1) {
+    if (!same(tracks[i], tracks[i - 1])) continue;
+    const swap = tracks.findIndex((t, j) => j > i && !same(t, tracks[i - 1]));
+    if (swap === -1) break;
+    [tracks[i], tracks[swap]] = [tracks[swap], tracks[i]];
+  }
+  return tracks;
+}
+
+// Deal the Goat's tracks into the queue: one to open, then one after every
+// couple of other tracks, for as long as there are Goat tracks left to play.
+function mixInGoat(others, goatTracks) {
+  if (!goatTracks.length) return others;
+  if (!others.length) return goatTracks;
+  const queue = [];
+  const rest = [...others];
+  const goats = [...goatTracks];
+  while (rest.length || goats.length) {
+    if (goats.length) queue.push(goats.shift());
+    for (let i = 0; i < GOAT_EVERY - 1 && rest.length; i += 1) queue.push(rest.shift());
+    if (!rest.length) break;
+  }
+  return queue;
+}
+
+async function buildGoatModeQueue(settings, ratings) {
+  const { others, goatTracks } = await goatModePool(settings, ratings);
+  return mixInGoat(others, goatTracks);
+}
+
+// The listener's thumbs, keyed by track, for shaping a station's queue.
+async function getUserRatings(userId) {
+  const result = await pool.query(
+    `SELECT track_title, artist, rating FROM user_play_history
+     WHERE user_id = $1 AND rating IS NOT NULL`,
+    [userId]
+  );
+  const ratings = new Map();
+  result.rows.forEach(r => ratings.set(ratingKey(r.track_title, r.artist), r.rating));
+  return ratings;
+}
+const ratingKey = (title, artist) => `${(title || '').toLowerCase()}|${(artist || '').toLowerCase()}`;
+
+// Thumbs-down tracks never play; thumbs-up tracks move to the front of the
+// group they are in. Everything else keeps its order.
+function shapeByRatings(tracks, ratings) {
+  if (!ratings || ratings.size === 0) return tracks;
+  const liked = [];
+  const rest = [];
+  tracks.forEach(t => {
+    const rating = ratings.get(ratingKey(t.title, t.artist));
+    if (rating === -1) return;
+    (rating === 1 ? liked : rest).push(t);
+  });
+  return [...liked, ...rest];
 }
 
 // The current UN-GOAT exclusion set for a user ─ empty unless they've toggled
@@ -474,31 +659,38 @@ async function getExcludedArtists(userId) {
   return [goat_artist, ...similarResult.rows.map(r => r.artist)];
 }
 
+const stationJson = (row) => ({
+  id: row.id,
+  name: row.name,
+  seedArtist: row.seed_artist,
+  hue: row.hue,
+  position: row.position,
+  settings: stationRowSettings(row),
+});
+
 // List the user's custom stations plus their GOAT/UN-GOAT slot ─ metadata only
 // (name/seedArtist/hue/position); a station's actual track pool is fetched
 // lazily, only once the user tunes to it (see the two /tracks endpoints below).
 router.get('/radio/stations', requireAuth, async (req, res) => {
   try {
     const stationsResult = await pool.query(
-      `SELECT id, name, seed_artist, hue, position, created_at
+      `SELECT id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position, created_at
        FROM radio_stations WHERE user_id = $1 ORDER BY created_at ASC`,
       [req.user.id]
     );
     const userResult = await pool.query(
-      `SELECT goat_artist, goat_mode FROM users WHERE id = $1`,
+      `SELECT goat_artist, goat_mode, radio_station_styles FROM users WHERE id = $1`,
       [req.user.id]
     );
-    const { goat_artist, goat_mode } = userResult.rows[0] || {};
+    const { goat_artist, goat_mode, radio_station_styles } = userResult.rows[0] || {};
 
     res.json({
-      stations: stationsResult.rows.map(s => ({
-        id: s.id,
-        name: s.name,
-        seedArtist: s.seed_artist,
-        hue: s.hue,
-        position: s.position,
-      })),
+      stations: stationsResult.rows.map(stationJson),
+      // The built-in stations' Station Panel fields, by station id
+      settings: await getBuiltInSettings(req.user.id),
       goat: { artist: goat_artist || null, mode: goat_mode || 'goat' },
+      // Sign font + color per station id (built-ins included) — see migration 012
+      styles: radio_station_styles || {},
     });
   } catch (err) {
     console.error('List stations error:', err);
@@ -510,9 +702,13 @@ router.get('/radio/stations', requireAuth, async (req, res) => {
 // catalog + similar-artist matches. hue/position are assigned once here so the
 // station's dial blip stays put between sessions.
 router.post('/radio/stations', requireAuth, async (req, res) => {
-  const { name, seedArtist } = req.body;
-  if (!name || !name.trim() || !seedArtist || !seedArtist.trim()) {
-    return res.status(400).json({ error: 'Station name and seed artist are required.' });
+  const { name } = req.body;
+  const settings = cleanStationSettings({ ...(req.body.settings || {}), artist: req.body.settings?.artist ?? req.body.seedArtist });
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Give the station a name.' });
+  }
+  if (!settingsHaveSound(settings)) {
+    return res.status(400).json({ error: 'Pick an artist, a tag or a Goat for the station to play from.' });
   }
 
   try {
@@ -528,28 +724,107 @@ router.post('/radio/stations', requireAuth, async (req, res) => {
     const hue = Math.floor(Math.random() * 360);
 
     const result = await pool.query(
-      `INSERT INTO radio_stations (user_id, name, seed_artist, hue, position)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, name, seed_artist, hue, position`,
-      [req.user.id, name.trim(), seedArtist.trim(), hue, position]
+      `INSERT INTO radio_stations (user_id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position`,
+      [req.user.id, name.trim().slice(0, 100), settings.artist, settings.tags, settings.goat, settings.ungoat, hue, position]
     );
 
-    const row = result.rows[0];
-    res.json({
-      station: {
-        id: row.id, name: row.name, seedArtist: row.seed_artist,
-        hue: row.hue, position: row.position,
-      },
-    });
+    res.json({ station: stationJson(result.rows[0]) });
   } catch (err) {
     console.error('Create station error:', err);
     res.status(500).json({ error: 'Failed to create station.' });
   }
 });
 
-// Delete one of the user's custom stations
-router.delete('/radio/stations/:id', requireAuth, async (req, res) => {
+// Restyle a station's sign (font + color) and rename it. :id is a custom
+// station's uuid or one of the built-in ids. Hot in Here is the one station
+// that never changes its name and can't be deleted. Your Station and GOAT
+// have no radio_stations row, so their custom name (and whether the listener
+// has removed them from the dial) lives beside their style in
+// users.radio_station_styles: { font, color, name? } or { hidden: true }.
+const BUILT_IN_STATION_IDS = ['hot-in-here', 'your-station', 'goat'];
+const LOCKED_STATION_ID = 'hot-in-here';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+router.put('/radio/stations/:id/style', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { font, color, name } = req.body || {};
+  const isBuiltIn = BUILT_IN_STATION_IDS.includes(id);
+
+  if (!isBuiltIn && !UUID_RE.test(id)) {
+    return res.status(404).json({ error: 'Station not found.' });
+  }
+  if (typeof font !== 'string' || !/^[A-Za-z0-9 ]{1,60}$/.test(font)) {
+    return res.status(400).json({ error: 'Pick a font.' });
+  }
+  if (typeof color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(color)) {
+    return res.status(400).json({ error: 'Pick a color.' });
+  }
+
   try {
+    let station = null;
+    if (!isBuiltIn) {
+      const trimmedName = typeof name === 'string' ? name.trim().slice(0, 100) : '';
+      const result = await pool.query(
+        `UPDATE radio_stations SET name = COALESCE(NULLIF($3, ''), name)
+         WHERE id = $1 AND user_id = $2
+         RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position`,
+        [id, req.user.id, trimmedName]
+      );
+      const row = result.rows[0];
+      if (!row) return res.status(404).json({ error: 'Station not found.' });
+      station = stationJson(row);
+    }
+
+    const style = { font, color: color.toLowerCase() };
+    // A built-in's own name; leaving it blank goes back to the automatic one.
+    // Saving a style also puts a removed built-in back on the dial.
+    if (isBuiltIn && id !== LOCKED_STATION_ID) {
+      const customName = typeof name === 'string' ? name.trim().slice(0, 100) : '';
+      if (customName) style.name = customName;
+    }
+    const styles = await pool.query(
+      `UPDATE users SET radio_station_styles = COALESCE(radio_station_styles, '{}'::jsonb) || jsonb_build_object($2::text, $3::jsonb)
+       WHERE id = $1 RETURNING radio_station_styles`,
+      [req.user.id, id, JSON.stringify(style)]
+    );
+    res.json({ style, station, styles: styles.rows[0]?.radio_station_styles || {} });
+  } catch (err) {
+    console.error('Style station error:', err);
+    res.status(500).json({ error: 'Failed to save the station style.' });
+  }
+});
+
+// Delete a station. Custom stations lose their row; Your Station and GOAT
+// are taken off the dial (and GOAT lets go of its artist, which also ends any
+// UN-GOAT muting). Hot in Here can't be deleted.
+router.delete('/radio/stations/:id', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  if (id === LOCKED_STATION_ID) {
+    return res.status(403).json({ error: 'Hot in Here cannot be deleted.' });
+  }
+  if (!BUILT_IN_STATION_IDS.includes(id) && !UUID_RE.test(id)) {
+    return res.status(404).json({ error: 'Station not found.' });
+  }
+  try {
+    if (BUILT_IN_STATION_IDS.includes(id)) {
+      const result = await pool.query(
+        `UPDATE users SET
+           radio_station_styles = COALESCE(radio_station_styles, '{}'::jsonb) || jsonb_build_object($2::text, '{"hidden": true}'::jsonb),
+           goat_artist = CASE WHEN $2 = 'goat' THEN NULL ELSE goat_artist END,
+           goat_mode = CASE WHEN $2 = 'goat' THEN 'goat' ELSE goat_mode END
+         WHERE id = $1
+         RETURNING radio_station_styles, goat_artist, goat_mode`,
+        [req.user.id, id]
+      );
+      const row = result.rows[0] || {};
+      return res.json({
+        success: true,
+        styles: row.radio_station_styles || {},
+        goat: { artist: row.goat_artist || null, mode: row.goat_mode || 'goat' },
+      });
+    }
     const result = await pool.query(
       `DELETE FROM radio_stations WHERE id = $1 AND user_id = $2 RETURNING id`,
       [req.params.id, req.user.id]
@@ -557,6 +832,11 @@ router.delete('/radio/stations/:id', requireAuth, async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Station not found.' });
     }
+    // Drop the deleted station's saved sign style too
+    await pool.query(
+      `UPDATE users SET radio_station_styles = COALESCE(radio_station_styles, '{}'::jsonb) - $2::text WHERE id = $1`,
+      [req.user.id, req.params.id]
+    );
     res.json({ success: true });
   } catch (err) {
     console.error('Delete station error:', err);
@@ -564,11 +844,72 @@ router.delete('/radio/stations/:id', requireAuth, async (req, res) => {
   }
 });
 
-// A custom station's track pool, with the UN-GOAT exclusion filter applied
+// Save a station's four Station Panel fields. A custom station must keep
+// something to play from; Hot in Here only takes Un-Goat.
+router.put('/radio/stations/:id/settings', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  let settings = cleanStationSettings(req.body || {});
+  try {
+    if (id === 'hot-in-here' || id === 'your-station') {
+      if (id === 'hot-in-here') settings = { artist: null, tags: [], goat: null, ungoat: settings.ungoat };
+      await pool.query(
+        `UPDATE users SET radio_station_settings = COALESCE(radio_station_settings, '{}'::jsonb) || jsonb_build_object($2::text, $3::jsonb)
+         WHERE id = $1`,
+        [req.user.id, id, JSON.stringify(settings)]
+      );
+      return res.json({ settings, builtIn: await getBuiltInSettings(req.user.id) });
+    }
+    if (!UUID_RE.test(id)) return res.status(404).json({ error: 'Station not found.' });
+    if (!settingsHaveSound(settings)) {
+      return res.status(400).json({ error: 'A station needs an artist, a tag or a Goat to play from.' });
+    }
+    const result = await pool.query(
+      `UPDATE radio_stations SET seed_artist = $3, tags = $4, goat_artist = $5, ungoat_artists = $6
+       WHERE id = $1 AND user_id = $2
+       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position`,
+      [id, req.user.id, settings.artist, settings.tags, settings.goat, settings.ungoat]
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'Station not found.' });
+    res.json({ settings, station: stationJson(result.rows[0]) });
+  } catch (err) {
+    console.error('Station settings error:', err);
+    res.status(500).json({ error: 'Failed to save the station.' });
+  }
+});
+
+// Tag suggestions for the Station Panel's Tags field: every genre, subgenre,
+// mood and tag5 in the catalog that contains what was typed, tags that start
+// with it first, then the ones on the most tracks.
+router.get('/radio/tags', requireAuth, async (req, res) => {
+  const q = cleanText(req.query.q).toLowerCase();
+  if (!q) return res.json({ tags: [] });
+  try {
+    const result = await pool.query(
+      `SELECT MIN(tag) AS name, COUNT(*) AS tracks FROM (
+         SELECT genre AS tag FROM seed_tracks
+         UNION ALL SELECT subgenre FROM seed_tracks
+         UNION ALL SELECT mood FROM seed_tracks
+         UNION ALL SELECT tag5 FROM seed_tracks
+       ) all_tags
+       WHERE tag IS NOT NULL AND btrim(tag) <> '' AND lower(tag) LIKE '%' || $1 || '%'
+       GROUP BY lower(tag)
+       ORDER BY (lower(tag) LIKE $1 || '%') DESC, COUNT(*) DESC
+       LIMIT 8`,
+      [q]
+    );
+    res.json({ tags: result.rows.map(r => ({ id: r.name, name: r.name, tracks: Number(r.tracks) })) });
+  } catch (err) {
+    console.error('Tag search error:', err);
+    res.status(500).json({ error: 'Search failed', tags: [] });
+  }
+});
+
+// A custom station's queue, built from its Station Panel fields
 router.get('/radio/stations/:id/tracks', requireAuth, async (req, res) => {
   try {
+    if (!UUID_RE.test(req.params.id)) return res.status(404).json({ error: 'Station not found.' });
     const stationResult = await pool.query(
-      `SELECT id, name, seed_artist, hue, position FROM radio_stations
+      `SELECT id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position FROM radio_stations
        WHERE id = $1 AND user_id = $2`,
       [req.params.id, req.user.id]
     );
@@ -577,16 +918,8 @@ router.get('/radio/stations/:id/tracks', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Station not found.' });
     }
 
-    const excluded = await getExcludedArtists(req.user.id);
-    const tracks = await buildArtistStationTracks(station.seed_artist, excluded);
-
-    res.json({
-      station: {
-        id: station.id, name: station.name, seedArtist: station.seed_artist,
-        hue: station.hue, position: station.position,
-      },
-      tracks,
-    });
+    const tracks = await buildGoatModeQueue(stationRowSettings(station), await getUserRatings(req.user.id));
+    res.json({ station: stationJson(station), tracks });
   } catch (err) {
     console.error('Station tracks error:', err);
     res.status(500).json({ error: 'Failed to load station tracks.' });
@@ -607,6 +940,8 @@ router.put('/radio/goat', requireAuth, async (req, res) => {
     const values = [];
     let i = 1;
     if (artist !== undefined) { fields.push(`goat_artist = $${i++}`); values.push(artist || null); }
+    // Picking a GOAT puts the station back on the dial if it had been removed
+    if (artist) fields.push(`radio_station_styles = COALESCE(radio_station_styles, '{}'::jsonb) #- '{goat,hidden}'`);
     if (mode !== undefined) { fields.push(`goat_mode = $${i++}`); values.push(mode); }
     if (fields.length === 0) {
       return res.status(400).json({ error: 'Nothing to update.' });
@@ -641,7 +976,7 @@ router.get('/radio/goat/tracks', requireAuth, async (req, res) => {
       return res.json({ artist: goat_artist, mode: 'ungoat', tracks: [] });
     }
 
-    const tracks = await buildArtistStationTracks(goat_artist);
+    const tracks = await buildGoatModeQueue(cleanStationSettings({ goat: goat_artist }), await getUserRatings(req.user.id));
     res.json({ artist: goat_artist, mode: 'goat', tracks });
   } catch (err) {
     console.error('GOAT tracks error:', err);
@@ -1717,11 +2052,21 @@ router.post('/history/rate', requireAuth, async (req, res) => {
   if (!title || !artist) {
     return res.status(400).json({ error: 'Title and artist are required.' });
   }
-  if (rating !== 1 && rating !== -1) {
-    return res.status(400).json({ error: 'rating must be 1 or -1.' });
+  if (rating !== 1 && rating !== -1 && rating !== 0) {
+    return res.status(400).json({ error: 'rating must be 1, -1, or 0 to clear.' });
   }
 
   try {
+    // 0 takes the thumb back; the play history row itself stays
+    if (rating === 0) {
+      await pool.query(
+        `UPDATE user_play_history SET rating = NULL
+         WHERE user_id = $1 AND track_title = $2 AND artist = $3`,
+        [req.user.id, title, artist]
+      );
+      return res.json({ success: true, rating: null });
+    }
+
     await pool.query(
       `INSERT INTO user_play_history (user_id, track_title, artist, album, genre, rating)
        VALUES ($1, $2, $3, $4, $5, $6)
@@ -1733,6 +2078,23 @@ router.post('/history/rate', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Rate track error:', err);
     res.status(500).json({ error: 'Failed to rate track.' });
+  }
+});
+
+// Every track this user has thumbed up or down, so the Radio tuner can show
+// the thumbs already lit when one of those tracks comes round again.
+router.get('/history/ratings', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT track_title AS title, artist, rating
+       FROM user_play_history
+       WHERE user_id = $1 AND rating IS NOT NULL`,
+      [req.user.id]
+    );
+    res.json({ ratings: result.rows });
+  } catch (err) {
+    console.error('Get ratings error:', err);
+    res.status(500).json({ error: 'Failed to load ratings.' });
   }
 });
 

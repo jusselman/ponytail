@@ -12,6 +12,12 @@ const NEAR_RADII_MI = [25, 100, 250, 500];
 const MAX_PLACES = 3;                  // same cap the panel enforces
 const EARTH_RADIUS_MI = 3958.8;
 
+// ── Where a listener is assumed to be until they set a city of their own.
+// Used by Radio's Hot in Here station (see GET /radio/hot-in-here). Change
+// or remove this once every account is asked for a location. ──
+const DEFAULT_HOME = { label: 'San Francisco, CA', lat: 37.7749, lng: -122.4194 };
+const HOT_IN_HERE_RADIUS_MI = 10;
+
 // ── Scenes shown as tiles in the Place tab: the eight places with the most
 // located tracks in the catalog (checked Oct 2026), biggest first. A fixed
 // list for the MVP — counts and artist names on each tile are still live.
@@ -172,7 +178,7 @@ async function countTracks(specGroups, genres = []) {
 }
 
 module.exports = {
-  CITY_RADIUS_MI, NEAR_RADII_MI, MAX_PLACES, SCENES,
+  CITY_RADIUS_MI, NEAR_RADII_MI, MAX_PLACES, SCENES, DEFAULT_HOME, HOT_IN_HERE_RADIUS_MI,
   distanceSql, cityLabel, describePlace, specForPlace, specSql, specsSql,
   parsePlaceTokens, parseNearRadius, parseGenres, resolvePlaceSpecs, userHome, countTracks,
 };

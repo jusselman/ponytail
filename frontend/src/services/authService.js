@@ -279,9 +279,39 @@ export const getRadioStations = async () => {
 
 // Create a custom station, seeded from one artist (auto-populated with their
 // catalog + similar-artist matches server-side).
-export const createRadioStation = async (name, seedArtist) => {
+export const createRadioStation = async (name, settings) => {
   const token = await getToken();
-  const response = await axios.post(`${API_URL}/auth/radio/stations`, { name, seedArtist }, {
+  const response = await axios.post(`${API_URL}/auth/radio/stations`, { name, settings }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+// Save a station's Station Panel fields: { artist, tags, goat, ungoat }.
+// Works for custom stations and the built-ins (Hot in Here keeps only ungoat).
+export const saveStationSettings = async (stationId, settings) => {
+  const token = await getToken();
+  const response = await axios.put(`${API_URL}/auth/radio/stations/${stationId}/settings`, settings, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+// Tag autocomplete for the Station Panel's Tags field
+export const searchTags = async (q) => {
+  const token = await getToken();
+  const response = await axios.get(`${API_URL}/auth/radio/tags`, {
+    params: { q },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+// Save a station's sign style (font + color). `name` renames a custom station
+// in the same call; built-in stations such as Hot in Here ignore it.
+export const saveStationStyle = async (stationId, { font, color, name }) => {
+  const token = await getToken();
+  const response = await axios.put(`${API_URL}/auth/radio/stations/${stationId}/style`, { font, color, name }, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
@@ -342,6 +372,14 @@ export const searchArtists = async (q) => {
 // Thumbs up (1) / thumbs down (-1) a track ─ personalized signal recorded
 // against user_play_history, distinct from the track's global like/dislike
 // counters.
+export const getTrackRatings = async () => {
+  const token = await getToken();
+  const response = await axios.get(`${API_URL}/auth/history/ratings`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 export const rateTrack = async (track, rating) => {
   const token = await getToken();
   const response = await axios.post(`${API_URL}/auth/history/rate`, {
