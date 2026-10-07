@@ -279,9 +279,9 @@ export const getRadioStations = async () => {
 
 // Create a custom station, seeded from one artist (auto-populated with their
 // catalog + similar-artist matches server-side).
-export const createRadioStation = async (name, settings) => {
+export const createRadioStation = async (name, settings, position = null) => {
   const token = await getToken();
-  const response = await axios.post(`${API_URL}/auth/radio/stations`, { name, settings }, {
+  const response = await axios.post(`${API_URL}/auth/radio/stations`, { name, settings, position }, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
@@ -292,6 +292,15 @@ export const createRadioStation = async (name, settings) => {
 export const saveStationSettings = async (stationId, settings) => {
   const token = await getToken();
   const response = await axios.put(`${API_URL}/auth/radio/stations/${stationId}/settings`, settings, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+// Move a station to another frequency on the dial (not Hot in Here)
+export const saveStationPosition = async (stationId, position) => {
+  const token = await getToken();
+  const response = await axios.put(`${API_URL}/auth/radio/stations/${stationId}/position`, { position }, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;

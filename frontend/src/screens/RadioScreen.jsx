@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import {
   getMe, getHotInHere, getMyStation,
   getRadioStations, createRadioStation, deleteRadioStation,
-  getStationTracks, saveStationSettings, searchTags,
+  getStationTracks, saveStationSettings, saveStationPosition, searchTags,
   searchArtists, rateTrack, getTrackRatings, saveStationStyle,
 } from '../services/authService';
 import FooterNav from '../components/FooterNav';
+import DuckModeBadge from '../assets/images/DuckModeBadge.png';
+import FrequencySheet from '../components/FrequencySheet';
 import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
 import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
@@ -190,7 +192,60 @@ const GoatBadge = ({ size = 34, ungoat = false }) => (
   </div>
 );
 
-// ─── Station Panel fields (Goat Mode) ──
+// Pony Mode's badge: the artwork from components/icons/PonyMode.svg, recolored
+// the way GoatBadge recolors the goat (green pony, pink mane) and set in the
+// same glowing green ring.
+const PONY_BODY = [
+  "M18.8128 47.9768C18.8128 44.9079 20.6266 40.4432 23.4203 36.6407C27.191 31.5079 27.7003 30.6486 28.1828 28.6104C28.4478 27.4913 28.5967 26.5122 28.5104 26.4294C28.427 26.3494 28.2781 26.5264 28.1798 26.8233C27.2654 29.5696 25.5082 31.8048 23.6884 32.5356C23.1463 32.7526 21.8626 32.9324 20.8321 32.9353C18.512 32.9438 16.9424 33.589 14.9886 35.3389C13.5947 36.5922 13.4696 36.6407 11.7124 36.6407C10.1398 36.6407 9.75854 36.5322 8.96629 35.8528C8.43019 35.3932 7.81962 34.4226 7.50093 33.5176C6.85761 31.6935 7.03333 31.0026 8.5255 29.5039C10.1219 27.9024 12.4569 24.2284 13.1509 22.2358C13.6006 20.9426 13.9729 20.3403 14.4078 20.2061C15.2745 19.9435 17.5768 17.8567 18.1278 16.8318C18.5358 16.0753 18.3958 16.141 16.9126 17.4085C14.1933 19.7322 11.3222 20.7799 9.11819 20.2489C8.34977 20.0634 8.36764 20.0377 9.77045 19.3639C10.8665 18.8415 11.5426 18.2135 12.5493 16.7833C13.2849 15.7442 14.372 14.4738 14.9677 13.9543C15.9744 13.0864 18.8783 11.8047 19.8493 11.8047C20.1173 11.8047 20.299 11.4193 20.3586 10.7341L20.4509 9.66363L21.127 10.6628C21.8448 11.7276 22.8842 14.6365 23.1493 16.3408C23.2982 17.2743 23.2178 17.4284 22.3005 17.9851C20.3377 19.1812 19.6378 22.3214 20.9662 23.9715C21.9073 25.139 22.3779 25.4559 23.7152 25.8156C26.077 26.4494 28.567 25.0334 29.2282 22.6783C29.7881 20.6914 28.7933 18.6246 26.7919 17.6283C26.2141 17.34 25.9341 16.926 25.7971 16.1581C25.6899 15.57 25.3503 14.2711 25.0376 13.272C24.7278 12.2757 24.4717 11.3565 24.4717 11.2309C24.4717 10.8712 27.316 11.6791 29.0316 12.5241C31.1164 13.5546 32.9303 15.296 33.7583 17.0573C34.3807 18.3848 34.4344 18.8672 34.3659 22.5184C34.2854 26.7805 34.7918 29.6466 36.0278 31.9618C36.5937 33.0152 36.5937 33.0437 36.0278 33.9601C35.31 35.1277 31.6436 38.4648 30.4076 39.0786C29.8953 39.3298 29.5558 39.6096 29.6481 39.6981C29.9787 40.015 34.8871 37.5171 36.1856 36.3695L37.508 35.2019L37.9876 36.3552C38.7143 38.0909 38.6011 39.2356 37.5765 40.5945C35.7776 42.9753 33.0494 44.3969 26.5566 46.3467C22.6043 47.5343 19.9297 48.6219 19.5604 49.1957C19.1196 49.8809 18.8128 49.3813 18.8128 47.9768ZM18.3779 23.1379C18.2648 23.5775 17.958 24.1627 17.7019 24.4368C16.8709 25.3189 15.5366 24.885 15.5366 23.7317C15.5366 23.215 16.0757 22.9238 17.7316 22.5384C18.5477 22.3471 18.5775 22.3728 18.3779 23.1379Z"
+];
+const PONY_MANE = [
+  "M23.6943 24.3711C21.7346 23.6118 21.1836 21.0539 22.6549 19.5438C24.9423 17.1972 28.9363 19.7722 27.6377 22.7525C26.9765 24.2683 25.255 24.9763 23.6943 24.3711Z",
+  "M44.0694 37.557C40.8617 36.4409 38.1543 33.5576 37.0583 30.0891C36.4954 28.3135 36.4001 24.8364 36.8051 20.7885C37.0107 18.7131 36.966 17.8995 36.5818 16.6291C35.9801 14.6422 35.0271 13.2777 33.7434 12.5583C32.8737 12.073 32.6116 12.0445 31.736 12.3471C30.8752 12.6468 30.6012 12.624 29.8149 12.1786C29.0227 11.7333 28.9214 11.5449 29.0733 10.8055C29.1716 10.3345 29.7077 9.28966 30.2646 8.48748C33.5111 3.8029 41.1059 4.80776 43.5363 10.2431C44.3881 12.1444 44.5191 14.1998 44.0009 17.4941C43.3754 21.4707 43.4112 23.4633 44.1409 25.5444C44.8646 27.6027 45.6092 28.6361 46.8869 29.3583C48.1468 30.072 47.4886 30.2204 45.5109 29.6695C44.3494 29.3469 43.6077 28.9073 42.8274 28.0794C42.2317 27.4485 41.6807 26.9347 41.5973 26.9347C41.2757 26.9347 41.4723 30.0434 41.8952 31.5935C42.5355 33.9544 43.4171 35.4731 44.951 36.8548C46.4104 38.1708 46.2317 38.3107 44.0694 37.557Z",
+  "M15.3936 11.5592C15.197 10.186 15.6349 7.80806 16.0846 7.80806C16.3824 7.80806 17.9461 9.41527 18.7681 10.5686L19.4144 11.4707L17.9252 11.9445C17.1062 12.2072 16.3616 12.5383 16.2663 12.6839C15.888 13.2691 15.5813 12.8752 15.3936 11.5592Z"
+];
+
+const PonyBadge = ({ size = 34 }) => (
+  <div style={{
+    width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+    border: "2px solid #d6ffe0", backgroundColor: "rgba(34,120,66,0.8)", boxShadow: "0 0 10px rgba(90,255,130,0.8)",
+    display: "flex", alignItems: "center", justifyContent: "center", boxSizing: "border-box",
+  }}>
+    <svg width="100%" height="100%" viewBox="2 2 51 51" fill="none">
+      {PONY_BODY.map((d) => <path key={d.slice(0, 40)} d={d} fill="#8dffab" fillRule="evenodd" clipRule="evenodd" />)}
+      {PONY_MANE.map((d) => <path key={d.slice(0, 40)} d={d} fill="#ffa3dc" />)}
+    </svg>
+  </div>
+);
+
+// Duck Mode's badge: the duck artwork (assets/images/DuckModeBadge.png, the
+// inside of DuckMode.png with the beak tinted yellow) in the same ring.
+const duckBadgeSrc = typeof DuckModeBadge === 'string' ? DuckModeBadge : (DuckModeBadge?.uri || DuckModeBadge?.default || DuckModeBadge);
+const DuckBadge = ({ size = 34 }) => (
+  <div style={{
+    width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+    border: "2px solid #d6ffe0", backgroundColor: "rgba(34,120,66,0.8)", boxShadow: "0 0 10px rgba(90,255,130,0.8)",
+    display: "flex", alignItems: "center", justifyContent: "center", boxSizing: "border-box",
+  }}>
+    <img src={duckBadgeSrc} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+  </div>
+);
+
+// The three station modes, in the order the mode icon cycles through them
+const MODES = ['goat', 'pony', 'duck'];
+const MODE_NAMES = { goat: 'Goat', pony: 'Pony', duck: 'Duck' };
+const nextMode = (mode) => MODES[(MODES.indexOf(mode) + 1) % MODES.length] || 'goat';
+// Which fields each mode plays from
+const modeUsesSound = (mode) => mode !== 'duck';   // Artist + Tags
+const modeUsesGoat = (mode) => mode !== 'pony';    // Goat + Un-Goat
+
+const ModeBadge = ({ mode, size }) => (
+  mode === 'pony' ? <PonyBadge size={size} /> : mode === 'duck' ? <DuckBadge size={size} /> : <GoatBadge size={size} />
+);
+
+// ─── Station Panel fields ──
+// A station is in Goat Mode (all four fields), Pony Mode (Artist and Tags
+// only) or Duck Mode (Goat and Un-Goat only). Fields a mode leaves out are
+// kept but sit out. Tapping the mode icon in the panel cycles the modes.
 const panelFieldStyle = (focused) => ({
   width: "100%", padding: "9px 12px",
   borderRadius: "8px", backgroundColor: "rgba(255,255,255,0.08)",
@@ -199,14 +254,15 @@ const panelFieldStyle = (focused) => ({
   fontFamily: kanit, boxSizing: "border-box", transition: "border-color 0.15s ease",
 });
 
-const EMPTY_SETTINGS = { artist: null, tags: [], goat: null, ungoat: [] };
+const EMPTY_SETTINGS = { artist: null, tags: [], goat: null, ungoat: [], mode: 'goat' };
 
 // One line for what a station plays, from its four fields
 const describeSettings = (st) => {
+  const mode = st?.mode || 'goat';
   const parts = [];
-  if (st?.artist) parts.push(`Sounds like ${st.artist}`);
-  if (st?.tags?.length) parts.push(st.tags.join(', '));
-  if (st?.goat) parts.push(`Goat: ${st.goat}`);
+  if (modeUsesSound(mode) && st?.artist) parts.push(`Sounds like ${st.artist}`);
+  if (modeUsesSound(mode) && st?.tags?.length) parts.push(st.tags.join(', '));
+  if (modeUsesGoat(mode) && st?.goat) parts.push(`Goat: ${st.goat}`);
   return parts.join(' · ') || 'Nothing picked yet';
 };
 
@@ -561,6 +617,11 @@ export default function RadioScreen({ setScreen }) {
   const [stationStyles, setStationStyles] = useState({});
   // Set Your City sheet, opened from the Station Panel's location button
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
+  // Choose a Frequency sheet, opened by tapping the panel's frequency
+  const [frequencyOpen, setFrequencyOpen] = useState(false);
+  // The frequency picked for a station that hasn't been created yet
+  // (null → the backend finds it a free spot)
+  const [draftFrequency, setDraftFrequency] = useState(null);
   // Edit Station Name sheet: null (closed), 'new', or a station id
   const [nameEditorFor, setNameEditorFor] = useState(null);
   // The style picked for a station that hasn't been created yet
@@ -679,7 +740,7 @@ export default function RadioScreen({ setScreen }) {
     },
     ...(user?.is_artist && !isHidden('your-station') ? [{
       id: 'your-station', kind: 'your-station', name: stationStyles['your-station']?.name || yourStationAutoName,
-      hue: YOUR_STATION_HUE, position: YOUR_STATION_POSITION,
+      hue: YOUR_STATION_HUE, position: builtInSettings['your-station']?.position || YOUR_STATION_POSITION,
       subtitle: 'Your uploads + similar artists',
     }] : []),
     ...customStations.map(s => ({
@@ -772,11 +833,13 @@ export default function RadioScreen({ setScreen }) {
     setNewStationName("");
     setPanelDescription("");
     setDraftSettings(EMPTY_SETTINGS);
+    setDraftFrequency(null);
+    setFrequencyOpen(false);
     setPanelError("");
     setNewStationStyle(DEFAULT_STATION_STYLE);
     setNameEditorFor(null);
   };
-  const closePanel = () => { setPanel(null); setDeleteArmed(false); setNameEditorFor(null); setCityPickerOpen(false); };
+  const closePanel = () => { setPanel(null); setDeleteArmed(false); setNameEditorFor(null); setCityPickerOpen(false); setFrequencyOpen(false); };
 
   // ── Save the listener's city to their account (it persists across sessions
   // and devices), then reload Hot in Here for the new spot. If the dial is on
@@ -824,7 +887,7 @@ export default function RadioScreen({ setScreen }) {
   const handleCreateStation = async () => {
     if (!canSaveNew) return;
     try {
-      const data = await createRadioStation(newStationName.trim(), draftSettings);
+      const data = await createRadioStation(newStationName.trim(), draftSettings, draftFrequency);
       setCustomStations(prev => [...prev, data.station]);
       // Carry over the sign style picked before the station existed
       try {
@@ -837,6 +900,7 @@ export default function RadioScreen({ setScreen }) {
       handleTune({ ...data.station, kind: 'custom' });
     } catch (err) {
       console.log('Failed to create station:', err);
+      setPanelError(err?.response?.data?.error || "Couldn't create the station.");
     }
   };
 
@@ -864,6 +928,25 @@ export default function RadioScreen({ setScreen }) {
       setStationStyles(data.styles || {});
     } catch (err) {
       console.log('Failed to restore station:', err);
+    }
+  };
+
+  // ── Save from the Choose a Frequency sheet. A station being created just
+  // remembers the spot; an existing one moves on the dial straight away.
+  // Errors are thrown back to the sheet so it can show them. The sheet
+  // slides itself away afterwards and then calls onCancel. ──
+  const handleSaveFrequency = async (position) => {
+    if (panel?.mode === 'new') {
+      setDraftFrequency(position);
+      return;
+    }
+    const station = allStations.find(s => s.id === panel?.stationId);
+    if (!station || station.kind === 'hot-in-here') return;
+    const data = await saveStationPosition(station.id, position);
+    if (data.station) {
+      setCustomStations(prev => prev.map(st => (st.id === data.station.id ? { ...st, ...data.station } : st)));
+    } else {
+      setBuiltInSettings(data.builtIn || {});
     }
   };
 
@@ -927,10 +1010,27 @@ export default function RadioScreen({ setScreen }) {
 
   const panelStation = panel?.mode === 'edit' ? (allStations.find(s => s.id === panel.stationId) || null) : null;
   const isNewStation = panel?.mode === 'new';
-  const canSaveNew = !!newStationName.trim() && !!(draftSettings.artist || draftSettings.goat || draftSettings.tags.length);
+  const canSaveNew = !!newStationName.trim()
+    && !!((modeUsesSound(draftSettings.mode) && (draftSettings.artist || draftSettings.tags.length))
+      || (modeUsesGoat(draftSettings.mode) && draftSettings.goat));
   const panelSettings = isNewStation ? draftSettings : settingsOf(panelStation);
   // Hot in Here plays whoever is local, so Un-Goat is the one field it takes
   const soundFieldsLocked = panelStation?.kind === 'hot-in-here';
+  const panelMode = panelSettings.mode || 'goat';
+  const tunedSettings = settingsOf(tunedStation);
+  const tunedMode = tunedSettings.mode || 'goat';
+  // One line under the fields: what this mode plays from, and what's missing
+  const panelNote = soundFieldsLocked
+    ? (panelMode === 'pony'
+      ? "Hot in Here plays whoever is local. In Pony Mode its Un-Goats sit out too."
+      : "Hot in Here plays whoever is local, so Un-Goat is the only field it takes.")
+    : panelMode === 'pony'
+      ? `Pony Mode plays from the Artist and Tags only.${panelSettings.artist || panelSettings.tags.length ? "" : " Pick one to hear something."}`
+      : panelMode === 'duck'
+        ? `Duck Mode plays from the Goat and skips the Un-Goats.${panelSettings.goat ? "" : " Pick a Goat to hear something."}`
+        : "";
+  // Every station but Hot in Here can be moved along the dial
+  const canMoveStation = isNewStation || (!!panelStation && panelStation.kind !== 'hot-in-here');
   const panelSignStyle = isNewStation ? newStationStyle : styleFor(panelStation?.id);
   const panelSignText = panelStation?.kind === 'hot-in-here' ? 'Hot in Here!!!' : (panelStation?.name || '');
   // What the Edit Station Name sheet is working on
@@ -944,8 +1044,8 @@ export default function RadioScreen({ setScreen }) {
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
         body { background: #222222; }
         @keyframes radioFade { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes radioBreathe { from { transform: scale(1); } to { transform: scale(1.14); } }
-        .radio-backdrop-img { animation: radioBreathe 22s ease-in-out infinite alternate; will-change: transform; }
+        @keyframes radioBreathe { from { transform: scale(1) rotate(0deg); } to { transform: scale(1.25) rotate(2deg); } }
+        .radio-backdrop-img { animation: radioBreathe 14s ease-in-out infinite alternate; will-change: transform; transform-origin: 50% 45%; }
         @media (prefers-reduced-motion: reduce) { .radio-backdrop-img { animation: none; } }
         @keyframes stationSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         ::-webkit-scrollbar { display: none; }
@@ -964,7 +1064,8 @@ export default function RadioScreen({ setScreen }) {
           {/* ── Tuner (everything above the footer) ── */}
           <div style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden", borderRadius: "40px 40px 0 0", display: "flex", flexDirection: "column" }}>
 
-            {/* Backdrop: the cover, blurred edge to edge, under a grey veil.
+            {/* Backdrop: the cover, softly blurred edge to edge under a dark veil,
+                slowly breathing in and out.
                 It carries its own rounded clip: a blurred, animated layer can
                 otherwise paint past the phone frame's rounded corners. */}
             <div style={{ position: "absolute", inset: 0, overflow: "hidden", borderRadius: "40px 40px 0 0", clipPath: "inset(0 round 40px 40px 0 0)", isolation: "isolate", transform: "translateZ(0)", background: "linear-gradient(160deg, #5a5a66, #3a3a40)" }}>
@@ -974,10 +1075,10 @@ export default function RadioScreen({ setScreen }) {
                   alt=""
                   draggable={false}
                   className="radio-backdrop-img"
-                  style={{ position: "absolute", inset: "-12%", width: "124%", height: "124%", objectFit: "cover", filter: "blur(22px)" }}
+                  style={{ position: "absolute", inset: "-12%", width: "124%", height: "124%", objectFit: "cover", filter: "blur(6px)" }}
                 />
               )}
-              <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(125,125,125,0.62)" }} />
+              <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(26,26,30,0.6)" }} />
             </div>
 
             {/* Top-right actions */}
@@ -1011,10 +1112,10 @@ export default function RadioScreen({ setScreen }) {
               <div style={{ ...neon.blue, fontFamily: signFont, fontSize: "25px", lineHeight: 1 }}>{frequency}</div>
               <div style={{ ...neon.blue, WebkitTextStroke: "4px #1616c4", fontFamily: signFont, fontSize: "15px", lineHeight: 1, marginTop: "5px" }}>μHz</div>
               <div onClick={() => tunedStation && openPanel({ mode: 'edit', stationId: tunedStation.id })} style={{ cursor: "pointer" }}>
-                <GoatBadge size={36} />
+                <ModeBadge mode={tunedMode} size={36} />
               </div>
               <div style={{ ...neon.blue, WebkitTextStroke: "5px #1616c4", fontFamily: signFont, fontSize: "17px", lineHeight: 1 }}>
-                Goat Mode
+                {MODE_NAMES[tunedMode]} Mode
               </div>
             </div>
 
@@ -1039,15 +1140,6 @@ export default function RadioScreen({ setScreen }) {
             <div style={{ position: "relative", zIndex: 1, flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "8px 0 4px" }}>
               {displayTrack ? (
                 <div style={{ position: "relative", height: "100%", maxHeight: "150px", aspectRatio: "1" }}>
-                  {/* Soft, oversized copy of the cover behind the sharp one */}
-                  {displayTrack.coverUrl && (
-                    <img
-                      src={displayTrack.coverUrl}
-                      alt=""
-                      draggable={false}
-                      style={{ position: "absolute", left: "-14%", top: "-16%", width: "128%", height: "200%", objectFit: "cover", filter: "blur(9px)", opacity: 0.9, borderRadius: "4px" }}
-                    />
-                  )}
                   <div style={{
                     position: "relative", width: "100%", height: "100%", boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
                     background: `linear-gradient(135deg, hsl(${(displayTrack.title?.charCodeAt(0) || 5) * 37 % 360}, 45%, 38%), hsl(${((displayTrack.title?.charCodeAt(0) || 5) * 37 + 40) % 360}, 40%, 22%))`,
@@ -1162,10 +1254,12 @@ export default function RadioScreen({ setScreen }) {
                   )}
                   {tunedStation?.kind === 'custom' && (
                     <>
-                      {tunedStation.settings?.artist && <>Plays music that sounds like <strong style={{ color: colors.text }}>{tunedStation.settings.artist}</strong>. </>}
-                      {tunedStation.settings?.tags?.length > 0 && <>Tagged <strong style={{ color: colors.text }}>{tunedStation.settings.tags.join(', ')}</strong>. </>}
-                      {tunedStation.settings?.goat && <><strong style={{ color: colors.text }}>{tunedStation.settings.goat}</strong> is the Goat here and comes round about every third track. </>}
-                      {tunedStation.settings?.ungoat?.length > 0 && <>Never plays {tunedStation.settings.ungoat.join(', ')}.</>}
+                      {tunedMode === 'duck' && <>Duck Mode: only the Goat and Un-Goats shape it. </>}
+                      {modeUsesSound(tunedMode) && tunedStation.settings?.artist && <>Plays music that sounds like <strong style={{ color: colors.text }}>{tunedStation.settings.artist}</strong>. </>}
+                      {modeUsesSound(tunedMode) && tunedStation.settings?.tags?.length > 0 && <>Tagged <strong style={{ color: colors.text }}>{tunedStation.settings.tags.join(', ')}</strong>. </>}
+                      {tunedMode === 'pony' && <>Pony Mode: only the artist and tags shape it. </>}
+                      {modeUsesGoat(tunedMode) && tunedStation.settings?.goat && <><strong style={{ color: colors.text }}>{tunedStation.settings.goat}</strong> is the Goat here and comes round about every third track. </>}
+                      {modeUsesGoat(tunedMode) && tunedStation.settings?.ungoat?.length > 0 && <>Never plays {tunedStation.settings.ungoat.join(', ')}.</>}
                     </>
                   )}
                 </div>
@@ -1248,8 +1342,12 @@ export default function RadioScreen({ setScreen }) {
 
                 {/* Frequency + sample */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginTop: "10px" }}>
-                  <div style={{ ...neon.blue, WebkitTextStroke: "5px #1616c4", fontFamily: signFont, fontSize: "18px" }}>
-                    {panelStation ? panelStation.position.toFixed(1) : "??.?"} μHz
+                  <div
+                    onClick={() => { if (canMoveStation) setFrequencyOpen(true); }}
+                    title={canMoveStation ? "Choose a frequency" : "Hot in Here always sits at the start of the dial"}
+                    style={{ ...neon.blue, WebkitTextStroke: "5px #1616c4", fontFamily: signFont, fontSize: "18px", cursor: canMoveStation ? "pointer" : "default" }}
+                  >
+                    {panelStation ? panelStation.position.toFixed(1) : (draftFrequency !== null ? draftFrequency.toFixed(1) : "??.?")} μHz
                   </div>
                   <div
                     onClick={() => {
@@ -1267,10 +1365,14 @@ export default function RadioScreen({ setScreen }) {
 
                 {/* Options */}
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: "22px" }}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", width: "70px" }}>
-                    <GoatBadge size={46} />
+                  <div
+                    onClick={() => handleSettingsChange({ mode: nextMode(panelMode) })}
+                    title={`Switch to ${MODE_NAMES[nextMode(panelMode)]} Mode`}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", width: "70px", cursor: "pointer" }}
+                  >
+                    <ModeBadge mode={panelMode} size={46} />
                     <div style={{ fontSize: "10.5px", color: "rgba(255,255,255,0.88)", fontFamily: kanit, whiteSpace: "nowrap" }}>
-                      Goat mode
+                      {MODE_NAMES[panelMode]} mode
                     </div>
                   </div>
                   <RoundOption label="AA 100%">
@@ -1284,14 +1386,15 @@ export default function RadioScreen({ setScreen }) {
                   </RoundOption>
                 </div>
 
-                {/* Fields — Goat Mode */}
+                {/* Fields. Pony Mode dims Goat and Un-Goat, Duck Mode dims Artist and
+                    Tags: what's dimmed is kept, just not in play */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "9px", marginTop: "20px" }}>
                   <StationField
                     label="Artist"
                     search={findArtists}
                     value={panelSettings.artist}
                     onChange={(artist) => handleSettingsChange({ artist })}
-                    disabled={soundFieldsLocked}
+                    disabled={soundFieldsLocked || !modeUsesSound(panelMode)}
                   />
                   <StationField
                     label="Tags"
@@ -1301,14 +1404,14 @@ export default function RadioScreen({ setScreen }) {
                     search={findTags}
                     value={panelSettings.tags}
                     onChange={(tags) => handleSettingsChange({ tags })}
-                    disabled={soundFieldsLocked}
+                    disabled={soundFieldsLocked || !modeUsesSound(panelMode)}
                   />
                   <StationField
                     label="Goat"
                     search={findArtists}
                     value={panelSettings.goat}
                     onChange={(goat) => handleSettingsChange({ goat })}
-                    disabled={soundFieldsLocked}
+                    disabled={soundFieldsLocked || !modeUsesGoat(panelMode)}
                   />
                   <StationField
                     label="UN-GOAT"
@@ -1317,10 +1420,11 @@ export default function RadioScreen({ setScreen }) {
                     search={findArtists}
                     value={panelSettings.ungoat}
                     onChange={(ungoat) => handleSettingsChange({ ungoat })}
+                    disabled={!modeUsesGoat(panelMode)}
                   />
-                  {(panelError || soundFieldsLocked) && (
+                  {(panelError || panelNote) && (
                     <div style={{ fontSize: "11px", color: panelError ? colors.danger : "rgba(255,255,255,0.55)", fontFamily: kanit, lineHeight: 1.4 }}>
-                      {panelError || "Hot in Here plays whoever is local, so Un-Goat is the only field it takes."}
+                      {panelError || panelNote}
                     </div>
                   )}
                 </div>
@@ -1363,6 +1467,16 @@ export default function RadioScreen({ setScreen }) {
               isDefault={hotInHereIsDefault}
               onPick={handlePickCity}
               onCancel={() => setCityPickerOpen(false)}
+            />
+          )}
+
+          {/* ── Choose a Frequency (tap the Station Panel's frequency) ── */}
+          {frequencyOpen && panel && canMoveStation && (
+            <FrequencySheet
+              stations={allStations.filter(s => s.id !== panelStation?.id)}
+              initial={panelStation ? panelStation.position : draftFrequency}
+              onSave={handleSaveFrequency}
+              onCancel={() => setFrequencyOpen(false)}
             />
           )}
 

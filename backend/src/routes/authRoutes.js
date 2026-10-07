@@ -333,7 +333,7 @@ router.get('/radio/hot-in-here', requireAuth, async (req, res) => {
     );
 
     // ── Un-Goat: artists the listener never wants on this station ──
-    const hotSettings = (await getBuiltInSettings(req.user.id))['hot-in-here'];
+    const hotSettings = playableSettings((await getBuiltInSettings(req.user.id))['hot-in-here']);
     const excluded = new Set(hotSettings.ungoat.map(a => a.toLowerCase()));
     const ratings = await getUserRatings(req.user.id);
     const pool40 = result.rows
@@ -428,7 +428,7 @@ router.get('/radio/my-station', requireAuth, async (req, res) => {
     const myRatings = await getUserRatings(req.user.id);
     // The Station Panel fields add to the profile matches: Artist and Tags
     // widen the pool, the Goat comes round often, Un-Goats never play.
-    const mySettings = (await getBuiltInSettings(req.user.id))['your-station'];
+    const mySettings = playableSettings((await getBuiltInSettings(req.user.id))['your-station']);
     const muted = new Set(mySettings.ungoat.map(a => a.toLowerCase()));
     const notMuted = (t) => !muted.has((t.artist || '').toLowerCase());
     const fromFields = await goatModePool(mySettings, myRatings);
@@ -480,16 +480,28 @@ const cleanList = (v, max) => {
   return out.slice(0, max);
 };
 // Whatever arrives (a request body, a JSON column) → the four fields, tidy
+const STATION_MODES = ['goat', 'pony', 'duck'];
 const cleanStationSettings = (raw) => ({
   artist: cleanText(raw?.artist) || null,
   tags: cleanList(raw?.tags, MAX_STATION_TAGS),
   goat: cleanText(raw?.goat) || null,
   ungoat: cleanList(raw?.ungoat, MAX_STATION_UNGOATS),
+  mode: STATION_MODES.includes(raw?.mode) ? raw.mode : 'goat',
 });
-// Does the station have anything to play from? (Un-Goat alone only removes.)
-const settingsHaveSound = (st) => !!(st.artist || st.goat || st.tags.length);
+// What actually shapes the queue. Pony Mode is Artist and Tags only; Duck
+// Mode is Goat and Un-Goat only. The fields a mode leaves out stay saved on
+// the station and sit out until a mode that uses them is back.
+const playableSettings = (st) => {
+  if (st.mode === 'pony') return { ...st, goat: null, ungoat: [] };
+  if (st.mode === 'duck') return { ...st, artist: null, tags: [] };
+  return st;
+};
+// Does the station have anything to play from in its mode? (Un-Goat alone
+// only removes.) settingsHaveAnySource asks the same across every mode.
+const settingsHaveAnySource = (st) => !!(st.artist || st.goat || st.tags.length);
+const settingsHaveSound = (st) => { const p = playableSettings(st); return !!(p.artist || p.goat || p.tags.length); };
 const stationRowSettings = (row) => cleanStationSettings({
-  artist: row.seed_artist, tags: row.tags, goat: row.goat_artist, ungoat: row.ungoat_artists,
+  artist: row.seed_artist, tags: row.tags, goat: row.goat_artist, ungoat: row.ungoat_artists, mode: row.mode,
 });
 
 // The built-in stations' fields, saved on the user. Hot in Here only takes Un-Goat.
@@ -497,9 +509,50 @@ async function getBuiltInSettings(userId) {
   const result = await pool.query(`SELECT radio_station_settings FROM users WHERE id = $1`, [userId]);
   const saved = result.rows[0]?.radio_station_settings || {};
   return {
-    'hot-in-here': { artist: null, tags: [], goat: null, ungoat: cleanStationSettings(saved['hot-in-here']).ungoat },
-    'your-station': cleanStationSettings(saved['your-station']),
+    'hot-in-here': { ...cleanStationSettings(saved['hot-in-here']), artist: null, tags: [], goat: null },
+    'your-station': {
+      ...cleanStationSettings(saved['your-station']),
+      // Where the listener has moved Your Station on the dial, if they have
+      position: Number(saved['your-station']?.position) || null,
+    },
   };
+}
+
+// ─── Frequencies ─ a station can sit anywhere from 1.0 to 99.9 μHz that isn't
+// within FREQUENCY_GAP of another station on the listener's dial. Hot in Here
+// owns the start of the dial and never moves. ──
+const FREQUENCY_MIN = 1;
+const FREQUENCY_MAX = 99.9;
+const FREQUENCY_GAP = 1;
+const HOT_IN_HERE_FREQUENCY = 0.1;
+const YOUR_STATION_FREQUENCY = 50;
+
+// → { position } rounded to 0.1, or { error, status } when it can't be used.
+// exceptId is the station being moved, so it doesn't block itself.
+async function checkFrequency(userId, raw, exceptId = null) {
+  const position = Math.round(Number(raw) * 10) / 10;
+  if (!Number.isFinite(position) || position < FREQUENCY_MIN || position > FREQUENCY_MAX) {
+    return { status: 400, error: `Pick a frequency from ${FREQUENCY_MIN.toFixed(1)} to ${FREQUENCY_MAX}.` };
+  }
+  const taken = [{ name: 'Hot in Here', position: HOT_IN_HERE_FREQUENCY }];
+  const userResult = await pool.query(
+    `SELECT is_artist, radio_station_styles, radio_station_settings FROM users WHERE id = $1`, [userId]
+  );
+  const me = userResult.rows[0] || {};
+  if (me.is_artist && !me.radio_station_styles?.['your-station']?.hidden && exceptId !== 'your-station') {
+    taken.push({
+      name: me.radio_station_styles?.['your-station']?.name || 'Your Station',
+      position: Number(me.radio_station_settings?.['your-station']?.position) || YOUR_STATION_FREQUENCY,
+    });
+  }
+  const others = await pool.query(`SELECT id, name, position FROM radio_stations WHERE user_id = $1`, [userId]);
+  others.rows.forEach(row => { if (row.id !== exceptId) taken.push({ name: row.name, position: row.position }); });
+
+  const blocker = taken.find(t => Math.abs(t.position - position) < FREQUENCY_GAP - 0.05);
+  if (blocker) {
+    return { status: 409, error: `${blocker.name} is already at ${Number(blocker.position).toFixed(1)} μHz. Pick a spot at least ${FREQUENCY_GAP} μHz away.` };
+  }
+  return { position };
 }
 
 const STATION_TRACK_COLUMNS = `id, title, artist, album, genre, subgenre, mood,
@@ -518,7 +571,8 @@ const mapStationRow = (row) => ({
 
 // The two halves of a Goat Mode queue: the Goat's own tracks, and everything
 // else the fields call for, already in play order.
-async function goatModePool(settings, ratings) {
+async function goatModePool(savedSettings, ratings) {
+  const settings = playableSettings(savedSettings);
   if (!settingsHaveSound(settings)) return { others: [], goatTracks: [] };
   const artist = settings.artist ? settings.artist.toLowerCase() : null;
   const goat = settings.goat ? settings.goat.toLowerCase() : null;
@@ -674,7 +728,7 @@ const stationJson = (row) => ({
 router.get('/radio/stations', requireAuth, async (req, res) => {
   try {
     const stationsResult = await pool.query(
-      `SELECT id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position, created_at
+      `SELECT id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position, created_at
        FROM radio_stations WHERE user_id = $1 ORDER BY created_at ASC`,
       [req.user.id]
     );
@@ -708,7 +762,13 @@ router.post('/radio/stations', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Give the station a name.' });
   }
   if (!settingsHaveSound(settings)) {
-    return res.status(400).json({ error: 'Pick an artist, a tag or a Goat for the station to play from.' });
+    return res.status(400).json({
+      error: settings.mode === 'pony'
+        ? 'Pony Mode plays from the Artist and Tags, so pick one of those.'
+        : settings.mode === 'duck'
+          ? 'Duck Mode plays from the Goat, so pick one.'
+          : 'Pick an artist, a tag or a Goat for the station to play from.',
+    });
   }
 
   try {
@@ -720,14 +780,27 @@ router.post('/radio/stations', requireAuth, async (req, res) => {
     // Spread stations across the dial (avoiding the built-in stations' fixed
     // spots at the far left/center/far right), with a little jitter so
     // stations created back-to-back don't land exactly on top of each other.
-    const position = Math.min(88, 12 + ((count * 19) % 76) + Math.random() * 5);
+    let position = Math.min(88, 12 + ((count * 19) % 76) + Math.random() * 5);
+    // A frequency the listener chose wins, as long as the spot is free
+    if (req.body.position !== undefined && req.body.position !== null) {
+      const checked = await checkFrequency(req.user.id, req.body.position);
+      if (checked.error) return res.status(checked.status).json({ error: checked.error });
+      position = checked.position;
+    } else {
+      // None chosen: start from the spread-out guess and walk to a free spot
+      for (let tries = 0; tries < 99; tries += 1) {
+        const candidate = FREQUENCY_MIN + ((position - FREQUENCY_MIN + tries * 1.3) % (FREQUENCY_MAX - FREQUENCY_MIN));
+        const checked = await checkFrequency(req.user.id, candidate);
+        if (!checked.error) { position = checked.position; break; }
+      }
+    }
     const hue = Math.floor(Math.random() * 360);
 
     const result = await pool.query(
-      `INSERT INTO radio_stations (user_id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position`,
-      [req.user.id, name.trim().slice(0, 100), settings.artist, settings.tags, settings.goat, settings.ungoat, hue, position]
+      `INSERT INTO radio_stations (user_id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position, mode)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position`,
+      [req.user.id, name.trim().slice(0, 100), settings.artist, settings.tags, settings.goat, settings.ungoat, hue, position, settings.mode]
     );
 
     res.json({ station: stationJson(result.rows[0]) });
@@ -769,7 +842,7 @@ router.put('/radio/stations/:id/style', requireAuth, async (req, res) => {
       const result = await pool.query(
         `UPDATE radio_stations SET name = COALESCE(NULLIF($3, ''), name)
          WHERE id = $1 AND user_id = $2
-         RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position`,
+         RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position`,
         [id, req.user.id, trimmedName]
       );
       const row = result.rows[0];
@@ -851,29 +924,67 @@ router.put('/radio/stations/:id/settings', requireAuth, async (req, res) => {
   let settings = cleanStationSettings(req.body || {});
   try {
     if (id === 'hot-in-here' || id === 'your-station') {
-      if (id === 'hot-in-here') settings = { artist: null, tags: [], goat: null, ungoat: settings.ungoat };
+      if (id === 'hot-in-here') settings = { ...settings, artist: null, tags: [], goat: null };
       await pool.query(
-        `UPDATE users SET radio_station_settings = COALESCE(radio_station_settings, '{}'::jsonb) || jsonb_build_object($2::text, $3::jsonb)
+        // merged over what's there, so Your Station keeps its frequency
+        `UPDATE users SET radio_station_settings = COALESCE(radio_station_settings, '{}'::jsonb)
+           || jsonb_build_object($2::text, COALESCE(radio_station_settings -> $2::text, '{}'::jsonb) || $3::jsonb)
          WHERE id = $1`,
         [req.user.id, id, JSON.stringify(settings)]
       );
       return res.json({ settings, builtIn: await getBuiltInSettings(req.user.id) });
     }
     if (!UUID_RE.test(id)) return res.status(404).json({ error: 'Station not found.' });
-    if (!settingsHaveSound(settings)) {
+    // Needs something to play from in some mode. A station may sit in a mode
+    // its fields don't feed yet (it just plays nothing until they do), so the
+    // mode icon can always be tapped through.
+    if (!settingsHaveAnySource(settings)) {
       return res.status(400).json({ error: 'A station needs an artist, a tag or a Goat to play from.' });
     }
     const result = await pool.query(
-      `UPDATE radio_stations SET seed_artist = $3, tags = $4, goat_artist = $5, ungoat_artists = $6
+      `UPDATE radio_stations SET seed_artist = $3, tags = $4, goat_artist = $5, ungoat_artists = $6, mode = $7
        WHERE id = $1 AND user_id = $2
-       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position`,
-      [id, req.user.id, settings.artist, settings.tags, settings.goat, settings.ungoat]
+       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position`,
+      [id, req.user.id, settings.artist, settings.tags, settings.goat, settings.ungoat, settings.mode]
     );
     if (!result.rows[0]) return res.status(404).json({ error: 'Station not found.' });
     res.json({ settings, station: stationJson(result.rows[0]) });
   } catch (err) {
     console.error('Station settings error:', err);
     res.status(500).json({ error: 'Failed to save the station.' });
+  }
+});
+
+// Move a station to another frequency. Hot in Here stays where it is.
+router.put('/radio/stations/:id/position', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  if (id === LOCKED_STATION_ID) {
+    return res.status(403).json({ error: 'Hot in Here always sits at the start of the dial.' });
+  }
+  if (id !== 'your-station' && !UUID_RE.test(id)) return res.status(404).json({ error: 'Station not found.' });
+  try {
+    const checked = await checkFrequency(req.user.id, req.body?.position, id);
+    if (checked.error) return res.status(checked.status).json({ error: checked.error });
+
+    if (id === 'your-station') {
+      await pool.query(
+        `UPDATE users SET radio_station_settings = COALESCE(radio_station_settings, '{}'::jsonb)
+           || jsonb_build_object('your-station', COALESCE(radio_station_settings -> 'your-station', '{}'::jsonb) || jsonb_build_object('position', $2::float8))
+         WHERE id = $1`,
+        [req.user.id, checked.position]
+      );
+      return res.json({ position: checked.position, builtIn: await getBuiltInSettings(req.user.id) });
+    }
+    const result = await pool.query(
+      `UPDATE radio_stations SET position = $3 WHERE id = $1 AND user_id = $2
+       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position`,
+      [id, req.user.id, checked.position]
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'Station not found.' });
+    res.json({ position: checked.position, station: stationJson(result.rows[0]) });
+  } catch (err) {
+    console.error('Station frequency error:', err);
+    res.status(500).json({ error: 'Failed to save the frequency.' });
   }
 });
 
@@ -909,7 +1020,7 @@ router.get('/radio/stations/:id/tracks', requireAuth, async (req, res) => {
   try {
     if (!UUID_RE.test(req.params.id)) return res.status(404).json({ error: 'Station not found.' });
     const stationResult = await pool.query(
-      `SELECT id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position FROM radio_stations
+      `SELECT id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position FROM radio_stations
        WHERE id = $1 AND user_id = $2`,
       [req.params.id, req.user.id]
     );
