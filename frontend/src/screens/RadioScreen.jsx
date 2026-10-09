@@ -8,6 +8,7 @@ import {
 import FooterNav from '../components/FooterNav';
 import DuckModeBadge from '../assets/images/DuckModeBadge.png';
 import FrequencySheet from '../components/FrequencySheet';
+import NeonSignText from '../components/NeonSignText';
 import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
 import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
@@ -254,7 +255,7 @@ const panelFieldStyle = (focused) => ({
   fontFamily: kanit, boxSizing: "border-box", transition: "border-color 0.15s ease",
 });
 
-const EMPTY_SETTINGS = { artist: null, tags: [], goat: null, ungoat: [], mode: 'goat' };
+const EMPTY_SETTINGS = { artist: null, tags: [], goat: null, ungoat: [], mode: 'goat', city: null };
 
 // One line for what a station plays, from its four fields
 const describeSettings = (st) => {
@@ -263,6 +264,7 @@ const describeSettings = (st) => {
   if (modeUsesSound(mode) && st?.artist) parts.push(`Sounds like ${st.artist}`);
   if (modeUsesSound(mode) && st?.tags?.length) parts.push(st.tags.join(', '));
   if (modeUsesGoat(mode) && st?.goat) parts.push(`Goat: ${st.goat}`);
+  if (st?.city?.label) parts.push(`in ${st.city.label}`);
   return parts.join(' · ') || 'Nothing picked yet';
 };
 
@@ -590,22 +592,39 @@ const RoundAction = ({ onClick, children, danger = false, disabled = false, titl
 );
 
 // ─── Radio Screen ─────────────────────────────────────────────────────────────
+// ─── What the dial was on, kept outside the component so it outlives a trip
+// to another tab. Leaving Radio unmounts this screen but the music keeps
+// playing (PlayerContext), so on the way back the dial returns to the same
+// station with the same queue, and the play/pause button matches what's
+// playing. The stations themselves (and their names, styles and the user)
+// are kept too, so the dial is drawn in place straight away instead of
+// starting at 0 and sliding over while they reload. The fetches still run
+// in the background to pick up anything new. Lasts until the app is reloaded. ──
+const radioSession = {};
+
+// useState whose value is also kept in radioSession under `key`
+function useSessionState(key, initial) {
+  const [value, setValue] = useState(() => (key in radioSession ? radioSession[key] : initial));
+  useEffect(() => { radioSession[key] = value; }, [key, value]);
+  return [value, setValue];
+}
+
 export default function RadioScreen({ setScreen }) {
   const [activeNav, setActiveNav] = useState("radio");
-  const [user, setUser] = useState(null);
-  const [hotInHere, setHotInHere] = useState([]);
-  const [hotInHereLocation, setHotInHereLocation] = useState(null);
+  const [user, setUser] = useSessionState('user', null);
+  const [hotInHere, setHotInHere] = useSessionState('hotInHere', []);
+  const [hotInHereLocation, setHotInHereLocation] = useSessionState('hotInHereLocation', null);
   // true while the listener has no city of their own and the backend is
   // assuming San Francisco for them
-  const [hotInHereIsDefault, setHotInHereIsDefault] = useState(false);
+  const [hotInHereIsDefault, setHotInHereIsDefault] = useSessionState('hotInHereIsDefault', false);
   const [hotInHereLoaded, setHotInHereLoaded] = useState(false);
-  const [myStation, setMyStation] = useState(null);
-  const [customStations, setCustomStations] = useState([]);
+  const [myStation, setMyStation] = useSessionState('myStation', null);
+  const [customStations, setCustomStations] = useSessionState('customStations', []);
   // The built-in stations' Station Panel fields, by station id
-  const [builtInSettings, setBuiltInSettings] = useState({});
+  const [builtInSettings, setBuiltInSettings] = useSessionState('builtInSettings', {});
 
-  const [tunedId, setTunedId] = useState(null);
-  const [tunedTracks, setTunedTracks] = useState([]);
+  const [tunedId, setTunedId] = useSessionState('tunedId', null);
+  const [tunedTracks, setTunedTracks] = useSessionState('tunedTracks', []);
   const [tunedLoading, setTunedLoading] = useState(false);
 
   const [infoOpen, setInfoOpen] = useState(false);
@@ -614,8 +633,10 @@ export default function RadioScreen({ setScreen }) {
   const [deleteArmed, setDeleteArmed] = useState(false);
   // Sign style (font + color) per station id, saved on the user — see
   // migration 012. A station with no entry uses DEFAULT_STATION_STYLE.
-  const [stationStyles, setStationStyles] = useState({});
+  const [stationStyles, setStationStyles] = useSessionState('stationStyles', {});
   // Set Your City sheet, opened from the Station Panel's location button
+  // false (closed), 'home' (Hot in Here: the listener's own city) or
+  // 'station' (the city of the station open in the panel)
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
   // Choose a Frequency sheet, opened by tapping the panel's frequency
   const [frequencyOpen, setFrequencyOpen] = useState(false);
@@ -808,8 +829,6 @@ export default function RadioScreen({ setScreen }) {
     const next = previous === value ? 0 : value;
     const rated = currentTrack;
     setRatings(prev => ({ ...prev, [key]: next || null }));
-    // A thumbs down moves straight on to the next track
-    if (next === -1) nextTrack();
     try {
       await rateTrack(rated, next);
     } catch (err) {
@@ -896,8 +915,9 @@ export default function RadioScreen({ setScreen }) {
       } catch (err) {
         console.log('Failed to save the new station style:', err);
       }
+      // The new station just joins the dial. The dial (and whatever is
+      // playing) stays where it is until the listener tunes to it.
       closePanel();
-      handleTune({ ...data.station, kind: 'custom' });
     } catch (err) {
       console.log('Failed to create station:', err);
       setPanelError(err?.response?.data?.error || "Couldn't create the station.");
@@ -950,6 +970,14 @@ export default function RadioScreen({ setScreen }) {
     }
   };
 
+  // ── A station's own city, from the Station Panel's location button. Picking
+  // one (or clearing it) goes through the same path as the other fields. ──
+  const handlePickStationCity = async (city) => {
+    const ok = await handleSettingsChange({ city: city ? { id: city.id, label: city.label } : null });
+    if (ok === false) throw new Error('not saved');
+    setCityPickerOpen(false);
+  };
+
   // ── Station Panel fields. A station being created just collects them; an
   // existing station saves each change as it's made and, if the dial is on
   // it, rebuilds its queue so the change can be heard straight away. ──
@@ -963,10 +991,10 @@ export default function RadioScreen({ setScreen }) {
     setPanelError("");
     if (panel?.mode === 'new') {
       setDraftSettings(prev => ({ ...prev, ...patch }));
-      return;
+      return true;
     }
     const station = allStations.find(s => s.id === panel?.stationId);
-    if (!station) return;
+    if (!station) return false;
     try {
       const data = await saveStationSettings(station.id, { ...settingsOf(station), ...patch });
       if (station.kind === 'custom') {
@@ -986,7 +1014,9 @@ export default function RadioScreen({ setScreen }) {
     } catch (err) {
       console.log('Failed to save station settings:', err);
       setPanelError(err?.response?.data?.error || "Couldn't save that change.");
+      return false;
     }
+    return true;
   };
 
   const ratingKey = currentTrack ? trackKey(currentTrack) : null;
@@ -1097,14 +1127,14 @@ export default function RadioScreen({ setScreen }) {
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >
-              <div style={{
-                ...neonSign(signStyle.color, 7), fontFamily: fontStack(signStyle.font), fontWeight: fontWeightFor(signStyle.font),
+              <NeonSignText color={signStyle.color} stroke={7} style={{
+                fontFamily: fontStack(signStyle.font), fontWeight: fontWeightFor(signStyle.font),
                 fontSize: `${signSize}px`, lineHeight: 1.02,
                 textAlign: "center", textTransform: "uppercase", transform: "rotate(-3deg) skewX(-6deg)",
                 letterSpacing: "0.5px", overflowWrap: "anywhere",
               }}>
                 {signText}
-              </div>
+              </NeonSignText>
             </div>
 
             {/* Frequency · goat · mode */}
@@ -1239,9 +1269,9 @@ export default function RadioScreen({ setScreen }) {
           {infoOpen && (
             <DarkOverlay onClose={() => setInfoOpen(false)}>
               <div style={{ padding: "58px 30px 24px", overflowY: "auto", flex: 1 }}>
-                <div style={{ ...neonSign(signStyle.color, 5), fontFamily: fontStack(signStyle.font), fontWeight: fontWeightFor(signStyle.font), fontSize: `${Math.round(26 * fontScaleFor(signStyle.font))}px`, textAlign: "center", transform: "rotate(-2deg)", overflowWrap: "anywhere" }}>
+                <NeonSignText color={signStyle.color} stroke={5} style={{ fontFamily: fontStack(signStyle.font), fontWeight: fontWeightFor(signStyle.font), fontSize: `${Math.round(26 * fontScaleFor(signStyle.font))}px`, textAlign: "center", transform: "rotate(-2deg)", overflowWrap: "anywhere" }}>
                   {tunedStation ? tunedStation.name : "Ponytail Radio"}
-                </div>
+                </NeonSignText>
                 <div style={{ marginTop: "18px", fontSize: "12.5px", color: "rgba(255,255,255,0.86)", fontFamily: kanit, lineHeight: 1.6, textAlign: "center" }}>
                   {!tunedStation && <>Drag the dial or pick a station below.</>}
                   {tunedStation?.kind === 'hot-in-here' && (
@@ -1260,6 +1290,7 @@ export default function RadioScreen({ setScreen }) {
                       {tunedMode === 'pony' && <>Pony Mode: only the artist and tags shape it. </>}
                       {modeUsesGoat(tunedMode) && tunedStation.settings?.goat && <><strong style={{ color: colors.text }}>{tunedStation.settings.goat}</strong> is the Goat here and comes round about every third track. </>}
                       {modeUsesGoat(tunedMode) && tunedStation.settings?.ungoat?.length > 0 && <>Never plays {tunedStation.settings.ungoat.join(', ')}.</>}
+                      {tunedStation.settings?.city?.label && <> Only artists within 25 miles of <strong style={{ color: colors.text }}>{tunedStation.settings.city.label}</strong>{modeUsesGoat(tunedMode) && tunedStation.settings?.goat ? <>, plus the Goat</> : null}.</>}
                     </>
                   )}
                 </div>
@@ -1312,13 +1343,13 @@ export default function RadioScreen({ setScreen }) {
                   title="Edit name and style"
                   style={{ padding: "0 26px", textAlign: "center", cursor: "pointer" }}
                 >
-                  <div style={{
-                    ...neonSign(panelSignStyle.color, 5), fontFamily: fontStack(panelSignStyle.font), fontWeight: fontWeightFor(panelSignStyle.font),
+                  <NeonSignText color={panelSignStyle.color} stroke={5} style={{
+                    fontFamily: fontStack(panelSignStyle.font), fontWeight: fontWeightFor(panelSignStyle.font),
                     fontSize: `${Math.round(25 * fontScaleFor(panelSignStyle.font))}px`, lineHeight: 1.1,
                     transform: "rotate(-2deg)", padding: "8px 0", overflowWrap: "anywhere", textTransform: "uppercase",
                   }}>
                     {isNewStation ? (newStationName.trim() || "New Station*") : panelSignText}
-                  </div>
+                  </NeonSignText>
                 </div>
 
                 {/* Description */}
@@ -1378,9 +1409,16 @@ export default function RadioScreen({ setScreen }) {
                   <RoundOption label="AA 100%">
                     <span style={{ fontSize: "27px", fontWeight: "700", color: "#fff", fontFamily: kanit, lineHeight: 1 }}>A</span>
                   </RoundOption>
-                  <RoundOption label={hotInHereLocation || "No location"} ring={false} onClick={() => setCityPickerOpen(true)}>
-                    <PinIcon color={hotInHereIsDefault || !hotInHereLocation ? colors.text : "#f5cf00"} />
-                  </RoundOption>
+                  {soundFieldsLocked ? (
+                    <RoundOption label={hotInHereLocation || "No location"} ring={false} onClick={() => setCityPickerOpen('home')}>
+                      <PinIcon color={hotInHereIsDefault || !hotInHereLocation ? colors.text : "#f5cf00"} />
+                    </RoundOption>
+                  ) : (
+                    // Every other station has a city of its own, empty until picked
+                    <RoundOption label={panelSettings.city?.label || "No location"} ring={false} onClick={() => setCityPickerOpen('station')}>
+                      <PinIcon color={panelSettings.city ? "#f5cf00" : colors.text} />
+                    </RoundOption>
+                  )}
                   <RoundOption label="Locale">
                     <HeartIcon />
                   </RoundOption>
@@ -1461,11 +1499,24 @@ export default function RadioScreen({ setScreen }) {
           )}
 
           {/* ── Set Your City (the Station Panel's location button) ── */}
-          {cityPickerOpen && (
+          {cityPickerOpen === 'home' && (
             <CityPickerSheet
               currentCity={hotInHereLocation}
               isDefault={hotInHereIsDefault}
               onPick={handlePickCity}
+              onCancel={() => setCityPickerOpen(false)}
+            />
+          )}
+          {cityPickerOpen === 'station' && panel && (
+            <CityPickerSheet
+              title="Set Station City"
+              currentCity={panelSettings.city?.label || null}
+              currentHint={panelSettings.city
+                ? "Only artists within 25 miles of here play on this station."
+                : "No city yet, so this station plays from anywhere."}
+              searchHint="Type at least two letters to find a city. This station will only play artists within 25 miles of it."
+              onPick={handlePickStationCity}
+              onClear={() => handlePickStationCity(null)}
               onCancel={() => setCityPickerOpen(false)}
             />
           )}

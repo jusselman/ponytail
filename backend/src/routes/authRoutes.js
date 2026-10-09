@@ -410,7 +410,7 @@ router.get('/radio/my-station', requireAuth, async (req, res) => {
     );
 
     const matchedResult = await pool.query(
-      `SELECT id, title, artist, album, genre, subgenre, mood,
+      `SELECT id, title, artist, album, genre, subgenre, mood, location_lat, location_lng,
               is_user_upload, uploaded_audio_url, uploaded_cover_url, cover, filename
        FROM seed_tracks
        WHERE artist != $1
@@ -433,7 +433,13 @@ router.get('/radio/my-station', requireAuth, async (req, res) => {
     const notMuted = (t) => !muted.has((t.artist || '').toLowerCase());
     const fromFields = await goatModePool(mySettings, myRatings);
     const seen = new Set();
-    const matched = [...fromFields.others, ...shapeByRatings(matchedResult.rows.map(mapRow), myRatings)]
+    // Your Station's city (if set) narrows the profile matches the same way
+    const myCity = mySettings.city && Number.isFinite(mySettings.city.lat) ? mySettings.city : null;
+    const profileRows = myCity
+      ? matchedResult.rows.filter(r => r.location_lat != null
+        && milesBetween(myCity.lat, myCity.lng, r.location_lat, r.location_lng) <= STATION_CITY_RADIUS_MI)
+      : matchedResult.rows;
+    const matched = [...fromFields.others, ...shapeByRatings(profileRows.map(mapRow), myRatings)]
       .filter(notMuted)
       .filter(t => t.artist !== artistName && (mySettings.goat || '').toLowerCase() !== (t.artist || '').toLowerCase())
       .filter(t => (seen.has(t.id) ? false : (seen.add(t.id), true)));
@@ -481,12 +487,41 @@ const cleanList = (v, max) => {
 };
 // Whatever arrives (a request body, a JSON column) → the four fields, tidy
 const STATION_MODES = ['goat', 'pony', 'duck'];
+// A station's city: { id, label, lat, lng } or null. What arrives from the app
+// only needs the id; resolveStationCity looks the rest up in places.
+const STATION_CITY_RADIUS_MI = geo.CITY_RADIUS_MI;
+const cleanCity = (raw) => {
+  const id = parseInt(raw?.id, 10);
+  if (!id) return null;
+  const lat = Number(raw.lat);
+  const lng = Number(raw.lng);
+  return {
+    id,
+    label: cleanText(raw.label) || null,
+    lat: Number.isFinite(lat) ? lat : null,
+    lng: Number.isFinite(lng) ? lng : null,
+  };
+};
+async function resolveStationCity(city) {
+  if (!city?.id) return null;
+  const r = await pool.query(`SELECT * FROM places WHERE id = $1 AND kind = 'city'`, [city.id]);
+  const p = r.rows[0];
+  if (!p) return null;
+  return { id: p.id, label: geo.cityLabel(p), lat: p.lat, lng: p.lng };
+}
+const milesBetween = (aLat, aLng, bLat, bLng) => {
+  const rad = (d) => (d * Math.PI) / 180;
+  const h = Math.sin(rad(bLat - aLat) / 2) ** 2
+    + Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(rad(bLng - aLng) / 2) ** 2;
+  return 3958.8 * 2 * Math.asin(Math.sqrt(h));
+};
 const cleanStationSettings = (raw) => ({
   artist: cleanText(raw?.artist) || null,
   tags: cleanList(raw?.tags, MAX_STATION_TAGS),
   goat: cleanText(raw?.goat) || null,
   ungoat: cleanList(raw?.ungoat, MAX_STATION_UNGOATS),
   mode: STATION_MODES.includes(raw?.mode) ? raw.mode : 'goat',
+  city: cleanCity(raw?.city),
 });
 // What actually shapes the queue. Pony Mode is Artist and Tags only; Duck
 // Mode is Goat and Un-Goat only. The fields a mode leaves out stay saved on
@@ -502,6 +537,7 @@ const settingsHaveAnySource = (st) => !!(st.artist || st.goat || st.tags.length)
 const settingsHaveSound = (st) => { const p = playableSettings(st); return !!(p.artist || p.goat || p.tags.length); };
 const stationRowSettings = (row) => cleanStationSettings({
   artist: row.seed_artist, tags: row.tags, goat: row.goat_artist, ungoat: row.ungoat_artists, mode: row.mode,
+  city: row.city_place_id ? { id: row.city_place_id, label: row.city_label, lat: row.city_lat, lng: row.city_lng } : null,
 });
 
 // The built-in stations' fields, saved on the user. Hot in Here only takes Un-Goat.
@@ -509,7 +545,7 @@ async function getBuiltInSettings(userId) {
   const result = await pool.query(`SELECT radio_station_settings FROM users WHERE id = $1`, [userId]);
   const saved = result.rows[0]?.radio_station_settings || {};
   return {
-    'hot-in-here': { ...cleanStationSettings(saved['hot-in-here']), artist: null, tags: [], goat: null },
+    'hot-in-here': { ...cleanStationSettings(saved['hot-in-here']), artist: null, tags: [], goat: null, city: null },
     'your-station': {
       ...cleanStationSettings(saved['your-station']),
       // Where the listener has moved Your Station on the dial, if they have
@@ -578,6 +614,9 @@ async function goatModePool(savedSettings, ratings) {
   const goat = settings.goat ? settings.goat.toLowerCase() : null;
   const tags = settings.tags.map(t => t.toLowerCase());
   const ungoat = settings.ungoat.map(a => a.toLowerCase());
+  // A station city keeps the mix to artists within 25 miles of it
+  const cityLat = Number.isFinite(settings.city?.lat) ? settings.city.lat : null;
+  const cityLng = Number.isFinite(settings.city?.lng) ? settings.city.lng : null;
   const disliked = (t) => ratings && ratings.get(ratingKey(t.title, t.artist)) === -1;
   const liked = (t) => ratings && ratings.get(ratingKey(t.title, t.artist)) === 1;
 
@@ -601,6 +640,8 @@ async function goatModePool(savedSettings, ratings) {
             FROM seed_tracks
             WHERE NOT (lower(artist) = ANY($4::text[]))
               AND ($2::text IS NULL OR lower(artist) <> $2)
+              AND ($5::float8 IS NULL OR (location_lat IS NOT NULL
+                   AND ${geo.distanceSql('location_lat', 'location_lng', '$5::float8', '$6::float8')} <= $7::float8))
           ),
           ranked AS (
             SELECT *, ROW_NUMBER() OVER (PARTITION BY lower(artist) ORDER BY RANDOM()) AS artist_rank
@@ -609,7 +650,7 @@ async function goatModePool(savedSettings, ratings) {
      SELECT * FROM ranked WHERE artist_rank <= 4
      ORDER BY score * (0.4 + RANDOM()) DESC
      LIMIT 90`,
-    [artist, goat, tags, ungoat]
+    [artist, goat, tags, ungoat, cityLat, cityLng, STATION_CITY_RADIUS_MI]
   );
 
   // Strongest matches lead, with enough chance in it that no two visits to
@@ -728,7 +769,7 @@ const stationJson = (row) => ({
 router.get('/radio/stations', requireAuth, async (req, res) => {
   try {
     const stationsResult = await pool.query(
-      `SELECT id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position, created_at
+      `SELECT id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, city_place_id, city_label, city_lat, city_lng, hue, position, created_at
        FROM radio_stations WHERE user_id = $1 ORDER BY created_at ASC`,
       [req.user.id]
     );
@@ -761,6 +802,7 @@ router.post('/radio/stations', requireAuth, async (req, res) => {
   if (!name || !name.trim()) {
     return res.status(400).json({ error: 'Give the station a name.' });
   }
+  settings.city = await resolveStationCity(settings.city);
   if (!settingsHaveSound(settings)) {
     return res.status(400).json({
       error: settings.mode === 'pony'
@@ -797,10 +839,12 @@ router.post('/radio/stations', requireAuth, async (req, res) => {
     const hue = Math.floor(Math.random() * 360);
 
     const result = await pool.query(
-      `INSERT INTO radio_stations (user_id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position, mode)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position`,
-      [req.user.id, name.trim().slice(0, 100), settings.artist, settings.tags, settings.goat, settings.ungoat, hue, position, settings.mode]
+      `INSERT INTO radio_stations (user_id, name, seed_artist, tags, goat_artist, ungoat_artists, hue, position, mode,
+                                   city_place_id, city_label, city_lat, city_lng)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, city_place_id, city_label, city_lat, city_lng, hue, position`,
+      [req.user.id, name.trim().slice(0, 100), settings.artist, settings.tags, settings.goat, settings.ungoat, hue, position, settings.mode,
+       settings.city?.id || null, settings.city?.label || null, settings.city?.lat ?? null, settings.city?.lng ?? null]
     );
 
     res.json({ station: stationJson(result.rows[0]) });
@@ -842,7 +886,7 @@ router.put('/radio/stations/:id/style', requireAuth, async (req, res) => {
       const result = await pool.query(
         `UPDATE radio_stations SET name = COALESCE(NULLIF($3, ''), name)
          WHERE id = $1 AND user_id = $2
-         RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position`,
+         RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, city_place_id, city_label, city_lat, city_lng, hue, position`,
         [id, req.user.id, trimmedName]
       );
       const row = result.rows[0];
@@ -923,8 +967,9 @@ router.put('/radio/stations/:id/settings', requireAuth, async (req, res) => {
   const { id } = req.params;
   let settings = cleanStationSettings(req.body || {});
   try {
+    settings.city = await resolveStationCity(settings.city);
     if (id === 'hot-in-here' || id === 'your-station') {
-      if (id === 'hot-in-here') settings = { ...settings, artist: null, tags: [], goat: null };
+      if (id === 'hot-in-here') settings = { ...settings, artist: null, tags: [], goat: null, city: null };
       await pool.query(
         // merged over what's there, so Your Station keeps its frequency
         `UPDATE users SET radio_station_settings = COALESCE(radio_station_settings, '{}'::jsonb)
@@ -942,10 +987,12 @@ router.put('/radio/stations/:id/settings', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'A station needs an artist, a tag or a Goat to play from.' });
     }
     const result = await pool.query(
-      `UPDATE radio_stations SET seed_artist = $3, tags = $4, goat_artist = $5, ungoat_artists = $6, mode = $7
+      `UPDATE radio_stations SET seed_artist = $3, tags = $4, goat_artist = $5, ungoat_artists = $6, mode = $7,
+         city_place_id = $8, city_label = $9, city_lat = $10, city_lng = $11
        WHERE id = $1 AND user_id = $2
-       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position`,
-      [id, req.user.id, settings.artist, settings.tags, settings.goat, settings.ungoat, settings.mode]
+       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, city_place_id, city_label, city_lat, city_lng, hue, position`,
+      [id, req.user.id, settings.artist, settings.tags, settings.goat, settings.ungoat, settings.mode,
+        settings.city?.id || null, settings.city?.label || null, settings.city?.lat ?? null, settings.city?.lng ?? null]
     );
     if (!result.rows[0]) return res.status(404).json({ error: 'Station not found.' });
     res.json({ settings, station: stationJson(result.rows[0]) });
@@ -977,7 +1024,7 @@ router.put('/radio/stations/:id/position', requireAuth, async (req, res) => {
     }
     const result = await pool.query(
       `UPDATE radio_stations SET position = $3 WHERE id = $1 AND user_id = $2
-       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position`,
+       RETURNING id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, city_place_id, city_label, city_lat, city_lng, hue, position`,
       [id, req.user.id, checked.position]
     );
     if (!result.rows[0]) return res.status(404).json({ error: 'Station not found.' });
@@ -1020,7 +1067,7 @@ router.get('/radio/stations/:id/tracks', requireAuth, async (req, res) => {
   try {
     if (!UUID_RE.test(req.params.id)) return res.status(404).json({ error: 'Station not found.' });
     const stationResult = await pool.query(
-      `SELECT id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, hue, position FROM radio_stations
+      `SELECT id, name, seed_artist, tags, goat_artist, ungoat_artists, mode, city_place_id, city_label, city_lat, city_lng, hue, position FROM radio_stations
        WHERE id = $1 AND user_id = $2`,
       [req.params.id, req.user.id]
     );

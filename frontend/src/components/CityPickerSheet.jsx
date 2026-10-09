@@ -13,6 +13,11 @@ import { searchCities } from '../services/placesService';
 //   isDefault    true when that city is the app's assumption, not their pick
 //   onPick       (city: { id, label, sub }) => void | Promise
 //   onCancel     () => void
+//   title        sheet title (defaults to "Set Your City")
+//   currentHint  line under the current city (overrides the Hot in Here copy)
+//   searchHint   line shown before anything is typed
+//   onClear      () => void | Promise. When given (and a city is set), a
+//                button offers to drop the city. Station cities use this.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const colors = {
@@ -48,7 +53,7 @@ const PinIcon = ({ color = colors.gold, size = 16 }) => (
   </svg>
 );
 
-export default function CityPickerSheet({ currentCity, isDefault = false, onPick, onCancel }) {
+export default function CityPickerSheet({ currentCity, isDefault = false, onPick, onCancel, title = "Set Your City", currentHint, searchHint, onClear }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [results, setResults] = useState([]);
@@ -113,7 +118,7 @@ export default function CityPickerSheet({ currentCity, isDefault = false, onPick
           borderBottom: `1px solid ${colors.border}`, flexShrink: 0,
         }}>
           <div style={{ width: "26px" }} />
-          <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: kanit }}>Set Your City</div>
+          <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: kanit }}>{title}</div>
           <button onClick={onCancel} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", width: "26px", justifyContent: "flex-end" }}>
             <XIcon />
           </button>
@@ -133,9 +138,17 @@ export default function CityPickerSheet({ currentCity, isDefault = false, onPick
                 {currentCity || "No city set"}
               </div>
               <div style={{ fontSize: "11px", color: colors.textSecondary, fontFamily: kanit, fontWeight: "300" }}>
-                {isDefault ? "Our starting guess. Pick your own below." : "Your city. Hot in Here plays artists within 10 miles."}
+                {currentHint || (isDefault ? "Our starting guess. Pick your own below." : "Your city. Hot in Here plays artists within 10 miles.")}
               </div>
             </div>
+            {onClear && currentCity && (
+              <button
+                onClick={async () => { try { await onClear(); } catch (err) { setError("Couldn't clear the city. Try again."); } }}
+                style={{ marginLeft: "auto", flexShrink: 0, background: "none", border: `1px solid rgba(255,255,255,0.18)`, borderRadius: "14px", padding: "5px 10px", color: colors.textSecondary, fontSize: "11.5px", fontFamily: kanit, cursor: "pointer" }}
+              >
+                Clear
+              </button>
+            )}
           </div>
 
           {/* Search */}
@@ -176,7 +189,7 @@ export default function CityPickerSheet({ currentCity, isDefault = false, onPick
           <div style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "12px", display: "flex", flexDirection: "column", gap: "6px", paddingBottom: "12px" }}>
             {trimmed.length < 2 ? (
               <div style={{ padding: "18px 12px", textAlign: "center", fontSize: "12.5px", color: colors.muted, fontFamily: kanit, lineHeight: 1.5 }}>
-                Type at least two letters to find your city. It's saved to your account, so you only do this once.
+                {searchHint || "Type at least two letters to find your city. It's saved to your account, so you only do this once."}
               </div>
             ) : results.length === 0 ? (
               <div style={{ padding: "18px 0", textAlign: "center", fontSize: "13px", color: colors.muted, fontFamily: kanit, backgroundColor: colors.bgCard, borderRadius: "10px" }}>
