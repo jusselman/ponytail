@@ -8,7 +8,7 @@ import {
 import FooterNav from '../components/FooterNav';
 import DuckModeBadge from '../assets/images/DuckModeBadge.png';
 import FrequencySheet from '../components/FrequencySheet';
-import NeonSignText from '../components/NeonSignText';
+import NeonSignText, { FittedNeonSignText } from '../components/NeonSignText';
 import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
 import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
@@ -71,6 +71,10 @@ const HOT_IN_HERE_HUE = 58;
 const YOUR_STATION_HUE = 45;
 const GOAT_HUE = 130;
 const UNGOAT_HUE = 355;
+// The station name's box on the Radio screen: fixed, so switching stations
+// never moves anything. Long names shrink to fit inside it.
+const SIGN_BOX_HEIGHT = 118;
+const SIGN_TEXT_HEIGHT = SIGN_BOX_HEIGHT - 20 - 4;
 const HOT_IN_HERE_BLURB = "A selection of the top artists within 10 miles of you";
 
 const trackKey = (t) => `${t?.title}|${t?.artist}`;
@@ -400,13 +404,12 @@ const StationField = ({ label, search, value, onChange, multi = false, minChars 
               }}
             >
               <span style={{ fontSize: "11.5px", color: colors.text, fontFamily: kanit, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
-              {!disabled && (
-                <span
-                  onClick={() => onChange(picked.filter(p => p !== name))}
-                  title={`Remove ${name}`}
-                  style={{ width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.8)", fontSize: "14px", lineHeight: 1, flexShrink: 0 }}
-                >×</span>
-              )}
+              {/* Kept in place (just hidden) on a dimmed field, so chips stay the same size */}
+              <span
+                onClick={disabled ? undefined : () => onChange(picked.filter(p => p !== name))}
+                title={disabled ? undefined : `Remove ${name}`}
+                style={{ width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", cursor: disabled ? "default" : "pointer", color: "rgba(255,255,255,0.8)", fontSize: "14px", lineHeight: 1, flexShrink: 0, visibility: disabled ? "hidden" : "visible" }}
+              >×</span>
             </div>
           ))}
         </div>
@@ -845,7 +848,17 @@ export default function RadioScreen({ setScreen }) {
   };
 
   // ── Station Panel ──
+  // ── Retuning the station you're listening to. If the panel is opened on
+  // the station that's playing and its fields, mode or city change, closing
+  // the panel stops the music: what was playing came from the old settings,
+  // and the screen now shows the retuned station ready to play. ──
+  const panelRetuneRef = useRef({ playingHere: false, changed: false });
+
   const openPanel = (next) => {
+    panelRetuneRef.current = {
+      playingHere: next?.mode === 'edit' && next.stationId === tunedId && isTunedActive && isPlaying,
+      changed: false,
+    };
     setPanel(next);
     setInfoOpen(false);
     setDeleteArmed(false);
@@ -858,7 +871,12 @@ export default function RadioScreen({ setScreen }) {
     setNewStationStyle(DEFAULT_STATION_STYLE);
     setNameEditorFor(null);
   };
-  const closePanel = () => { setPanel(null); setDeleteArmed(false); setNameEditorFor(null); setCityPickerOpen(false); setFrequencyOpen(false); };
+  const closePanel = () => {
+    const { playingHere, changed } = panelRetuneRef.current;
+    if (playingHere && changed && isPlaying) togglePlay();
+    panelRetuneRef.current = { playingHere: false, changed: false };
+    setPanel(null); setDeleteArmed(false); setNameEditorFor(null); setCityPickerOpen(false); setFrequencyOpen(false);
+  };
 
   // ── Save the listener's city to their account (it persists across sessions
   // and devices), then reload Hot in Here for the new spot. If the dial is on
@@ -997,6 +1015,7 @@ export default function RadioScreen({ setScreen }) {
     if (!station) return false;
     try {
       const data = await saveStationSettings(station.id, { ...settingsOf(station), ...patch });
+      panelRetuneRef.current.changed = true;
       if (station.kind === 'custom') {
         setCustomStations(prev => prev.map(st => (st.id === data.station.id ? { ...st, ...data.station } : st)));
         if (tunedId === station.id) handleTune({ ...data.station, kind: 'custom' });
@@ -1123,18 +1142,27 @@ export default function RadioScreen({ setScreen }) {
               onClick={() => tunedStation && openPanel({ mode: 'edit', stationId: tunedStation.id })}
               style={{
                 position: "relative", zIndex: 2, flexShrink: 0, cursor: "pointer",
-                minHeight: "118px", padding: "20px 58px 0 44px",
+                // Fixed height: the name shrinks to fit rather than pushing
+                // everything below it down (see FittedNeonSignText)
+                height: `${SIGN_BOX_HEIGHT}px`, padding: "20px 58px 0 44px", boxSizing: "border-box",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >
-              <NeonSignText color={signStyle.color} stroke={7} style={{
-                fontFamily: fontStack(signStyle.font), fontWeight: fontWeightFor(signStyle.font),
-                fontSize: `${signSize}px`, lineHeight: 1.02,
-                textAlign: "center", textTransform: "uppercase", transform: "rotate(-3deg) skewX(-6deg)",
-                letterSpacing: "0.5px", overflowWrap: "anywhere",
-              }}>
+              <FittedNeonSignText
+                color={signStyle.color}
+                stroke={7}
+                maxSize={signSize}
+                minSize={18}
+                maxHeight={SIGN_TEXT_HEIGHT}
+                style={{
+                  fontFamily: fontStack(signStyle.font), fontWeight: fontWeightFor(signStyle.font),
+                  lineHeight: 1.02,
+                  textAlign: "center", textTransform: "uppercase", transform: "rotate(-3deg) skewX(-6deg)",
+                  letterSpacing: "0.5px", overflowWrap: "anywhere",
+                }}
+              >
                 {signText}
-              </NeonSignText>
+              </FittedNeonSignText>
             </div>
 
             {/* Frequency · goat · mode */}
@@ -1149,15 +1177,23 @@ export default function RadioScreen({ setScreen }) {
               </div>
             </div>
 
-            {/* Description */}
-            <div style={{ position: "relative", zIndex: 2, flexShrink: 0, margin: "10px 20px 0", padding: "3px 4px", background: greenBand, textAlign: "center" }}>
-              <div style={{ ...neon.green, WebkitTextStroke: "3px #1d6a2b", fontFamily: markerFont, fontSize: "9.5px", lineHeight: 1.35, textTransform: "uppercase" }}>
-                {tunedStation ? tunedStation.subtitle : "Tune the dial to pick a station"}
+            {/* Description. Its slot is always two lines tall, with the band
+                centred in it, so a one-line and a two-line description leave
+                the dial in the same place. Anything longer is cut off with an
+                ellipsis (the info screen has it in full). */}
+            <div style={{ position: "relative", zIndex: 2, flexShrink: 0, height: "38px", margin: "6px 20px 0", display: "flex", alignItems: "center" }}>
+              <div style={{ width: "100%", padding: "3px 4px", background: greenBand, textAlign: "center" }}>
+                <div style={{
+                  ...neon.green, WebkitTextStroke: "3px #1d6a2b", fontFamily: markerFont, fontSize: "9.5px", lineHeight: 1.35, textTransform: "uppercase",
+                  display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+                }}>
+                  {tunedStation ? tunedStation.subtitle : "Tune the dial to pick a station"}
+                </div>
               </div>
             </div>
 
             {/* Dial */}
-            <div style={{ position: "relative", zIndex: 2, marginTop: "26px", flexShrink: 0 }}>
+            <div style={{ position: "relative", zIndex: 2, marginTop: "18px", flexShrink: 0 }}>
               <TunerDial
                 stations={allStations}
                 tunedId={tunedId}
@@ -1352,7 +1388,10 @@ export default function RadioScreen({ setScreen }) {
                   </NeonSignText>
                 </div>
 
-                {/* Description */}
+                {/* Description. Always two lines tall (longer text is cut off with an
+                    ellipsis), so switching modes, which changes how much there is
+                    to say, never moves anything below it. */}
+                <div style={{ height: "40px", marginTop: "2px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 {isNewStation ? (
                   <input
                     className="radio-desc-input"
@@ -1362,14 +1401,18 @@ export default function RadioScreen({ setScreen }) {
                     maxLength={60}
                     style={{
                       ...neon.green, WebkitTextStroke: "3px #1d6a2b", fontFamily: markerFont, fontSize: "11.5px", textTransform: "uppercase",
-                      width: "100%", textAlign: "center", background: "none", border: "none", outline: "none", padding: "4px 0", marginTop: "2px",
+                      width: "100%", textAlign: "center", background: "none", border: "none", outline: "none", padding: "4px 0",
                     }}
                   />
                 ) : (
-                  <div style={{ ...neon.green, WebkitTextStroke: "3px #1d6a2b", fontFamily: markerFont, fontSize: "11.5px", textTransform: "uppercase", textAlign: "center", padding: "4px 0", marginTop: "2px", lineHeight: 1.35 }}>
+                  <div style={{
+                    ...neon.green, WebkitTextStroke: "3px #1d6a2b", fontFamily: markerFont, fontSize: "11.5px", textTransform: "uppercase", textAlign: "center", lineHeight: 1.35,
+                    display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", padding: "0 2px",
+                  }}>
                     {panelStation?.subtitle}
                   </div>
                 )}
+                </div>
 
                 {/* Frequency + sample */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginTop: "10px" }}>

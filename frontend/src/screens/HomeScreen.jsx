@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMe, getToken } from '../services/authService';
+import { getMe, getToken, rateTrack, getTrackRatings } from '../services/authService';
 import AppHeader from '../components/AppHeader';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
@@ -106,35 +106,31 @@ const PlayButton = ({ playing, onToggle }) => (
   </button>
 );
 
-// ─── Track Card ───────────────────────────────────────────────────────────────
-const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
-  const [hovered, setHovered] = useState(false);
-  const [reaction, setReaction] = useState(null); 
-
-  const handleReaction = async (type) => {
-  if (reaction === type) {
-    setReaction(null);
-    return;
-  }
-  try {
-    const token = await getToken();
-    const endpoint = type === 'liked' ? 'like' : 'dislike';
-    await fetch(`http://localhost:5000/api/auth/tracks/${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        title: track.trackTitle,
-        artist: track.artist,
-      }),
-    });
-    setReaction(type);
-  } catch (err) {
-    console.log(`Failed to ${type} track:`, err);
-  }
+// ─── Thumbs up / down — the same icon as the Radio screen's: a thumb that
+// fills in teal (up) or red (down) when it's the track's reaction ──
+const THUMB_PATH = "M7 22V11l5-8 1.5 1L12 11h7a2 2 0 012 2.3l-1.6 7A2 2 0 0117.4 22H7z";
+const ThumbIcon = ({ down = false, active = false, size = 19 }) => {
+  const stroke = active ? (down ? "#ff6b6b" : colors.teal) : colors.textSecondary;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ transform: down ? "rotate(180deg)" : "none", display: "block" }}>
+      <path d={THUMB_PATH} stroke={stroke} strokeWidth="1.7" strokeLinejoin="round" fill={active ? stroke : "none"} fillOpacity={active ? 0.25 : 0} />
+    </svg>
+  );
 };
+
+// ─── Track Card ───────────────────────────────────────────────────────────────
+// rating: 1 (thumbs up), -1 (thumbs down) or null, the listener's saved
+// reaction to this track (shared with the Radio screen's thumbs).
+// onRate(track, value) saves a new one; value 0 takes it back.
+const TrackCard = ({ track, isPlaying, onTogglePlay, index, rating = null, onRate }) => {
+  const [hovered, setHovered] = useState(false);
+  const reaction = rating === 1 ? 'liked' : rating === -1 ? 'dislike' : null;
+
+  // Tapping the lit thumb again clears it, same as on the Radio screen
+  const handleReaction = (type) => {
+    const value = type === 'liked' ? 1 : -1;
+    onRate?.(track, rating === value ? 0 : value);
+  };
 
   return (
     <div
@@ -211,39 +207,33 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index }) => {
       }}>
        <button
         onClick={() => handleReaction('dislike')}
+        title="Thumbs down"
         style={{
           background: "none", border: "none",
           cursor: "pointer",
-          color: reaction === 'dislike' ? "#ff4444" : colors.muted,
-          fontSize: "12px", cursor: reaction === 'dislike' ? "default" : "pointer",
+          color: reaction === 'dislike' ? "#ff6b6b" : colors.muted,
+          fontSize: "12px",
           fontFamily: "'Kanit', sans-serif", padding: "4px 8px",
           transition: "color 0.2s ease",
           display: "flex", alignItems: "center", gap: "4px",
         }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path d="M17 2H19C20.1046 2 21 2.89543 21 4V13C21 14.1046 20.1046 15 19 15H17M17 2L11 2C9.34315 2 8 3.34315 8 5V16.5C8 17.3284 7.32843 18 6.5 18V18C5.11929 18 4 19.1193 4 20.5V20.5C4 21.3284 4.67157 22 5.5 22H13C14.6569 22 16 20.6569 16 19V15M17 2V15" 
-              stroke={reaction === 'dislike' ? "#ff4444" : colors.muted} 
-              strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <ThumbIcon down active={reaction === 'dislike'} />
         </button>
         <button
           onClick={() => handleReaction('liked')}
+          title="Thumbs up"
           style={{
             background: "none", border: "none",
             cursor: "pointer",
             color: reaction === 'liked' ? colors.teal : colors.muted,
-            fontSize: "12px", cursor: reaction === 'liked' ? "default" : "pointer",
+            fontSize: "12px",
             fontFamily: "'Kanit', sans-serif", padding: "4px 8px",
             transition: "color 0.2s ease",
             display: "flex", alignItems: "center", gap: "4px",
           }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path d="M7 22H5C3.89543 22 3 21.1046 3 20V11C3 9.89543 3.89543 9 5 9H7M7 22L13 22C14.6569 22 16 20.6569 16 19V7.5C16 6.67157 16.6716 6 17.5 6V6C18.8807 6 20 4.88071 20 3.5V3.5C20 2.67157 19.3284 2 18.5 2H11C9.34315 2 8 3.34315 8 5V9M7 22V9"
-              stroke={reaction === 'liked' ? colors.teal : colors.muted}
-              strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <ThumbIcon active={reaction === 'liked'} />
         </button>
         <button style={{
           background: "none", border: `1px solid ${colors.teal}`,
@@ -298,6 +288,42 @@ export default function HomeScreen({ setScreen }) {
   const [loading, setLoading] = useState(true);
   const [activeNav, setActiveNav] = useState("home");
   const { playStandaloneTrack, currentTrack, isPlaying, togglePlay } = usePlayer();
+  // The listener's saved thumbs, keyed "title|artist" (the same ratings the
+  // Radio screen shows and uses to shape its stations)
+  const [ratings, setRatings] = useState({});
+
+  useEffect(() => {
+    getTrackRatings()
+      .then((data) => {
+        const saved = {};
+        (data.ratings || []).forEach(r => { saved[`${r.title}|${r.artist}`] = r.rating; });
+        setRatings(prev => ({ ...saved, ...prev }));
+      })
+      .catch(err => console.log('Failed to fetch ratings:', err));
+  }, []);
+
+  // Light the thumb straight away, save it to the listener's account, and put
+  // it back if the save fails. A new thumbs up or down also counts toward the
+  // track's overall like / dislike tally, as before.
+  const handleRate = async (track, value) => {
+    const key = `${track.trackTitle}|${track.artist}`;
+    const previous = ratings[key] ?? null;
+    setRatings(prev => ({ ...prev, [key]: value || null }));
+    try {
+      await rateTrack({ title: track.trackTitle, artist: track.artist, album: track.album, genre: track.genre }, value);
+      if (value !== 0) {
+        const token = await getToken();
+        fetch(`http://localhost:5000/api/auth/tracks/${value === 1 ? 'like' : 'dislike'}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ title: track.trackTitle, artist: track.artist }),
+        }).catch(() => {});
+      }
+    } catch (err) {
+      console.log('Failed to rate track:', err);
+      setRatings(prev => ({ ...prev, [key]: previous }));
+    }
+  };
 
   useEffect(() => {
     const loadFeed = async () => {
@@ -457,6 +483,8 @@ export default function HomeScreen({ setScreen }) {
                     index={i}
                     isPlaying={isTrackPlaying(track.id)}
                     onTogglePlay={handleTogglePlay}
+                    rating={ratings[`${track.trackTitle}|${track.artist}`] ?? null}
+                    onRate={handleRate}
                   />
                 ))
               )}

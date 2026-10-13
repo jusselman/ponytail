@@ -1,3 +1,4 @@
+import { useState, useLayoutEffect, useEffect, useRef } from 'react';
 import { neonSign } from '../constants/stationFonts';
 
 // ─── A station name as a neon sign that can wrap onto several lines ──────────
@@ -33,6 +34,59 @@ export default function NeonSignText({ color, stroke = 7, style = {}, children }
       </div>
       {/* 3. Lit fill, every line, on top */}
       <div style={{ ...over, color: neon.color, WebkitTextStroke: "0", textShadow: "none" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── A neon sign that always fits its box ────────────────────────────────────
+// The Radio screen gives the station name a box of fixed height, so a long
+// name can never push the frequency, dial or cover down. The text starts at
+// maxSize and steps down one pixel at a time until it fits (never below
+// minSize). It's measured with an invisible copy of the text in the same
+// spot, and measured again once web fonts finish loading, since a font
+// arriving late changes how much room the name takes.
+//
+// Props: as NeonSignText, plus
+//   maxSize    largest font size to try, px
+//   minSize    smallest font size allowed, px
+//   maxHeight  the height the text has to fit in, px
+export function FittedNeonSignText({ color, stroke, style = {}, maxSize, minSize = 14, maxHeight, children }) {
+  const measureRef = useRef(null);
+  const [size, setSize] = useState(maxSize);
+  const [fontsTick, setFontsTick] = useState(0);
+
+  useEffect(() => {
+    const fonts = typeof document !== 'undefined' ? document.fonts : null;
+    if (!fonts || !fonts.addEventListener) return undefined;
+    const bump = () => setFontsTick(t => t + 1);
+    fonts.addEventListener('loadingdone', bump);
+    return () => fonts.removeEventListener('loadingdone', bump);
+  }, []);
+
+  const { transform, ...text } = style;
+  useLayoutEffect(() => {
+    const el = measureRef.current;
+    if (!el) return;
+    let next = maxSize;
+    el.style.fontSize = `${next}px`;
+    while (next > minSize && el.scrollHeight > maxHeight) {
+      next -= 1;
+      el.style.fontSize = `${next}px`;
+    }
+    setSize(next);
+  }, [children, maxSize, minSize, maxHeight, text.fontFamily, text.fontWeight, text.lineHeight, fontsTick]);
+
+  return (
+    <div style={{ position: "relative", width: "100%" }}>
+      <NeonSignText color={color} stroke={stroke} style={{ ...style, fontSize: `${size}px` }}>{children}</NeonSignText>
+      {/* Invisible copy used only for measuring */}
+      <div
+        ref={measureRef}
+        aria-hidden="true"
+        style={{ ...text, position: "absolute", top: 0, left: 0, right: 0, visibility: "hidden", pointerEvents: "none" }}
+      >
         {children}
       </div>
     </div>
