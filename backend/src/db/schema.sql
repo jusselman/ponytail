@@ -158,3 +158,46 @@ CREATE TABLE IF NOT EXISTS user_blocks (
     PRIMARY KEY (blocker_id, blocked_id),
     CHECK (blocker_id != blocked_id)
 );
+
+-- Bulletin posts, likes and replies (see migrations/017_bulletin.sql, which also seeds demo posts)
+CREATE TABLE IF NOT EXISTS bulletin_posts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    author_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    body TEXT NOT NULL CHECK (length(btrim(body)) > 0),
+    tag TEXT NOT NULL,
+    details JSONB,
+    image_url TEXT,
+    attachment_type TEXT CHECK (attachment_type IN ('track', 'album')),
+    attachment JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    seed_key TEXT UNIQUE,
+    seed_author JSONB,
+    seed_media JSONB,
+    seed_likes INTEGER NOT NULL DEFAULT 0,
+    seed_reposts INTEGER NOT NULL DEFAULT 0,
+    CHECK ((attachment_type IS NULL) = (attachment IS NULL)),
+    CHECK (author_id IS NOT NULL OR seed_author IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS idx_bulletin_posts_created ON bulletin_posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bulletin_posts_author ON bulletin_posts(author_id);
+
+CREATE TABLE IF NOT EXISTS bulletin_post_likes (
+    post_id UUID NOT NULL REFERENCES bulletin_posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (post_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS bulletin_replies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES bulletin_posts(id) ON DELETE CASCADE,
+    author_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    body TEXT NOT NULL CHECK (length(btrim(body)) > 0),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    seed_key TEXT UNIQUE,
+    seed_author JSONB,
+    CHECK (author_id IS NOT NULL OR seed_author IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS idx_bulletin_replies_post ON bulletin_replies(post_id, created_at);
