@@ -85,6 +85,12 @@ export function UIProvider({ children, setScreen }) {
     setViewedPlaylistId(null);
   }, []);
 
+  // ── Tipping. tipTarget is what prompted the tip (a track, playlist or post,
+  // see components/TipPanel.jsx); TipPanel slides up while it is set. ──
+  const [tipTarget, setTipTarget] = useState(null);
+  const openTip = useCallback((target) => setTipTarget(target), []);
+  const closeTip = useCallback(() => setTipTarget(null), []);
+
   // ── Direct messages. The inbox (list of threads) and an open conversation are
   // separate panels so a thread opened from someone's profile doesn't need the
   // inbox underneath it. `activeConversation` is { id, otherUser }. ──
@@ -130,6 +136,7 @@ export function UIProvider({ children, setScreen }) {
       isInboxOpen, openInbox, closeInbox,
       activeConversation, openConversation, closeConversation,
       unreadMessageCount, refreshUnreadCount,
+      tipTarget, openTip, closeTip,
       setScreen,
     }}>
       {children}

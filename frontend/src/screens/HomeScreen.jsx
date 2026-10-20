@@ -7,6 +7,8 @@ import FullPlayer from '../components/FullPlayer';
 import ProfilePanel from '../components/ProfilePanel';
 import PublicPlaylistPanel from '../components/PublicPlaylistPanel';
 import MessagesLayer from '../components/MessagesLayer';
+import TipPanel, { TipHeartIcon } from '../components/TipPanel';
+import { useUI } from '../context/UIContext';
 import { usePlayer } from '../context/PlayerContext';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
@@ -122,7 +124,7 @@ const ThumbIcon = ({ down = false, active = false, size = 19 }) => {
 // rating: 1 (thumbs up), -1 (thumbs down) or null, the listener's saved
 // reaction to this track (shared with the Radio screen's thumbs).
 // onRate(track, value) saves a new one; value 0 takes it back.
-const TrackCard = ({ track, isPlaying, onTogglePlay, index, rating = null, onRate }) => {
+const TrackCard = ({ track, isPlaying, onTogglePlay, index, rating = null, onRate, onTip }) => {
   const [hovered, setHovered] = useState(false);
   const reaction = rating === 1 ? 'liked' : rating === -1 ? 'dislike' : null;
 
@@ -235,17 +237,17 @@ const TrackCard = ({ track, isPlaying, onTogglePlay, index, rating = null, onRat
         >
           <ThumbIcon active={reaction === 'liked'} />
         </button>
-        <button style={{
+        <button
+          onClick={() => onTip?.(track)}
+          title="Tip this artist"
+          style={{
           background: "none", border: `1px solid ${colors.teal}`,
           color: colors.teal, fontSize: "12px", cursor: "pointer",
           fontFamily: "'Kanit', sans-serif", padding: "4px 12px",
           borderRadius: "20px", transition: "all 0.2s",
         }}>
           <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <path d="M12 21C12 21 3 16 3 9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 7-9 12-9 12z" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 10v4M10 12h4" stroke="#5DEBD7" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+            <TipHeartIcon size={13} />
             Tip
           </span>
         </button>
@@ -288,6 +290,16 @@ export default function HomeScreen({ setScreen }) {
   const [loading, setLoading] = useState(true);
   const [activeNav, setActiveNav] = useState("home");
   const { playStandaloneTrack, currentTrack, isPlaying, togglePlay } = usePlayer();
+  const { openTip } = useUI();
+
+  // Tip button on a track card: the tip goes to whoever made the track
+  const handleTip = (track) => openTip({
+    type: 'track',
+    title: track.trackTitle,
+    artist: track.artist,
+    album: track.album,
+    coverUrl: track.coverUrl,
+  });
   // The listener's saved thumbs, keyed "title|artist" (the same ratings the
   // Radio screen shows and uses to shape its stations)
   const [ratings, setRatings] = useState({});
@@ -485,6 +497,7 @@ export default function HomeScreen({ setScreen }) {
                     onTogglePlay={handleTogglePlay}
                     rating={ratings[`${track.trackTitle}|${track.artist}`] ?? null}
                     onRate={handleRate}
+                    onTip={handleTip}
                   />
                 ))
               )}
@@ -509,6 +522,7 @@ export default function HomeScreen({ setScreen }) {
           <ProfilePanel />
           <MessagesLayer />
           <PublicPlaylistPanel />
+          <TipPanel />
 
         </div>
       </div>

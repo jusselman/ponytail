@@ -4,6 +4,8 @@ import { getFollowedPlaylists } from '../services/playlistService';
 import { useUI } from '../context/UIContext';
 import SettingsPanel from './SettingsPanel';
 import PlaylistPanel from './PlaylistPanel';
+import TipsReceived from './TipsReceived';
+import { getReceivedTips } from '../services/tipService';
 
 
 const colors = {
@@ -247,6 +249,7 @@ export default function ProfilePanel() {
   const [followedUsers, setFollowedUsers] = useState([]);
   const [isPlaylistPanelOpen, setIsPlaylistPanelOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  const [tipsReceived, setTipsReceived] = useState(null);
 
  useEffect(() => {
   const loadUser = async () => {
@@ -300,6 +303,18 @@ export default function ProfilePanel() {
 
   useEffect(() => {
     if (isProfileOpen) fetchFollowing();
+  }, [isProfileOpen]);
+
+  // ── Tips you've been sent, private to you. Re-fetched each time the panel
+  // opens so a tip that just came in shows up ──
+  useEffect(() => {
+    if (!isProfileOpen) return;
+    getReceivedTips()
+      .then(setTipsReceived)
+      .catch((err) => {
+        console.log('Failed to fetch tips:', err);
+        setTipsReceived(prev => prev || { count: 0, totalCents: 0, netCents: 0, tips: [] });
+      });
   }, [isProfileOpen]);
 
   // ── Tapping one of the user's own playlists opens the same build-mode panel used in
@@ -466,6 +481,9 @@ const handleImageChange = async (e) => {
               </div>
             </div>
           )}
+
+          {/* ── Tips Received — private to this user ── */}
+          <TipsReceived data={tipsReceived} onOpenUser={openUserProfile} />
 
           {/* ── Your Playlists — real data, row layout, no add action (creating a
           playlist already lives in My Music) ── */}

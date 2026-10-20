@@ -10,6 +10,7 @@ const messageRoutes = require('./routes/messageRoutes');
 const blockRoutes = require('./routes/blockRoutes');
 const placesRoutes = require('./routes/placesRoutes');
 const bulletinRoutes = require('./routes/bulletinRoutes');
+const tipRoutes = require('./routes/tipRoutes');
 const path = require('path');
 require('dotenv').config();
 
@@ -47,6 +48,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/blocks', blockRoutes);
 app.use('/api/places', placesRoutes);
 app.use('/api/bulletin', bulletinRoutes);
+app.use('/api/tips', tipRoutes);
 
 // ── Health check ──
 app.get('/health', (req, res) => {
