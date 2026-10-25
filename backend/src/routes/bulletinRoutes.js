@@ -4,6 +4,7 @@ const fs = require('fs');
 const multer = require('multer');
 const router = express.Router();
 const { requireAuth } = require('../middleware/authMiddleware');
+const { isAllowed, safeFilename, verifyUploads } = require('../utils/uploads');
 const {
   getPosts, createPost, deletePost,
   likePost, unlikePost,
@@ -17,19 +18,18 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 const imageUpload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, `post-${req.user.id}-${Date.now()}${path.extname(file.originalname)}`),
+    filename: (req, file, cb) => cb(null, safeFilename('post', req.user.id, file.mimetype)),
   }),
   limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
   fileFilter: (req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Photos need to be JPG, PNG, WEBP or GIF.'));
+    isAllowed(file.mimetype, 'image') ? cb(null, true) : cb(new Error('Photos need to be JPG, PNG, WEBP or GIF.'));
   },
 });
 
 // Turn multer errors (too big, wrong type) into a readable 400
 const optionalImage = (req, res, next) => {
   imageUpload.single('image')(req, res, (err) => {
-    if (!err) return next();
+    if (!err) return verifyUploads(req, res, next);
     const message = err.code === 'LIMIT_FILE_SIZE' ? 'Photos can be up to 8MB.' : err.message;
     res.status(400).json({ error: message });
   });

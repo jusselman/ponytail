@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { requireAuth } = require('../middleware/authMiddleware');
+const { isAllowed, safeFilename, verifyUploads } = require('../utils/uploads');
 const {
   createPlaylist,
   getMyPlaylists,
@@ -27,23 +28,19 @@ if (!fs.existsSync(uploadDir)) {
 // ── Multer config for playlist cover images ──
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `playlist-cover-${req.user.id}-${Date.now()}${ext}`);
-  },
+  filename: (req, file, cb) => cb(null, safeFilename('playlist-cover', req.user.id, file.mimetype)),
 });
 
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
   fileFilter: (req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'));
+    isAllowed(file.mimetype, 'image') ? cb(null, true) : cb(new Error('Invalid file type'));
   },
 });
 
 // Create a playlist — optional 'cover' image field
-router.post('/', requireAuth, upload.single('cover'), createPlaylist);
+router.post('/', requireAuth, upload.single('cover'), verifyUploads, createPlaylist);
 
 // List the current user's playlists
 router.get('/', requireAuth, getMyPlaylists);
@@ -56,7 +53,7 @@ router.get('/followed', requireAuth, getFollowedPlaylists);
 router.get('/:id', requireAuth, getPlaylistDetail);
 
 // Update playlist details (title/description/is_public/cover) — optional 'cover' image field
-router.put('/:id', requireAuth, upload.single('cover'), updatePlaylist);
+router.put('/:id', requireAuth, upload.single('cover'), verifyUploads, updatePlaylist);
 
 // Delete a playlist
 router.delete('/:id', requireAuth, deletePlaylist);

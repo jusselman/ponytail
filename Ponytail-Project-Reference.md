@@ -343,3 +343,17 @@ Goat Mode is the first of three planned station modes (Goat, Pony, Duck). Each s
 Storage: custom stations keep them on `radio_stations` (`seed_artist`, `tags`, `goat_artist`, `ungoat_artists`); Hot in Here and Your Station keep theirs in `users.radio_station_settings`. Hot in Here only takes Un-Goat. A custom station must keep an Artist, a Tag or a Goat.
 
 API: `POST /api/auth/radio/stations` `{ name, settings }`, `PUT /radio/stations/:id/settings`, `GET /radio/tags?q=`. Queue building is `goatModePool` / `mixInGoat` in `authRoutes.js`; thumbs down drops a track, thumbs up lifts it. The old account-wide Goat slot (`users.goat_artist`, `goat_mode`) and its dial station are no longer used.
+
+## Artist identity: verified artists and claims (migration 019)
+
+Stops people posing as real artists and stops artist money going to whoever picks the right name.
+
+- **Name matching:** the database function `ponytail_name_key()` turns a name into a match key that ignores case, accents, spacing and punctuation, look-alike Cyrillic/Greek letters, `0`/`1`/`$` swaps, `&` vs "and", and a leading "The ". Every check uses it (`backend/src/services/artistIdentity.js`).
+- **Reserved and unique names:** an artist account can't use the name of a catalog artist (`seed_tracks`) or of another artist account. That covers both the display name and the @username. A listener can't use an artist account's name. Catalog names stay open to listeners, because the catalog has common names like "Bob".
+- **Claims:** an artist account opens a catalog artist's page and taps "Is this you? Claim this artist" (`ClaimArtistSheet.jsx`). It gets a one-off code (`ponytail-xxxxxxxx`) to post on a page only the real artist controls. Requests live in `claim_requests`; `POST /api/claims`, `GET /api/claims/mine`.
+- **Review is offline only:** there is deliberately no API route that approves a claim. The team runs `node scripts/reviewClaims.js` (list / show / approve / reject) from `backend/`. Approving gives the account the catalog name and `users.artist_verified`, releases held tips (matched on `tips.recipient_key`), and rejects other waiting claims for that artist.
+- **Verified artists:** get the teal badge (`VerifiedBadge.jsx`) on their profile, catalog page, search results and Bulletin posts, and their name is locked. The Bulletin badge used to show for every `is_artist` account; it now follows `artist_verified`.
+- **Tips:** catalog-track tips go only to the verified account for that artist; otherwise they're held. Opening Tips no longer picks up held tips by name match.
+- **Existing accounts:** kept as they are. Any existing artist whose name matched a catalog artist was flagged with a `collision` claim for review; until it is approved it has no badge and gets no held tips.
+
+Setup: `psql "$DATABASE_URL" -f backend/src/db/migrations/019_artist_identity.sql` (needs PostgreSQL 13+). It prints any flagged accounts and is safe to re-run.

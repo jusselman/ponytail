@@ -5,6 +5,7 @@ import { useUI } from '../context/UIContext';
 import SettingsPanel from './SettingsPanel';
 import PlaylistPanel from './PlaylistPanel';
 import TipsReceived from './TipsReceived';
+import VerifiedBadge from './VerifiedBadge';
 import { getReceivedTips } from '../services/tipService';
 
 
@@ -448,10 +449,11 @@ const handleImageChange = async (e) => {
               <div style={{
                 fontSize: "22px", fontWeight: "700", color: colors.text,
                 fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px",
-                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                 marginBottom: "12px",
+                display: "flex", alignItems: "center", gap: "6px",
               }}>
-                {user?.username || ""}
+                <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user?.username || ""}</span>
+                {user?.artist_verified && <VerifiedBadge size={18} />}
               </div>
               <div style={{ display: "flex", gap: "20px" }}>
                 <StatBlock value={user?.followers_count ?? 0} label="Followers" />

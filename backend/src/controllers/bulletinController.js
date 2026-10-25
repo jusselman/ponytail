@@ -1,4 +1,5 @@
 const path = require('path');
+const { uploadPathFromUrl } = require('../utils/uploads');
 const fs = require('fs');
 const db = require('../config/db');
 
@@ -119,9 +120,9 @@ const parseJsonField = (value) => {
 
 // Best-effort removal of an uploaded post photo
 const deleteUploadedFile = (publicUrl) => {
-  if (!publicUrl || !publicUrl.includes('/uploads/')) return;
-  const filename = decodeURIComponent(publicUrl.split('/uploads/')[1]);
-  fs.unlink(path.join(uploadDir, filename), (err) => {
+  const filePath = uploadPathFromUrl(uploadDir, publicUrl);
+  if (!filePath) return;
+  fs.unlink(filePath, (err) => {
     if (err && err.code !== 'ENOENT') console.error('Failed to delete post image:', err.message);
   });
 };
@@ -136,6 +137,7 @@ const mapAuthor = (row, prefix = '') => {
       name: row[`${prefix}display_name`] || row[`${prefix}username`],
       profilePicture: row[`${prefix}profile_picture`] || null,
       isArtist: Boolean(row[`${prefix}is_artist`]),
+      verified: Boolean(row[`${prefix}artist_verified`]),
       hue: null,
       seeded: false,
     };
@@ -143,7 +145,7 @@ const mapAuthor = (row, prefix = '') => {
   const s = row[`${prefix}seed_author`] || {};
   return {
     id: null, username: s.handle || null, name: s.name || 'Ponytail',
-    profilePicture: null, isArtist: Boolean(s.isArtist), hue: s.hue ?? null, seeded: true,
+    profilePicture: null, isArtist: Boolean(s.isArtist), verified: Boolean(s.isArtist), hue: s.hue ?? null, seeded: true,
   };
 };
 
@@ -181,7 +183,7 @@ const notBlocked = (col) => `(${col} IS NULL OR NOT EXISTS (
      OR (b.blocker_id = ${col} AND b.blocked_id = $1)))`;
 
 const POST_SELECT = `
-  SELECT p.*, u.username, u.display_name, u.profile_picture, u.is_artist,
+  SELECT p.*, u.username, u.display_name, u.profile_picture, u.is_artist, u.artist_verified,
     (SELECT COUNT(*)::int FROM bulletin_post_likes l WHERE l.post_id = p.id) AS like_count,
     (SELECT COUNT(*)::int FROM bulletin_replies r WHERE r.post_id = p.id AND ${notBlocked('r.author_id')}) AS reply_count,
     EXISTS (SELECT 1 FROM bulletin_post_likes l WHERE l.post_id = p.id AND l.user_id = $1) AS liked_by_me
@@ -296,7 +298,7 @@ const setLike = (liked) => async (req, res) => {
 };
 
 const REPLY_SELECT = `
-  SELECT r.*, u.username, u.display_name, u.profile_picture, u.is_artist
+  SELECT r.*, u.username, u.display_name, u.profile_picture, u.is_artist, u.artist_verified
   FROM bulletin_replies r
   LEFT JOIN users u ON u.id = r.author_id`;
 

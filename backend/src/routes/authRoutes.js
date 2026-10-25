@@ -14,6 +14,8 @@ const fs = require('fs');
 // utils/trackUrls.js for the fuzzy-filesystem-match + upload-branching logic. ──
 const { getCoverUrl, getAudioUrl, buildTrackUrls } = require('../utils/trackUrls');
 const geo = require('../services/geo');
+const { isAllowed, safeFilename, verifyUploads, uploadPathFromUrl } = require('../utils/uploads');
+const { assertNameAvailable, effectiveName, sendNameError, verifiedAccountForArtist, NameError } = require('../services/artistIdentity');
 
 // ── Ensure uploads directory exists ──
 const uploadDir = path.join(__dirname, '../../assets/uploads');
@@ -24,23 +26,20 @@ if (!fs.existsSync(uploadDir)) {
 // ── Multer config ──
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `avatar-${req.user.id}-${Date.now()}${ext}`);
-  },
+  // Extension comes from the checked type, never the user's filename
+  filename: (req, file, cb) => cb(null, safeFilename('avatar', req.user.id, file.mimetype)),
 });
 
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
   fileFilter: (req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'));
+    isAllowed(file.mimetype, 'image') ? cb(null, true) : cb(new Error('Invalid file type'));
   },
 });
 
 // Upload profile picture
-router.post('/upload-avatar', requireAuth, upload.single('avatar'), async (req, res) => {
+router.post('/upload-avatar', requireAuth, upload.single('avatar'), verifyUploads, async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     const avatarUrl = `http://localhost:5000/uploads/${req.file.filename}`;
@@ -61,9 +60,8 @@ router.post('/upload-avatar', requireAuth, upload.single('avatar'), async (req, 
 const trackStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
     const prefix = file.fieldname === 'audio' ? 'track-audio' : 'track-cover';
-    cb(null, `${prefix}-${req.user.id}-${Date.now()}${ext}`);
+    cb(null, safeFilename(prefix, req.user.id, file.mimetype));
   },
 });
 
@@ -71,12 +69,10 @@ const trackUpload = multer({
   storage: trackStorage,
   limits: { fileSize: 25 * 1024 * 1024 }, // 25MB max — comfortably covers a full track at high bitrate
   fileFilter: (req, file, cb) => {
-    const allowedAudio = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/aac', 'audio/ogg'];
-    const allowedImage = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (file.fieldname === 'audio') {
-      allowedAudio.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid audio file type'));
+      isAllowed(file.mimetype, 'audio') ? cb(null, true) : cb(new Error('Invalid audio file type'));
     } else if (file.fieldname === 'cover') {
-      allowedImage.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid cover image type'));
+      isAllowed(file.mimetype, 'image') ? cb(null, true) : cb(new Error('Invalid cover image type'));
     } else {
       cb(new Error('Unexpected field'));
     }
@@ -92,6 +88,7 @@ router.post(
   '/tracks/upload',
   requireAuth,
   trackUpload.fields([{ name: 'audio', maxCount: 1 }, { name: 'cover', maxCount: 1 }]),
+  verifyUploads,
   async (req, res) => {
     try {
       const artistCheck = await pool.query(
@@ -140,6 +137,11 @@ router.post(
            location_region = EXCLUDED.location_region,
            uploaded_audio_url = EXCLUDED.uploaded_audio_url,
            uploaded_cover_url = EXCLUDED.uploaded_cover_url
+         -- Only overwrite a track this same musician uploaded earlier. Without
+         -- this, anyone whose display name matched an existing artist could
+         -- replace that artist's audio by uploading a song with the same title.
+         WHERE seed_tracks.uploader_user_id = EXCLUDED.uploader_user_id
+           AND seed_tracks.is_user_upload = TRUE
          RETURNING id, title, artist, album, genre, subgenre, mood, tag5, location`,
         [
           title.trim(), artistName, album || null,
@@ -152,6 +154,12 @@ router.post(
       );
 
       const track = result.rows[0];
+      if (!track) {
+        // Title + artist already belongs to someone else's track
+        fs.unlink(audioFile.path, () => {});
+        if (coverFile) fs.unlink(coverFile.path, () => {});
+        return res.status(409).json({ error: `A track called "${title.trim()}" by ${artistName} already exists.` });
+      }
       res.status(201).json({
         track: {
           ...track,
@@ -198,9 +206,8 @@ router.get('/tracks/mine', requireAuth, async (req, res) => {
 const deleteUploadedFile = (publicUrl) => {
   if (!publicUrl) return;
   try {
-    const filename = publicUrl.split('/uploads/')[1];
-    if (!filename) return;
-    const filePath = path.join(uploadDir, decodeURIComponent(filename));
+    const filePath = uploadPathFromUrl(uploadDir, publicUrl);
+    if (!filePath) return;
     fs.unlink(filePath, (err) => {
       if (err && err.code !== 'ENOENT') console.error('Failed to delete upload file:', filePath, err.message);
     });
@@ -243,7 +250,7 @@ router.delete('/tracks/:id', requireAuth, async (req, res) => {
 // re-uploading a fresh version is the path for that. Reuses the `upload` multer
 // instance from the avatar endpoint above (images only, 5MB) with a 'cover' field,
 // same pattern playlistRoutes.js uses for playlist covers.
-router.put('/tracks/:id', requireAuth, upload.single('cover'), async (req, res) => {
+router.put('/tracks/:id', requireAuth, upload.single('cover'), verifyUploads, async (req, res) => {
   const { id } = req.params;
   const { title, album, genre } = req.body;
 
@@ -1146,6 +1153,25 @@ router.get('/radio/goat/tracks', requireAuth, async (req, res) => {
 // Email/password registration
 router.post('/register', register);
 
+// Can this artist name be used? Called from the musician signup's name step so a
+// reserved or taken name is caught there, not at the end of signup. Same rules
+// as register (services/artistIdentity.js). Artist names are public anyway, so
+// answering this reveals nothing private.
+router.post('/check-artist-name', async (req, res) => {
+  const name = String(req.body?.name || '').trim().slice(0, 100);
+  if (!name) return res.status(400).json({ error: 'Please enter a name.' });
+  try {
+    await assertNameAvailable(name, { isArtist: true });
+    res.json({ available: true });
+  } catch (err) {
+    if (err instanceof NameError) {
+      return res.json({ available: false, code: err.code, message: err.message });
+    }
+    console.error('Check artist name error:', err);
+    res.status(500).json({ error: 'Could not check that name.' });
+  }
+});
+
 // Email/password login
 router.post('/login',
   passport.authenticate('local', { session: false }),
@@ -1198,6 +1224,24 @@ router.put('/update-profile', async (req, res) => {
       values.push(JSON.stringify(favorite_artists));
     }
     if (display_name !== undefined) {
+      // Verified artists keep the name they were verified under, and nobody can
+      // rename themselves into a catalog artist or another artist on Ponytail.
+      const { rows: [me] } = await pool.query(
+        'SELECT username, display_name, is_artist, artist_verified FROM users WHERE id = $1',
+        [decoded.id]
+      );
+      if (!me) return res.status(404).json({ error: 'Account not found.' });
+      const current = effectiveName(me.display_name, me.username);
+      const next = effectiveName(display_name, me.username);
+      if (next !== current) {
+        if (me.artist_verified) {
+          return res.status(403).json({
+            error: "Your artist name is locked because your account is verified. To change it, contact the Ponytail team.",
+            code: 'NAME_LOCKED',
+          });
+        }
+        await assertNameAvailable(next, { isArtist: me.is_artist, userId: decoded.id });
+      }
       fields.push(`display_name = $${i++}`);
       values.push(display_name?.trim() || null);
     }
@@ -1233,6 +1277,8 @@ router.put('/update-profile', async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
+    if (sendNameError(res, err)) return;
+    if (err.code === '23505') return res.status(409).json({ error: 'An artist on Ponytail already uses that name. Please pick another.', code: 'NAME_TAKEN' });
     console.error('Update profile error:', err);
     res.status(500).json({ error: 'Failed to update profile' });
   }
@@ -1537,10 +1583,22 @@ router.get('/search', async (req, res) => {
     }
 
     const result = await pool.query(query, params);
+
+    // Verified badges for musician results (one extra lookup, not per row)
+    const musicianIds = result.rows.filter(r => r.type === 'musician' && r.user_id).map(r => r.user_id);
+    const verifiedIds = new Set();
+    if (musicianIds.length) {
+      const v = await pool.query(
+        'SELECT id FROM users WHERE id = ANY($1::uuid[]) AND artist_verified = TRUE', [musicianIds]
+      );
+      v.rows.forEach(row => verifiedIds.add(row.id));
+    }
+
     const mapped = result.rows.map(r => {
       if (r.type === 'musician' || r.type === 'user') {
         return {
           ...r,
+          artist_verified: verifiedIds.has(r.user_id),
           coverUrl: r.profile_picture || null,
           audioUrl: null,
         };
@@ -1565,7 +1623,7 @@ router.get('/users/:username', requireAuth, async (req, res) => {
 
   try {
     const userResult = await pool.query(
-      `SELECT id, username, display_name, profile_picture, favorite_artists, is_artist,
+      `SELECT id, username, display_name, profile_picture, favorite_artists, is_artist, artist_verified,
               (SELECT COUNT(*)::int FROM user_follows WHERE followed_id = users.id) AS followers_count,
               (SELECT COUNT(*)::int FROM user_follows WHERE follower_id = users.id) AS following_count,
               EXISTS(
@@ -1605,6 +1663,7 @@ router.get('/users/:username', requireAuth, async (req, res) => {
         profile_picture: profile.profile_picture,
         favorite_artists: profile.favorite_artists,
         is_artist: profile.is_artist,
+        artist_verified: !!profile.artist_verified,
         followers_count: profile.followers_count,
         following_count: profile.following_count,
         is_following: profile.is_following,
@@ -1914,8 +1973,13 @@ router.get('/artists/detail', async (req, res) => {
     // ── Background image: cover of the album with the most tracks ──
     const backgroundAlbum = albums.sort((a, b) => b.trackCount - a.trackCount)[0];
 
+    // The verified Ponytail account for this catalog artist, if one exists
+    const verified = await verifiedAccountForArtist(name);
+
     res.json({
       artist: name,
+      verified: !!verified,
+      verifiedUsername: verified?.username || null,
       backgroundUrl: backgroundAlbum?.coverUrl || null,
       albums,
       genres,

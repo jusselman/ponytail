@@ -3,6 +3,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcrypt');
 const db = require('./db');
+const { assertNameAvailable } = require('../services/artistIdentity');
 
 // Local Strategy - email & password
 passport.use(new LocalStrategy(
@@ -54,13 +55,17 @@ passport.use(new GoogleStrategy(
 
       let user = result.rows[0];
 
-      // If not, create them
+      // If not, create them. A Google name that matches an artist on Ponytail is
+      // not used (it would let anyone pose as that artist); the account shows
+      // its username instead and the person can pick a name later.
       if (!user) {
+        let safeName = displayName;
+        try { await assertNameAvailable(displayName, { isArtist: false }); } catch { safeName = null; }
         const newUser = await db.query(
           `INSERT INTO users (email, username, display_name, avatar_url)
            VALUES ($1, $2, $3, $4)
            RETURNING *`,
-          [email, email.split('@')[0], displayName, avatar]
+          [email, email.split('@')[0], safeName, avatar]
         );
         user = newUser.rows[0];
       }

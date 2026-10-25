@@ -44,7 +44,7 @@ const Reply = ({ reply, onDelete, onOpenAuthor }) => {
           >
             {author.name}
           </span>
-          {author.isArtist && <VerifiedBadge size={12} />}
+          {author.verified && <VerifiedBadge size={12} />}
           {author.username && <span style={{ fontSize: "11.5px", color: colors.muted, fontFamily: kanit }}>@{author.username}</span>}
           <span style={{ fontSize: "11px", color: colors.muted }}>·</span>
           <span style={{ fontSize: "11.5px", color: colors.muted, fontFamily: kanit }}>{timeAgo(reply.createdAt)}</span>

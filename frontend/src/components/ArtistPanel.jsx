@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { usePlayer } from '../context/PlayerContext';
+import { useUI } from '../context/UIContext';
+import VerifiedBadge from './VerifiedBadge';
+import ClaimArtistSheet from './ClaimArtistSheet';
 
 const colors = {
   bg: "#222222",
@@ -161,6 +164,12 @@ export default function ArtistPanel({ artistName, isOpen, onClose, onAlbumTap, z
     fetchDetail();
   }, [artistName, isOpen]);
 
+  // ── Claim: an unverified artist account can say "this is me" ──
+  const { user } = useUI();
+  const [claimOpen, setClaimOpen] = useState(false);
+  useEffect(() => { if (!isOpen) setClaimOpen(false); }, [isOpen]);
+  const canClaim = !!detail && !detail.verified && !!user?.is_artist && !user?.artist_verified;
+
   const handleAlbumTap = (album) => {
     onAlbumTap({ artist: artistName, album: album.album });
   };
@@ -230,9 +239,16 @@ export default function ArtistPanel({ artistName, isOpen, onClose, onAlbumTap, z
             fontSize: "28px", fontWeight: "800", color: colors.text,
             fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.5px",
             textShadow: "0 2px 12px rgba(0,0,0,0.6)",
+            display: "flex", alignItems: "center", gap: "8px",
           }}>
-            {artistName}
+            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{artistName}</span>
+            {detail?.verified && <VerifiedBadge size={22} />}
           </div>
+          {detail?.verified && (
+            <div style={{ fontSize: "12px", color: colors.teal, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
+              Verified artist on Ponytail
+            </div>
+          )}
         </div>
       </div>
 
@@ -268,6 +284,19 @@ export default function ArtistPanel({ artistName, isOpen, onClose, onAlbumTap, z
             <TagSection title="Similar Artists" tags={detail.similarArtists} />
             <TagSection title="Mood" tags={detail.moods} />
 
+            {canClaim && (
+              <button
+                onClick={() => setClaimOpen(true)}
+                style={{
+                  width: "100%", padding: "14px", marginTop: "4px", borderRadius: "12px",
+                  background: colors.bgCard, border: `1px solid ${colors.border}`, cursor: "pointer",
+                  color: colors.textSecondary, fontFamily: "'Kanit', sans-serif", fontSize: "14px", textAlign: "left",
+                }}
+              >
+                Is this you? <span style={{ color: colors.teal, fontWeight: 600 }}>Claim this artist</span>
+              </button>
+            )}
+
             <div style={{ height: "20px" }} />
           </>
         ) : (
@@ -276,6 +305,7 @@ export default function ArtistPanel({ artistName, isOpen, onClose, onAlbumTap, z
           </div>
         )}
       </div>
+      <ClaimArtistSheet artistName={artistName} isOpen={claimOpen} onClose={() => setClaimOpen(false)} />
     </div>
   );
 }

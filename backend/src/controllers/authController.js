@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { cityLabel } = require('../services/geo');
+const { assertNameAvailable, effectiveName, sendNameError, NameError } = require('../services/artistIdentity');
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -43,7 +44,21 @@ const register = async (req, res) => {
       [username]
     );
     if (existingUsername.rows.length > 0) {
-      return res.status(409).json({ error: 'That username is already taken.' });
+      return res.status(409).json({ error: 'That username is already taken.', code: 'USERNAME_TAKEN' });
+    }
+
+    // ── Names: no posing as a catalog artist or another artist on Ponytail.
+    // Both the display name and the @username are checked, since both show. ──
+    const asArtist = Boolean(is_artist);
+    const shownName = effectiveName(display_name, username);
+    await assertNameAvailable(shownName, { isArtist: asArtist });
+    if (asArtist && shownName.toLowerCase() !== String(username).toLowerCase()) {
+      try {
+        await assertNameAvailable(username, { isArtist: true });
+      } catch (err) {
+        if (!(err instanceof NameError)) throw err;
+        throw new NameError(409, 'USERNAME_RESERVED', `The username @${username} matches another artist's name. Please choose a different username.`);
+      }
     }
 
     // Hash password
@@ -88,6 +103,9 @@ const register = async (req, res) => {
 
     res.status(201).json({ token, user });
   } catch (err) {
+    if (sendNameError(res, err)) return;
+    // Two signups racing for the same artist name: the unique index catches it
+    if (err.code === '23505') return res.status(409).json({ error: 'That name or username is already taken.', code: 'NAME_TAKEN' });
     console.error('Register error:', err);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
@@ -106,6 +124,7 @@ const login = async (req, res) => {
       username: req.user.username,
       display_name: req.user.display_name,
       is_artist: req.user.is_artist,
+      artist_verified: !!req.user.artist_verified,
     }
   });
 };
@@ -115,6 +134,7 @@ const getMe = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT id, email, username, display_name, favorite_artists, profile_picture, is_artist,
+              artist_verified,
               location, genre, subgenre, mood, sound_description,
               (SELECT COUNT(*)::int FROM user_follows WHERE followed_id = users.id) AS followers_count,
               (SELECT COUNT(*)::int FROM user_follows WHERE follower_id = users.id) AS following_count

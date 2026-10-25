@@ -11,7 +11,9 @@ const blockRoutes = require('./routes/blockRoutes');
 const placesRoutes = require('./routes/placesRoutes');
 const bulletinRoutes = require('./routes/bulletinRoutes');
 const tipRoutes = require('./routes/tipRoutes');
+const claimRoutes = require('./routes/claimRoutes');
 const path = require('path');
+const { guardUploadsStatic } = require('./utils/uploads');
 require('dotenv').config();
 
 const app = express();
@@ -36,7 +38,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ── Static assets ──
-app.use('/uploads', express.static(path.join(__dirname, '../assets/uploads')));
+app.use('/uploads', guardUploadsStatic, express.static(path.join(__dirname, '../assets/uploads')));
 app.use('/covers', express.static(path.join(__dirname, '../assets/dev_seed/covers')));
 app.use('/audio', express.static(path.join(__dirname, '../assets/dev_seed/mp3')));
 app.use('/vinyl', express.static(path.join(__dirname, '../assets/dev_seed/VinylCases')));
@@ -49,10 +51,29 @@ app.use('/api/blocks', blockRoutes);
 app.use('/api/places', placesRoutes);
 app.use('/api/bulletin', bulletinRoutes);
 app.use('/api/tips', tipRoutes);
+app.use('/api/claims', claimRoutes);
 
 // ── Health check ──
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Ponytail API is running' });
+});
+
+// ── Last-resort error handler ──
+// Upload problems (wrong type, too big) become a plain 400. Anything else is
+// logged here on the server and the client only gets a generic message, never
+// a stack trace or file paths.
+const multer = require('multer');
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  if (err instanceof multer.MulterError) {
+    const message = err.code === 'LIMIT_FILE_SIZE' ? 'That file is too large.' : 'Upload failed.';
+    return res.status(400).json({ error: message });
+  }
+  if (/^Invalid .*(file|image) type$|^Unexpected field$/.test(err.message || '')) {
+    return res.status(400).json({ error: err.message });
+  }
+  console.error('Unhandled error:', err);
+  res.status(err.status || 500).json({ error: 'Something went wrong.' });
 });
 
 app.listen(PORT, () => {

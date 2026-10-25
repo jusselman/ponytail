@@ -3,6 +3,7 @@ import { getMe } from '../services/authService';
 import { searchPlaces, getPlaceOptions, searchCities, setHomeCity } from '../services/placesService';
 import { useUI } from '../context/UIContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import VerifiedBadge from '../components/VerifiedBadge';
 import AppHeader from '../components/AppHeader';
 import InboxButton from '../components/InboxButton';
 import MessagesLayer from '../components/MessagesLayer';
@@ -394,8 +395,9 @@ const StandardSearch = ({ loved, onArtistTap, onAlbumTap, onUserTap }) => {
             >
               <Avatar name={result.name} size={38} coverUrl={result.coverUrl} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {result.name}
+                <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "14px", fontWeight: "600", color: colors.text, fontFamily: "'Kanit', sans-serif" }}>
+                  <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{result.name}</span>
+                  {result.type === "musician" && result.artist_verified && <VerifiedBadge size={14} />}
                 </div>
                 <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "2px" }}>
                   {result.type === "track"

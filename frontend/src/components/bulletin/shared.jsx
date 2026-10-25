@@ -51,6 +51,8 @@ export const formatCount = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(
 const formatMoney = (n) => `$${Number(n).toLocaleString()}`;
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
+// Verified artist: driven only by the server's artist_verified flag (author.verified),
+// never by is_artist, since anyone can sign up as an artist.
 export const VerifiedBadge = ({ size = 13 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
     <circle cx="12" cy="12" r="10" fill={colors.teal} />
@@ -436,7 +438,7 @@ export const FeedPost = ({ post, index = 0, inThread = false, onToggleLike, onOp
             >
               {author.name}
             </span>
-            {author.isArtist && <VerifiedBadge />}
+            {author.verified && <VerifiedBadge />}
             {author.username && (
               <span style={{ fontSize: "12px", color: colors.muted, fontFamily: kanit }}>@{author.username}</span>
             )}

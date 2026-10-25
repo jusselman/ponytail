@@ -5,6 +5,7 @@ import { openConversation as openConversationApi } from '../services/messageServ
 import { blockUser, unblockUser } from '../services/blockService';
 import LogoutConfirmModal from './LogoutConfirmModal';
 import { BlockToggleButton } from './messages/shared';
+import VerifiedBadge from './VerifiedBadge';
 
 const colors = {
   bg: "#222222",
@@ -467,10 +468,11 @@ export default function UserProfilePanel() {
                   <div style={{
                     fontSize: "22px", fontWeight: "700", color: colors.text,
                     fontFamily: "'Kanit', sans-serif", letterSpacing: "-0.3px",
-                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                     marginBottom: "4px",
+                    display: "flex", alignItems: "center", gap: "6px",
                   }}>
-                    {displayName}
+                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{displayName}</span>
+                    {profile.artist_verified && <VerifiedBadge size={18} />}
                   </div>
                   {!isOwnProfile && (
                     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>

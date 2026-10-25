@@ -183,6 +183,7 @@ export default function EditProfilePanel({ isOpen, onClose }) {
   const [subgenre, setSubgenre] = useState(null);
   const [mood, setMood] = useState(null);
   const [soundDescription, setSoundDescription] = useState("");
+  const [verified, setVerified] = useState(false);
 
   // ── Load the current values fresh every time the panel opens ──
   useEffect(() => {
@@ -195,6 +196,7 @@ export default function EditProfilePanel({ isOpen, onClose }) {
         const me = await getMe();
         setUsername(me.username || "");
         setIsArtist(!!me.is_artist);
+        setVerified(!!me.artist_verified);
         setDisplayName(me.display_name || "");
         setLocation(me.location || "");
         setGenre(me.genre || null);
@@ -227,7 +229,8 @@ export default function EditProfilePanel({ isOpen, onClose }) {
     setSaving(true);
     setError(null);
     try {
-      const payload = { display_name: displayName.trim() };
+      // A verified artist's name is locked server-side, so don't send it
+      const payload = verified ? {} : { display_name: displayName.trim() };
       if (isArtist) {
         payload.location = location.trim();
         payload.genre = genre;
@@ -296,8 +299,14 @@ export default function EditProfilePanel({ isOpen, onClose }) {
             <PonytailInput
               placeholder="Your name"
               value={displayName}
+              disabled={verified}
               onChange={e => setDisplayName(e.target.value)}
             />
+            {verified && (
+              <div style={{ fontSize: "11px", color: colors.muted, fontFamily: "'Kanit', sans-serif", marginTop: "6px", lineHeight: 1.4 }}>
+                Your name is locked because you're a verified artist. Contact the Ponytail team to change it.
+              </div>
+            )}
 
             {isArtist && (
               <>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { register, updateProfile } from '../services/authService';
+import { registerFromEmail, updateProfile } from '../services/authService';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 
@@ -710,7 +710,7 @@ export default function OnboardingScreen({ setScreen }) {
     setLoading(true);
     try {
       const username = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
-      await register(email, username, password);
+      await registerFromEmail(email, username, password);
       await updateProfile({ favorite_artists: selectedArtists });
       setArtists(selectedArtists);
 

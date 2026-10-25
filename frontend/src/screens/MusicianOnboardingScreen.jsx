@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { register } from '../services/authService';
+import { registerFromEmail, checkArtistName } from '../services/authService';
+import PonytailNotice, { NameTakenIcon } from '../components/PonytailNotice';
 import { searchCities } from '../services/placesService';
 import PonyMoodBg from '../assets/images/PonyMood.png';
 import PonyRockBg from '../assets/images/PonyRock.png';
@@ -241,8 +242,37 @@ const PasswordStep = ({ password, setPassword, onNext }) => {
 // ─── Step 3: Artist / Stage Name — musician-specific, replaces the favorite-artists
 // picker since that step doesn't apply to an account that will be uploading, not
 // discovering, music. This becomes the artist name attached to every uploaded track. ──
-const ArtistNameStep = ({ artistName, setArtistName, onNext }) => {
+// Titles for the name-problem sheet, by the server's code
+const NAME_PROBLEM_TITLES = {
+  NAME_RESERVED: "That name belongs to a catalog artist",
+  NAME_TAKEN: "That name is already taken",
+  NAME_INVALID: "Try a different name",
+  USERNAME_RESERVED: "Try a different email",
+};
+
+// The name is checked here, before the rest of signup, so a catalog artist's
+// name or another artist's name never gets past this screen.
+const ArtistNameStep = ({ artistName, setArtistName, onNext, onNameProblem }) => {
   const [focused, setFocused] = useState(null);
+  const [checking, setChecking] = useState(false);
+
+  const handleNext = async () => {
+    const name = artistName.trim();
+    if (!name || checking) return;
+    setChecking(true);
+    try {
+      const result = await checkArtistName(name);
+      if (result.available) onNext();
+      else onNameProblem({ title: NAME_PROBLEM_TITLES[result.code] || "Try a different name", message: result.message });
+    } catch (err) {
+      onNameProblem({
+        title: "We couldn't check that name",
+        message: err.response?.data?.error || "Please check your connection and try again.",
+      });
+    } finally {
+      setChecking(false);
+    }
+  };
 
   return (
     <div style={{ width: "100%", animation: "fadeSlideUp 0.4s ease forwards" }}>
@@ -262,9 +292,10 @@ const ArtistNameStep = ({ artistName, setArtistName, onNext }) => {
         placeholder="Your artist or band name"
         value={artistName}
         onChange={e => setArtistName(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") handleNext(); }}
       />
       <div style={{ marginTop: "24px" }}>
-        <NextButton onPress={onNext} disabled={!artistName.trim()} />
+        <NextButton onPress={handleNext} label={checking ? "Checking..." : "Next"} disabled={!artistName.trim() || checking} />
       </div>
     </div>
   );
@@ -635,12 +666,21 @@ export default function MusicianOnboardingScreen({ setScreen }) {
   const [mood, setMood] = useState(null);
   const [soundDescription, setSoundDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  // In-app notice sheet (replaces the browser's alert). backToName: closing it
+  // returns to the name step, for a name that became unavailable mid-signup.
+  const [notice, setNotice] = useState(null);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const showNotice = (n) => { setNotice(n); setNoticeOpen(true); };
+  const closeNotice = () => {
+    setNoticeOpen(false);
+    if (notice?.backToName) setStep("artistName");
+  };
 
   const handleFinishSignup = async () => {
     setLoading(true);
     try {
       const username = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
-      await register(email, username, password, true, artistName.trim(), {
+      await registerFromEmail(email, username, password, true, artistName.trim(), {
         location: location.trim(),
         locationPlaceId,
         genre,
@@ -650,8 +690,14 @@ export default function MusicianOnboardingScreen({ setScreen }) {
       }); // is_artist: true, display_name: artist name
       setScreen("home");
     } catch (err) {
-      const message = err.response?.data?.error || 'Something went wrong.';
-      alert(message);
+      const data = err.response?.data || {};
+      const isNameProblem = ['NAME_RESERVED', 'NAME_TAKEN', 'NAME_INVALID'].includes(data.code);
+      showNotice({
+        title: NAME_PROBLEM_TITLES[data.code] || "We couldn't create your account",
+        message: data.error || "Something went wrong. Please try again.",
+        backToName: isNameProblem,
+        isNameProblem,
+      });
     } finally {
       setLoading(false);
     }
@@ -710,6 +756,7 @@ export default function MusicianOnboardingScreen({ setScreen }) {
                 artistName={artistName}
                 setArtistName={setArtistName}
                 onNext={() => setStep("location")}
+                onNameProblem={(n) => showNotice({ ...n, isNameProblem: true })}
               />
             )}
             {step === "location" && (
@@ -733,6 +780,15 @@ export default function MusicianOnboardingScreen({ setScreen }) {
               />
             )}
           </div>
+
+          <PonytailNotice
+            isOpen={noticeOpen}
+            onClose={closeNotice}
+            title={notice?.title}
+            message={notice?.message}
+            icon={notice?.isNameProblem ? <NameTakenIcon /> : null}
+            actionLabel={notice?.isNameProblem ? "Choose another name" : "Got it"}
+          />
         </div>
       </div>
     </>

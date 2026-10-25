@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { verifiedAccountForArtist } = require('../services/artistIdentity');
 
 // ── Tips: a listener sends money to whoever made a track, playlist or Bulletin
 // post. Payments are mocked for the demo (see migrations/018_tips.sql and
@@ -30,16 +31,9 @@ const findUser = async (id) => {
   return rows[0] || null;
 };
 
-// A musician account whose name matches an artist in the imported catalog
-const findArtistAccount = async (artistName) => {
-  const { rows } = await db.query(
-    `SELECT id, username, display_name, profile_picture, is_artist FROM users
-     WHERE is_artist = TRUE AND lower(COALESCE(display_name, username)) = lower($1)
-     ORDER BY created_at LIMIT 1`,
-    [artistName]
-  );
-  return rows[0] || null;
-};
+// Catalog artists are paid only through an account the Ponytail team has
+// verified (see migration 019 and scripts/reviewClaims.js). A name match alone
+// is never enough: anyone can type a name.
 
 // Works out who a tip goes to and what prompted it.
 // Returns { recipient (user row or null if held), recipientName, target, label }
@@ -56,7 +50,7 @@ const resolveTarget = async (type, raw = {}) => {
     if (!track) throw new TipError(404, "We couldn't find that track.");
     const recipient = track.uploader_user_id
       ? await findUser(track.uploader_user_id)
-      : await findArtistAccount(track.artist);
+      : await verifiedAccountForArtist(track.artist);
     return {
       recipient,
       recipientName: recipient ? nameOf(recipient) : track.artist,
@@ -159,8 +153,9 @@ const createTip = async (req, res) => {
       `INSERT INTO tips
          (tipper_id, recipient_id, recipient_name, target_type, target, target_label,
           amount_cents, fee_cents, message, is_anonymous,
-          payment_provider, payment_ref, payment_status, card_brand, card_last4)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'mock', $11, 'succeeded', $12, $13)
+          payment_provider, payment_ref, payment_status, card_brand, card_last4, recipient_key)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'mock', $11, 'succeeded', $12, $13,
+               ponytail_name_key($3))
        RETURNING id, amount_cents, fee_cents, created_at`,
       [
         req.user.id, resolved.recipient?.id || null, resolved.recipientName,
@@ -193,14 +188,8 @@ const getReceivedTips = async (req, res) => {
     const me = await findUser(req.user.id);
     if (!me) return res.status(404).json({ error: 'Account not found.' });
 
-    // A musician picks up tips that were held under their artist name
-    if (me.is_artist) {
-      await db.query(
-        `UPDATE tips SET recipient_id = $1
-         WHERE recipient_id IS NULL AND lower(recipient_name) = lower($2)`,
-        [me.id, nameOf(me)]
-      );
-    }
+    // Held tips are NOT picked up here by name. They move to an account only
+    // when the team approves that account's claim (scripts/reviewClaims.js).
 
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
     const [list, totals] = await Promise.all([
