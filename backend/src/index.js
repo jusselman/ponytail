@@ -17,6 +17,16 @@ const { guardUploadsStatic } = require('./utils/uploads');
 require('dotenv').config();
 
 const app = express();
+
+// Behind a hosting proxy or load balancer (most production setups), set
+// TRUST_PROXY=1 so rate limits see each visitor's real address instead of the
+// proxy's. The value is the number of proxies in front of the app (usually 1).
+// Only a number is accepted: "true" would trust any X-Forwarded-For header a
+// visitor sends, letting them fake a new address and dodge every limit.
+// Leave it unset when running locally.
+const proxyHops = Number.parseInt(process.env.TRUST_PROXY, 10);
+if (Number.isInteger(proxyHops) && proxyHops > 0) app.set('trust proxy', proxyHops);
+else if (process.env.TRUST_PROXY) console.warn('TRUST_PROXY must be a number of proxies (e.g. 1); ignoring it.');
 const PORT = process.env.PORT || 5000;
 
 // ── Middleware ──
@@ -28,6 +38,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use('/api', require('./middleware/rateLimits').general);
 app.use(cookieParser());
 app.use(session({
   secret: process.env.SESSION_SECRET,

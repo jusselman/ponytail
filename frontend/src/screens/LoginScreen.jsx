@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { register, login } from '../services/authService';
 import logo from '../assets/images/ponyLogo.png';
+import PonytailNotice from '../components/PonytailNotice';
 
 // ─── Colors & Styles ──────────────────────────────────────────────────────────
 const colors = {
@@ -326,7 +327,7 @@ const ChooseAccountTypeScreen = ({ setLocalScreen, setAppScreen }) => {
 };
 
 // ─── Signup Screen ────────────────────────────────────────────────────────────
-const SignupScreen = ({ setLocalScreen }) => {
+const SignupScreen = ({ setLocalScreen, showNotice }) => {
   const [hovered, setHovered] = useState(null);
   const [focused, setFocused] = useState(null);
   const [form, setForm] = useState({ email: "", password: "", username: "" });
@@ -337,8 +338,11 @@ const SignupScreen = ({ setLocalScreen }) => {
       console.log('Registered successfully:', data.user);
       setLocalScreen("login");
     } catch (err) {
-      const message = err.response?.data?.error || 'Something went wrong.';
-      alert(message);
+      const data = err.response?.data || {};
+      showNotice({
+        title: data.code === 'RATE_LIMITED' ? "Let's take a short break" : "We couldn't create your account",
+        message: data.error || "Something went wrong. Please try again.",
+      });
     }
   };
 
@@ -433,7 +437,7 @@ const SignupScreen = ({ setLocalScreen }) => {
 };
 
 // ─── Login Screen ─────────────────────────────────────────────────────────────
-const LoginScreen = ({ setLocalScreen, setAppScreen }) => {
+const LoginScreen = ({ setLocalScreen, setAppScreen, showNotice }) => {
   const [hovered, setHovered] = useState(null);
   const [focused, setFocused] = useState(null);
   const [form, setForm] = useState({ email: "", password: "" });
@@ -444,8 +448,11 @@ const LoginScreen = ({ setLocalScreen, setAppScreen }) => {
       // console.log('Logged in successfully:', data.user);
       setAppScreen("home");
     } catch (err) {
-      const message = err.response?.data?.error || 'Invalid email or password.';
-      alert(message);
+      // A wrong email or password comes back as a plain 401 with no details
+      const data = typeof err.response?.data === 'object' ? err.response.data : {};
+      showNotice(data.code === 'RATE_LIMITED'
+        ? { title: "Let's take a short break", message: data.error }
+        : { title: "Couldn't sign you in", message: data.error || "Email or password is incorrect." });
     }
   };
 
@@ -478,7 +485,17 @@ const LoginScreen = ({ setLocalScreen, setAppScreen }) => {
         </div>
 
         <div style={{ textAlign: "right", marginBottom: "20px", marginTop: "-8px" }}>
-          <button style={baseStyles.forgotBtn}>Forgot password?</button>
+          {/* Password reset isn't built yet (SECURITY_RISKS.md SR-30), so say so
+              instead of a button that does nothing */}
+          <button
+            style={baseStyles.forgotBtn}
+            onClick={() => showNotice({
+              title: "Password reset is on its way",
+              message: "Resetting your password from the app is coming soon. Until then, the Ponytail team can help you get back into your account.",
+            })}
+          >
+            Forgot password?
+          </button>
         </div>
 
         <button
@@ -534,6 +551,7 @@ const LoginScreen = ({ setLocalScreen, setAppScreen }) => {
 // ─── Root Auth Component ──────────────────────────────────────────────────────
 export default function AuthScreen({ setScreen: setAppScreen }) {
   const [localScreen, setLocalScreen] = useState("landing");
+  const [notice, setNotice] = useState(null);   // in-app sheet instead of alert()
 
   return (
     <>
@@ -563,6 +581,7 @@ export default function AuthScreen({ setScreen: setAppScreen }) {
             <LoginScreen
               setLocalScreen={setLocalScreen}
               setAppScreen={setAppScreen}
+              showNotice={setNotice}
             />
           )}
           {localScreen === "choose-account-type" && (
@@ -571,6 +590,13 @@ export default function AuthScreen({ setScreen: setAppScreen }) {
               setAppScreen={setAppScreen}
             />
           )}
+
+          <PonytailNotice
+            isOpen={!!notice}
+            onClose={() => setNotice(null)}
+            title={notice?.title}
+            message={notice?.message}
+          />
         </div>
       </div>
     </>

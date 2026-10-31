@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { requireAuth } = require('../middleware/authMiddleware');
+const limits = require('../middleware/rateLimits');
 const { isAllowed, safeFilename, verifyUploads } = require('../utils/uploads');
 const {
   createPlaylist,
@@ -40,7 +41,7 @@ const upload = multer({
 });
 
 // Create a playlist — optional 'cover' image field
-router.post('/', requireAuth, upload.single('cover'), verifyUploads, createPlaylist);
+router.post('/', requireAuth, limits.uploads, upload.single('cover'), verifyUploads, createPlaylist);
 
 // List the current user's playlists
 router.get('/', requireAuth, getMyPlaylists);
@@ -53,7 +54,7 @@ router.get('/followed', requireAuth, getFollowedPlaylists);
 router.get('/:id', requireAuth, getPlaylistDetail);
 
 // Update playlist details (title/description/is_public/cover) — optional 'cover' image field
-router.put('/:id', requireAuth, upload.single('cover'), verifyUploads, updatePlaylist);
+router.put('/:id', requireAuth, limits.uploads, upload.single('cover'), verifyUploads, updatePlaylist);
 
 // Delete a playlist
 router.delete('/:id', requireAuth, deletePlaylist);

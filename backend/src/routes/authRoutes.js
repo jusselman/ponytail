@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const pool = require('../config/db');
 const { register, login, getMe } = require('../controllers/authController');
 const { requireAuth } = require('../middleware/authMiddleware');
+const limits = require('../middleware/rateLimits');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -39,7 +40,7 @@ const upload = multer({
 });
 
 // Upload profile picture
-router.post('/upload-avatar', requireAuth, upload.single('avatar'), verifyUploads, async (req, res) => {
+router.post('/upload-avatar', requireAuth, limits.uploads, upload.single('avatar'), verifyUploads, async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     const avatarUrl = `http://localhost:5000/uploads/${req.file.filename}`;
@@ -87,6 +88,7 @@ const trackUpload = multer({
 router.post(
   '/tracks/upload',
   requireAuth,
+  limits.uploads,
   trackUpload.fields([{ name: 'audio', maxCount: 1 }, { name: 'cover', maxCount: 1 }]),
   verifyUploads,
   async (req, res) => {
@@ -250,7 +252,7 @@ router.delete('/tracks/:id', requireAuth, async (req, res) => {
 // re-uploading a fresh version is the path for that. Reuses the `upload` multer
 // instance from the avatar endpoint above (images only, 5MB) with a 'cover' field,
 // same pattern playlistRoutes.js uses for playlist covers.
-router.put('/tracks/:id', requireAuth, upload.single('cover'), verifyUploads, async (req, res) => {
+router.put('/tracks/:id', requireAuth, limits.uploads, upload.single('cover'), verifyUploads, async (req, res) => {
   const { id } = req.params;
   const { title, album, genre } = req.body;
 
@@ -1151,13 +1153,13 @@ router.get('/radio/goat/tracks', requireAuth, async (req, res) => {
 
 
 // Email/password registration
-router.post('/register', register);
+router.post('/register', limits.signup, register);
 
 // Can this artist name be used? Called from the musician signup's name step so a
 // reserved or taken name is caught there, not at the end of signup. Same rules
 // as register (services/artistIdentity.js). Artist names are public anyway, so
 // answering this reveals nothing private.
-router.post('/check-artist-name', async (req, res) => {
+router.post('/check-artist-name', limits.nameCheck, async (req, res) => {
   const name = String(req.body?.name || '').trim().slice(0, 100);
   if (!name) return res.status(400).json({ error: 'Please enter a name.' });
   try {
@@ -1174,6 +1176,9 @@ router.post('/check-artist-name', async (req, res) => {
 
 // Email/password login
 router.post('/login',
+  limits.loginByAddress,
+  limits.loginByEmailAndAddress,
+  limits.loginByEmail,
   passport.authenticate('local', { session: false }),
   login
 );
@@ -1329,7 +1334,7 @@ router.delete('/account', requireAuth, async (req, res) => {
 // account (password_hash never set at signup — see the Google strategy in
 // config/passport.js) gets a clear error instead of a confusing bcrypt.compare
 // failure against a null hash.
-router.put('/change-password', requireAuth, async (req, res) => {
+router.put('/change-password', requireAuth, limits.changePassword, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
   if (!currentPassword || !newPassword) {

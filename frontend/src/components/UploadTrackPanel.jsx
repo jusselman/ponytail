@@ -15,7 +15,16 @@ const colors = {
 };
 
 const MAX_AUDIO_BYTES = 25 * 1024 * 1024; // matches backend multer limit
-const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/aac', 'audio/ogg'];
+// Several names per format, because browsers disagree (Chrome and Safari call
+// .m4a audio/x-m4a, some call .wav audio/wave). Keep in sync with the backend's
+// utils/uploads.js.
+const ALLOWED_AUDIO_TYPES = [
+  'audio/mpeg', 'audio/mp3',
+  'audio/mp4', 'audio/x-m4a', 'audio/m4a',
+  'audio/wav', 'audio/x-wav', 'audio/wave', 'audio/vnd.wave',
+  'audio/aac', 'audio/x-aac',
+  'audio/ogg',
+];
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -85,7 +94,7 @@ export default function UploadTrackPanel({ isOpen, onClose, onUploaded }) {
     if (!file) return;
 
     if (!ALLOWED_AUDIO_TYPES.includes(file.type)) {
-      setError('Please choose an MP3, WAV, AAC, or OGG file.');
+      setError('Please choose an MP3, M4A, WAV, AAC or OGG file.');
       return;
     }
     if (file.size > MAX_AUDIO_BYTES) {

@@ -4,6 +4,7 @@ const fs = require('fs');
 const multer = require('multer');
 const router = express.Router();
 const { requireAuth } = require('../middleware/authMiddleware');
+const limits = require('../middleware/rateLimits');
 const { isAllowed, safeFilename, verifyUploads } = require('../utils/uploads');
 const {
   getPosts, createPost, deletePost,
@@ -39,7 +40,7 @@ const optionalImage = (req, res, next) => {
 router.get('/posts', requireAuth, getPosts);
 
 // Publish a post (multipart, optional image)
-router.post('/posts', requireAuth, optionalImage, createPost);
+router.post('/posts', requireAuth, limits.posting, optionalImage, createPost);
 
 // Delete your own post
 router.delete('/posts/:id', requireAuth, deletePost);
@@ -50,7 +51,7 @@ router.delete('/posts/:id/like', requireAuth, unlikePost);
 
 // Reply thread
 router.get('/posts/:id/replies', requireAuth, getReplies);
-router.post('/posts/:id/replies', requireAuth, createReply);
+router.post('/posts/:id/replies', requireAuth, limits.posting, createReply);
 router.delete('/replies/:id', requireAuth, deleteReply);
 
 module.exports = router;

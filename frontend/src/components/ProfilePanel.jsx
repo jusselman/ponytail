@@ -6,6 +6,7 @@ import SettingsPanel from './SettingsPanel';
 import PlaylistPanel from './PlaylistPanel';
 import TipsReceived from './TipsReceived';
 import VerifiedBadge from './VerifiedBadge';
+import PonytailNotice from './PonytailNotice';
 import { getReceivedTips } from '../services/tipService';
 
 
@@ -337,14 +338,36 @@ export default function ProfilePanel() {
   };
 
 const fileInputRef = useRef(null);
+// Shown when a profile photo can't be used or doesn't save
+const [avatarNotice, setAvatarNotice] = useState(null);
+
+const AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024; // matches the server's limit
 
 const handleImageChange = async (e) => {
   const file = e.target.files[0];
+  e.target.value = ""; // so picking the same file again still triggers a change
   if (!file) return;
 
-  // Show preview immediately while uploading
+  // Check before uploading, the same way every other image picker does
+  if (!AVATAR_TYPES.includes(file.type)) {
+    setAvatarNotice({ title: "That photo can't be used", message: "Please choose a JPG, PNG, WEBP or GIF image." });
+    return;
+  }
+  if (file.size > AVATAR_MAX_BYTES) {
+    setAvatarNotice({ title: "That photo is too large", message: "Profile photos can be up to 5MB. Try a smaller version or a screenshot of it." });
+    return;
+  }
+
+  // Show preview immediately while uploading; put the old photo back if it fails
+  const previousImage = profileImage;
   const previewUrl = URL.createObjectURL(file);
   setProfileImage(previewUrl);
+  const failed = (message) => {
+    setProfileImage(previousImage);
+    URL.revokeObjectURL(previewUrl);
+    setAvatarNotice({ title: "Your photo didn't save", message: message || "Please check your connection and try again." });
+  };
 
   try {
     const token = await import('../services/authService').then(m => m.getToken());
@@ -357,12 +380,16 @@ const handleImageChange = async (e) => {
       body: formData,
     });
 
-    const data = await res.json();
-    if (data.avatarUrl) {
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.avatarUrl) {
       setProfileImage(data.avatarUrl); // replace preview with permanent URL
+      URL.revokeObjectURL(previewUrl);
+    } else {
+      failed(data.error);
     }
   } catch (err) {
     console.log('Avatar upload error:', err);
+    failed();
   }
 };
 
@@ -559,6 +586,13 @@ const handleImageChange = async (e) => {
           playlist={selectedPlaylist}
           onClose={handleClosePlaylistPanel}
           onCreated={addMyPlaylist}
+        />
+
+        <PonytailNotice
+          isOpen={!!avatarNotice}
+          onClose={() => setAvatarNotice(null)}
+          title={avatarNotice?.title}
+          message={avatarNotice?.message}
         />
 
       </div>

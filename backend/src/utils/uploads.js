@@ -22,9 +22,33 @@ const ALLOWED = {
   'audio/mp3':   { ext: '.mp3',  kind: 'audio', sig: ['id3', 'mpegFrame'] },
   'audio/wav':   { ext: '.wav',  kind: 'audio', sig: ['wav'] },
   'audio/x-wav': { ext: '.wav',  kind: 'audio', sig: ['wav'] },
+  'audio/wave':      { ext: '.wav', kind: 'audio', sig: ['wav'] },
+  'audio/vnd.wave':  { ext: '.wav', kind: 'audio', sig: ['wav'] },
   'audio/mp4':   { ext: '.m4a',  kind: 'audio', sig: ['ftyp'] },
+  'audio/x-m4a': { ext: '.m4a',  kind: 'audio', sig: ['ftyp'] },   // what browsers call .m4a
+  'audio/m4a':   { ext: '.m4a',  kind: 'audio', sig: ['ftyp'] },
   'audio/aac':   { ext: '.aac',  kind: 'audio', sig: ['id3', 'mpegFrame'] },
+  'audio/x-aac': { ext: '.aac',  kind: 'audio', sig: ['id3', 'mpegFrame'] },
   'audio/ogg':   { ext: '.ogg',  kind: 'audio', sig: ['ogg'] },
+};
+
+// When a file's name doesn't match its contents (a PNG screenshot renamed to
+// .jpg, a WebP saved as .jpg), the browser reports the wrong type. What the
+// bytes really are decides instead, as long as it's an allowed format of the
+// same kind. Checked in this order.
+const FORMATS = [
+  { ext: '.jpg',  kind: 'image', sig: ['jpeg'] },
+  { ext: '.png',  kind: 'image', sig: ['png'] },
+  { ext: '.webp', kind: 'image', sig: ['webp'] },
+  { ext: '.gif',  kind: 'image', sig: ['gif'] },
+  { ext: '.wav',  kind: 'audio', sig: ['wav'] },
+  { ext: '.ogg',  kind: 'audio', sig: ['ogg'] },
+  { ext: '.m4a',  kind: 'audio', sig: ['ftyp'] },
+  { ext: '.mp3',  kind: 'audio', sig: ['id3', 'mpegFrame'] },
+];
+const MIME_FOR_EXT = {
+  '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif',
+  '.wav': 'audio/wav', '.ogg': 'audio/ogg', '.m4a': 'audio/mp4', '.mp3': 'audio/mpeg', '.aac': 'audio/aac',
 };
 
 // Extensions /uploads is allowed to serve. Anything else 404s.
@@ -65,15 +89,29 @@ const readHead = (filePath) => {
   }
 };
 
-const contentMatches = (file) => {
+// What a saved file really is: { ext } when its bytes are an allowed format of
+// the kind it claimed to be (image or audio), or null when they aren't.
+const detectFormat = (file) => {
   const rule = ALLOWED[file.mimetype];
-  if (!rule) return false;
-  try {
-    const head = readHead(file.path);
-    return rule.sig.some((name) => SIGNATURES[name](head));
-  } catch {
-    return false;
-  }
+  if (!rule) return null;
+  let head;
+  try { head = readHead(file.path); } catch { return null; }
+  const matches = (sig) => sig.some((name) => SIGNATURES[name](head));
+  if (matches(rule.sig)) return { ext: rule.ext };            // it is what it said
+  const actual = FORMATS.find((f) => f.kind === rule.kind && matches(f.sig));
+  return actual ? { ext: actual.ext } : null;
+};
+
+// Give a mislabelled file the extension of what it really is, in place, so the
+// route builds its URL from the corrected name
+const renameTo = (file, ext) => {
+  if (path.extname(file.filename) === ext) return;
+  const filename = file.filename.slice(0, -path.extname(file.filename).length) + ext;
+  const newPath = path.join(path.dirname(file.path), filename);
+  fs.renameSync(file.path, newPath);
+  file.filename = filename;
+  file.path = newPath;
+  file.mimetype = MIME_FOR_EXT[ext] || file.mimetype;
 };
 
 const removeQuietly = (filePath) => fs.unlink(filePath, () => {});
@@ -88,14 +126,24 @@ const verifyUploads = (req, res, next) => {
   ];
   if (files.length === 0) return next();
 
-  const bad = files.find((f) => !contentMatches(f));
-  if (!bad) return next();
+  const detected = files.map(detectFormat);
+  const badIndex = detected.findIndex((d) => !d);
+  if (badIndex === -1) {
+    try {
+      files.forEach((f, i) => renameTo(f, detected[i].ext));
+      return next();
+    } catch (err) {
+      files.forEach((f) => removeQuietly(f.path));
+      return next(err);
+    }
+  }
+  const bad = files[badIndex];
 
   files.forEach((f) => removeQuietly(f.path));
   return res.status(400).json({
     error: bad.mimetype.startsWith('audio/')
-      ? "That audio file doesn't look like a real MP3, WAV, M4A, AAC or OGG file."
-      : "That image doesn't look like a real JPG, PNG, WEBP or GIF file.",
+      ? "That audio file couldn't be read. Please use an MP3, M4A, WAV, AAC or OGG file."
+      : "That image couldn't be read. Please use a JPG, PNG, WEBP or GIF image.",
   });
 };
 

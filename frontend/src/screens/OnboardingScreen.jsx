@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { registerFromEmail, updateProfile } from '../services/authService';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
+import PonytailNotice from '../components/PonytailNotice';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const colors = {
@@ -701,6 +702,7 @@ export default function OnboardingScreen({ setScreen }) {
   const [password, setPassword] = useState("");
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState(null);   // in-app sheet instead of alert()
 
   // ── Shared background — cover art from local DB ──
   const [coverUrl, setCoverUrl] = useState(null);
@@ -721,8 +723,11 @@ export default function OnboardingScreen({ setScreen }) {
 
       setStep("intro");
     } catch (err) {
-      const message = err.response?.data?.error || 'Something went wrong.';
-      alert(message);
+      const data = err.response?.data || {};
+      setNotice({
+        title: data.code === 'RATE_LIMITED' ? "Let's take a short break" : "We couldn't create your account",
+        message: data.error || "Something went wrong. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -851,6 +856,12 @@ export default function OnboardingScreen({ setScreen }) {
             </>
           )}
 
+          <PonytailNotice
+            isOpen={!!notice}
+            onClose={() => setNotice(null)}
+            title={notice?.title}
+            message={notice?.message}
+          />
         </div>
       </div>
     </>

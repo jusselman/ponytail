@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/authMiddleware');
+const limits = require('../middleware/rateLimits');
 const {
   getConversations,
   getUnreadCount,
@@ -23,7 +24,7 @@ router.post('/conversations', requireAuth, openConversation);
 router.get('/conversations/:id/messages', requireAuth, getMessages);
 
 // Send a message (text and/or a shared track/playlist)
-router.post('/conversations/:id/messages', requireAuth, sendMessage);
+router.post('/conversations/:id/messages', requireAuth, limits.messaging, sendMessage);
 
 // Mark the other person's messages in this thread as read
 router.post('/conversations/:id/read', requireAuth, markConversationRead);
