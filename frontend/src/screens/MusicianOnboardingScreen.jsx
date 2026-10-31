@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { registerFromEmail, checkArtistName } from '../services/authService';
+import { register, checkArtistName } from '../services/authService';
+import UsernameStep, { suggestUsername } from '../components/UsernameStep';
 import PonytailNotice, { NameTakenIcon } from '../components/PonytailNotice';
 import { searchCities } from '../services/placesService';
 import PonyMoodBg from '../assets/images/PonyMood.png';
@@ -125,7 +126,7 @@ const NextButton = ({ onPress, label = "Next", disabled = false }) => {
 };
 
 // ─── Reusable Input ───────────────────────────────────────────────────────────
-const PonytailInput = ({ name, focused, onFocus, onBlur, ...props }) => (
+const PonytailInput = ({ name, focused, onFocus, onBlur, style, ...props }) => (
   <input
     style={{
       width: "100%",
@@ -140,6 +141,7 @@ const PonytailInput = ({ name, focused, onFocus, onBlur, ...props }) => (
       fontFamily: "'Kanit', sans-serif",
       boxSizing: "border-box",
       boxShadow: focused === name ? `0 0 0 4px rgba(93,235,215,0.1)` : "none",
+      ...style,
     }}
     onFocus={() => onFocus(name)}
     onBlur={() => onBlur(null)}
@@ -655,6 +657,7 @@ export default function MusicianOnboardingScreen({ setScreen }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [artistName, setArtistName] = useState("");
+  const [username, setUsername] = useState("");
   // ── Board-requested additions: location, genre, subgenre, mood, and a free-text
   // sound description — captured once here, then used both as the musician's
   // profile (for the personalized radio station / Hot in Here) and as the default
@@ -674,13 +677,13 @@ export default function MusicianOnboardingScreen({ setScreen }) {
   const closeNotice = () => {
     setNoticeOpen(false);
     if (notice?.backToName) setStep("artistName");
+    if (notice?.backToUsername) setStep("username");
   };
 
   const handleFinishSignup = async () => {
     setLoading(true);
     try {
-      const username = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
-      await registerFromEmail(email, username, password, true, artistName.trim(), {
+      await register(email, username, password, true, artistName.trim(), {
         location: location.trim(),
         locationPlaceId,
         genre,
@@ -690,13 +693,19 @@ export default function MusicianOnboardingScreen({ setScreen }) {
       }); // is_artist: true, display_name: artist name
       setScreen("home");
     } catch (err) {
+      if (!err.response) {
+        showNotice({ title: "Couldn't reach Ponytail", message: "Check your connection and try again." });
+        return;
+      }
       const data = err.response?.data || {};
       const isNameProblem = ['NAME_RESERVED', 'NAME_TAKEN', 'NAME_INVALID'].includes(data.code);
+      const isUsernameProblem = ['USERNAME_TAKEN', 'USERNAME_RESERVED', 'USERNAME_INVALID', 'USERNAME_ARTIST'].includes(data.code);
       showNotice({
-        title: NAME_PROBLEM_TITLES[data.code] || "We couldn't create your account",
+        title: isUsernameProblem ? "Choose another username" : (NAME_PROBLEM_TITLES[data.code] || "We couldn't create your account"),
         message: data.error || "Something went wrong. Please try again.",
         backToName: isNameProblem,
-        isNameProblem,
+        backToUsername: isUsernameProblem,
+        isNameProblem: isNameProblem || isUsernameProblem,
       });
     } finally {
       setLoading(false);
@@ -755,8 +764,19 @@ export default function MusicianOnboardingScreen({ setScreen }) {
               <ArtistNameStep
                 artistName={artistName}
                 setArtistName={setArtistName}
-                onNext={() => setStep("location")}
+                onNext={() => setStep("username")}
                 onNameProblem={(n) => showNotice({ ...n, isNameProblem: true })}
+              />
+            )}
+            {step === "username" && (
+              <UsernameStep
+                username={username}
+                setUsername={setUsername}
+                suggestion={suggestUsername(artistName)}
+                onNext={() => setStep("location")}
+                Input={PonytailInput}
+                NextButton={NextButton}
+                colors={colors}
               />
             )}
             {step === "location" && (

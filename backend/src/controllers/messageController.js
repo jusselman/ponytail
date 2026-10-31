@@ -194,7 +194,7 @@ const openConversation = async (req, res) => {
   if (!username) return res.status(400).json({ error: 'Username is required.' });
 
   try {
-    const target = await db.query('SELECT id FROM users WHERE username = $1', [username]);
+    const target = await db.query('SELECT id FROM users WHERE lower(username) = lower($1)', [username]);
     if (target.rows.length === 0) return res.status(404).json({ error: 'User not found.' });
     const targetId = target.rows[0].id;
 

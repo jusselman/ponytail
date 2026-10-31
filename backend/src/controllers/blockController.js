@@ -5,7 +5,7 @@ const db = require('../config/db');
 // blocked person from messaging the blocker; messageController.js enforces it.
 
 const findUserId = async (username) => {
-  const result = await db.query('SELECT id FROM users WHERE username = $1', [username]);
+  const result = await db.query('SELECT id FROM users WHERE lower(username) = lower($1)', [username]);
   return result.rows[0]?.id || null;
 };
 

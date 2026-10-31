@@ -3,6 +3,13 @@ import { register, login } from '../services/authService';
 import logo from '../assets/images/ponyLogo.png';
 import PonytailNotice from '../components/PonytailNotice';
 
+// Google sign-in is switched off until email verification exists: without it,
+// signing in with Google could land someone in an account an attacker created
+// with their email (SECURITY_RISKS.md SR-32, SR-36). The server's Google routes
+// are off too unless GOOGLE_SIGNIN_ENABLED=true is set in backend/.env.
+const GOOGLE_SIGNIN_ENABLED = false;
+const GOOGLE_SIGNIN_URL = 'http://localhost:5000/api/auth/google';
+
 // ─── Colors & Styles ──────────────────────────────────────────────────────────
 const colors = {
   bg: "#222222",
@@ -229,7 +236,8 @@ const LandingScreen = ({ setLocalScreen, setAppScreen }) => {
           Sign up
         </button>
 
-        <button
+        {GOOGLE_SIGNIN_ENABLED && (<>
+<button
           style={{
             width: "100%", padding: "14px 16px", borderRadius: "50px",
             border: `1.5px solid ${hovered === "google" ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.2)"}`,
@@ -242,11 +250,12 @@ const LandingScreen = ({ setLocalScreen, setAppScreen }) => {
           }}
           onMouseEnter={() => setHovered("google")}
           onMouseLeave={() => setHovered(null)}
-          onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
+          onClick={() => window.location.href = GOOGLE_SIGNIN_URL}
         >
           <GoogleIcon />
           Continue with Google
         </button>
+</>)}
 
         <button
           style={{
@@ -338,6 +347,10 @@ const SignupScreen = ({ setLocalScreen, showNotice }) => {
       console.log('Registered successfully:', data.user);
       setLocalScreen("login");
     } catch (err) {
+      if (!err.response) {
+        showNotice({ title: "Couldn't reach Ponytail", message: "Check your connection and try again." });
+        return;
+      }
       const data = err.response?.data || {};
       showNotice({
         title: data.code === 'RATE_LIMITED' ? "Let's take a short break" : "We couldn't create your account",
@@ -402,6 +415,7 @@ const SignupScreen = ({ setLocalScreen, showNotice }) => {
         >
           Create account
         </button>
+{GOOGLE_SIGNIN_ENABLED && (<>
 
         <div style={baseStyles.divider}>
           <div style={baseStyles.dividerLine}/>
@@ -421,11 +435,12 @@ const SignupScreen = ({ setLocalScreen, showNotice }) => {
           }}
           onMouseEnter={() => setHovered("google")}
           onMouseLeave={() => setHovered(null)}
-          onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
+          onClick={() => window.location.href = GOOGLE_SIGNIN_URL}
         >
           <GoogleIcon />
           Continue with Google
         </button>
+</>)}
 
         <div style={baseStyles.switchText}>
           Already have an account?{" "}
@@ -449,10 +464,17 @@ const LoginScreen = ({ setLocalScreen, setAppScreen, showNotice }) => {
       setAppScreen("home");
     } catch (err) {
       // A wrong email or password comes back as a plain 401 with no details
+      const status = err.response?.status;
       const data = typeof err.response?.data === 'object' ? err.response.data : {};
-      showNotice(data.code === 'RATE_LIMITED'
-        ? { title: "Let's take a short break", message: data.error }
-        : { title: "Couldn't sign you in", message: data.error || "Email or password is incorrect." });
+      if (!err.response) {
+        showNotice({ title: "Couldn't reach Ponytail", message: "Check your connection and try again." });
+      } else if (data.code === 'RATE_LIMITED') {
+        showNotice({ title: "Let's take a short break", message: data.error });
+      } else if (status >= 500) {
+        showNotice({ title: "Something went wrong on our end", message: "Please try again in a moment." });
+      } else {
+        showNotice({ title: "Couldn't sign you in", message: data.error || "Email or password is incorrect." });
+      }
     }
   };
 
@@ -514,6 +536,7 @@ const LoginScreen = ({ setLocalScreen, setAppScreen, showNotice }) => {
         >
           Log in
         </button>
+{GOOGLE_SIGNIN_ENABLED && (<>
 
         <div style={baseStyles.divider}>
           <div style={baseStyles.dividerLine}/>
@@ -533,11 +556,12 @@ const LoginScreen = ({ setLocalScreen, setAppScreen, showNotice }) => {
           }}
           onMouseEnter={() => setHovered("google")}
           onMouseLeave={() => setHovered(null)}
-          onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
+          onClick={() => window.location.href = GOOGLE_SIGNIN_URL}
         >
           <GoogleIcon />
           Continue with Google
         </button>
+</>)}
 
         <div style={baseStyles.switchText}>
           Don't have an account?{" "}

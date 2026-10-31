@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { cityLabel } = require('../services/geo');
+const { normalizeEmail } = require('../utils/email');
+const { assertUsernameAvailable, normalizeUsername } = require('../services/usernames');
 const { assertNameAvailable, effectiveName, sendNameError, NameError } = require('../services/artistIdentity');
 
 const generateToken = (user) => {
@@ -24,42 +26,32 @@ const register = async (req, res) => {
   // seed both the personalized radio station and the track upload endpoint, which
   // stamps every new upload with these same values instead of asking per track.
   const {
-    email, username, password, display_name, is_artist,
+    email: rawEmail, username: rawUsername, password, display_name, is_artist,
     location, location_place_id, genre, subgenre, mood, sound_description,
   } = req.body;
+
+  const email = normalizeEmail(rawEmail);
+  // Usernames are chosen at signup, stored in lower case and compared ignoring
+  // capitals (SECURITY_RISKS.md SR-35, SR-42); the rules are in services/usernames.js
+  const username = normalizeUsername(rawUsername);
 
   try {
     // Check if email already exists
     const existingEmail = await db.query(
-      'SELECT id FROM users WHERE email = $1',
+      'SELECT id FROM users WHERE lower(email) = $1',
       [email]
     );
     if (existingEmail.rows.length > 0) {
       return res.status(409).json({ error: 'An account with that email already exists.' });
     }
 
-    // Check if username already exists
-    const existingUsername = await db.query(
-      'SELECT id FROM users WHERE username = $1',
-      [username]
-    );
-    if (existingUsername.rows.length > 0) {
-      return res.status(409).json({ error: 'That username is already taken.', code: 'USERNAME_TAKEN' });
-    }
+    // ── Username: format, reserved words, taken, and artist names ──
+    await assertUsernameAvailable(username);
 
-    // ── Names: no posing as a catalog artist or another artist on Ponytail.
-    // Both the display name and the @username are checked, since both show. ──
+    // ── Display name: no posing as a catalog artist or another artist on Ponytail ──
     const asArtist = Boolean(is_artist);
     const shownName = effectiveName(display_name, username);
     await assertNameAvailable(shownName, { isArtist: asArtist });
-    if (asArtist && shownName.toLowerCase() !== String(username).toLowerCase()) {
-      try {
-        await assertNameAvailable(username, { isArtist: true });
-      } catch (err) {
-        if (!(err instanceof NameError)) throw err;
-        throw new NameError(409, 'USERNAME_RESERVED', `The username @${username} matches another artist's name. Please choose a different username.`);
-      }
-    }
 
     // Hash password
     const saltRounds = 12;

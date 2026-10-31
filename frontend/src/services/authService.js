@@ -46,21 +46,11 @@ export const register = async (email, username, password, is_artist = false, dis
   return response.data;
 };
 
-// Same as register, for signup flows that make the username from the email
-// address (so the person never typed it and can't fix it). If that username is
-// taken, or matches an artist's name, try once more with a few digits added.
-const USERNAME_CODES = ['USERNAME_TAKEN', 'USERNAME_RESERVED'];
-export const registerFromEmail = async (email, username, password, is_artist = false, display_name = null, musicianProfile = null) => {
-  try {
-    return await register(email, username, password, is_artist, display_name, musicianProfile);
-  } catch (err) {
-    const code = err.response?.data?.code;
-    // A listener has no separate display name, so NAME_TAKEN is about the username too
-    const usernameProblem = USERNAME_CODES.includes(code) || (!is_artist && code === 'NAME_TAKEN');
-    if (!usernameProblem) throw err;
-    const suffix = String(Math.floor(100 + Math.random() * 900));
-    return register(email, `${username.slice(0, 46)}${suffix}`, password, is_artist, display_name, musicianProfile);
-  }
+// Check a username while someone types it on the signup's username step.
+// Returns { available: true, username } or { available: false, code, message }
+export const checkUsername = async (username) => {
+  const response = await axios.post(`${API_URL}/auth/check-username`, { username });
+  return response.data;
 };
 
 // Check an artist name during musician signup.

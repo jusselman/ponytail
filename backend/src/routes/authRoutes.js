@@ -17,6 +17,7 @@ const { getCoverUrl, getAudioUrl, buildTrackUrls } = require('../utils/trackUrls
 const geo = require('../services/geo');
 const { isAllowed, safeFilename, verifyUploads, uploadPathFromUrl } = require('../utils/uploads');
 const { assertNameAvailable, effectiveName, sendNameError, verifiedAccountForArtist, NameError } = require('../services/artistIdentity');
+const { assertUsernameAvailable } = require('../services/usernames');
 
 // ── Ensure uploads directory exists ──
 const uploadDir = path.join(__dirname, '../../assets/uploads');
@@ -1155,6 +1156,20 @@ router.get('/radio/goat/tracks', requireAuth, async (req, res) => {
 // Email/password registration
 router.post('/register', limits.signup, register);
 
+// Can this username be used? Called while someone types on the signup's username
+// step. Same rules as register (services/usernames.js). Rate limited like the
+// artist name check; usernames are public, so this reveals nothing private.
+router.post('/check-username', limits.nameCheck, async (req, res) => {
+  try {
+    const username = await assertUsernameAvailable(String(req.body?.username || '').slice(0, 60));
+    res.json({ available: true, username });
+  } catch (err) {
+    if (err instanceof NameError) return res.json({ available: false, code: err.code, message: err.message });
+    console.error('Check username error:', err);
+    res.status(500).json({ error: 'Could not check that username.' });
+  }
+});
+
 // Can this artist name be used? Called from the musician signup's name step so a
 // reserved or taken name is caught there, not at the end of signup. Same rules
 // as register (services/artistIdentity.js). Artist names are public anyway, so
@@ -1187,11 +1202,17 @@ router.post('/login',
 router.get('/me', requireAuth, getMe);
 
 // Google OAuth
+// Google sign-in is off unless GOOGLE_SIGNIN_ENABLED=true (see config/passport.js)
+const googleOnly = (req, res, next) =>
+  passport.googleSigninEnabled ? next() : res.status(404).json({ error: 'Google sign-in is not available yet.' });
+
 router.get('/google',
+  googleOnly,
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 router.get('/google/callback',
+  googleOnly,
   passport.authenticate('google', { session: false, failureRedirect: '/login' }),
   (req, res) => {
     const token = jwt.sign(
@@ -1639,7 +1660,7 @@ router.get('/users/:username', requireAuth, async (req, res) => {
                 SELECT 1 FROM user_blocks
                 WHERE blocker_id = $2 AND blocked_id = users.id
               ) AS is_blocked
-       FROM users WHERE username = $1`,
+       FROM users WHERE lower(username) = lower($1)`,
       [username, req.user.id]
     );
 
@@ -1723,7 +1744,7 @@ router.post('/users/:username/follow', requireAuth, async (req, res) => {
   const { username } = req.params;
 
   try {
-    const targetResult = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+    const targetResult = await pool.query('SELECT id FROM users WHERE lower(username) = lower($1)', [username]);
     if (targetResult.rows.length === 0) {
       return res.status(404).json({ error: 'User not found.' });
     }
@@ -1751,7 +1772,7 @@ router.delete('/users/:username/follow', requireAuth, async (req, res) => {
   const { username } = req.params;
 
   try {
-    const targetResult = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+    const targetResult = await pool.query('SELECT id FROM users WHERE lower(username) = lower($1)', [username]);
     if (targetResult.rows.length === 0) {
       return res.status(404).json({ error: 'User not found.' });
     }

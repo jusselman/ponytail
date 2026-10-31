@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { registerFromEmail, updateProfile } from '../services/authService';
+import { register, updateProfile } from '../services/authService';
+import UsernameStep from '../components/UsernameStep';
 import MiniPlayer from '../components/MiniPlayer';
 import FooterNav from '../components/FooterNav';
 import PonytailNotice from '../components/PonytailNotice';
@@ -52,7 +53,7 @@ const NextButton = ({ onPress, label = "Next", disabled = false }) => {
 };
 
 // ─── Reusable Input ───────────────────────────────────────────────────────────
-const PonytailInput = ({ name, focused, onFocus, onBlur, ...props }) => (
+const PonytailInput = ({ name, focused, onFocus, onBlur, style, ...props }) => (
   <input
     style={{
       width: "100%",
@@ -67,6 +68,7 @@ const PonytailInput = ({ name, focused, onFocus, onBlur, ...props }) => (
       fontFamily: "'Kanit', sans-serif",
       boxSizing: "border-box",
       boxShadow: focused === name ? `0 0 0 4px rgba(93,235,215,0.1)` : "none",
+      ...style,
     }}
     onFocus={() => onFocus(name)}
     onBlur={() => onBlur(null)}
@@ -703,6 +705,7 @@ export default function OnboardingScreen({ setScreen }) {
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState(null);   // in-app sheet instead of alert()
+  const [username, setUsername] = useState("");
 
   // ── Shared background — cover art from local DB ──
   const [coverUrl, setCoverUrl] = useState(null);
@@ -711,8 +714,7 @@ export default function OnboardingScreen({ setScreen }) {
   const handleFinishSignup = async (selectedArtists) => {
     setLoading(true);
     try {
-      const username = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
-      await registerFromEmail(email, username, password);
+      await register(email, username, password);
       await updateProfile({ favorite_artists: selectedArtists });
       setArtists(selectedArtists);
 
@@ -723,10 +725,17 @@ export default function OnboardingScreen({ setScreen }) {
 
       setStep("intro");
     } catch (err) {
+      if (!err.response) {
+        setNotice({ title: "Couldn't reach Ponytail", message: "Check your connection and try again." });
+        return;
+      }
       const data = err.response?.data || {};
+      const isUsernameProblem = ['USERNAME_TAKEN', 'USERNAME_RESERVED', 'USERNAME_INVALID', 'USERNAME_ARTIST'].includes(data.code);
       setNotice({
-        title: data.code === 'RATE_LIMITED' ? "Let's take a short break" : "We couldn't create your account",
+        title: data.code === 'RATE_LIMITED' ? "Let's take a short break"
+          : isUsernameProblem ? "Choose another username" : "We couldn't create your account",
         message: data.error || "Something went wrong. Please try again.",
+        backToUsername: isUsernameProblem,
       });
     } finally {
       setLoading(false);
@@ -798,7 +807,17 @@ export default function OnboardingScreen({ setScreen }) {
 
           {/* ── Form steps ── */}
           {step === "email" && <EmailStep email={email} setEmail={setEmail} onNext={() => setStep("password")} />}
-          {step === "password" && <PasswordStep password={password} setPassword={setPassword} onNext={() => setStep("artists")} loading={loading} />}
+          {step === "password" && <PasswordStep password={password} setPassword={setPassword} onNext={() => setStep("username")} loading={loading} />}
+          {step === "username" && (
+            <UsernameStep
+              username={username}
+              setUsername={setUsername}
+              onNext={() => setStep("artists")}
+              Input={PonytailInput}
+              NextButton={NextButton}
+              colors={colors}
+            />
+          )}
           {step === "artists" && <FavoriteArtistsStep onNext={handleFinishSignup} loading={loading} />}
 
           {/* ── Full height slides ── */}
@@ -858,7 +877,7 @@ export default function OnboardingScreen({ setScreen }) {
 
           <PonytailNotice
             isOpen={!!notice}
-            onClose={() => setNotice(null)}
+            onClose={() => { if (notice?.backToUsername) setStep("username"); setNotice(null); }}
             title={notice?.title}
             message={notice?.message}
           />
