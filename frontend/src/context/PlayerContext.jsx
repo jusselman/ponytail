@@ -240,15 +240,36 @@ export function PlayerProvider({ children }) {
   const closePlayer = useCallback(() => setIsPlayerOpen(false), []);
 
  // ── Stable context: only changes when something meaningful changes, never on progress ticks ──
+// ── Back to a silent, empty player. Called when someone logs out, so the
+// music stops and the next person doesn't inherit the previous person's track,
+// queue or recent plays (SECURITY_RISKS.md SR-44). ──
+const resetPlayer = useCallback(() => {
+  const audio = audioRef.current;
+  if (audio) {
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+  }
+  setIsPlaying(false);
+  setCurrentTrack(null);
+  setQueue([]);
+  setQueueIndex(0);
+  setIsPlayerOpen(false);
+  setProgress(0);
+  setDuration(0);
+  setCurrentTime(0);
+  setPlayHistory([]);
+}, []);
+
 const playerValue = useMemo(() => ({
   currentTrack, isPlaying, queue, queueIndex,
-  isPlayerOpen, playHistory,
+  isPlayerOpen, playHistory, resetPlayer,
   audioRef, playTrack, playStandaloneTrack, togglePlay, nextTrack,
   prevTrack, openPlayer, closePlayer, seekTo, jumpToQueueIndex, reorderQueue,
   addTracksToQueue,
 }), [
   currentTrack, isPlaying, queue, queueIndex,
-  isPlayerOpen, playHistory, playTrack, playStandaloneTrack, togglePlay, nextTrack,
+  isPlayerOpen, playHistory, resetPlayer, playTrack, playStandaloneTrack, togglePlay, nextTrack,
   prevTrack, openPlayer, closePlayer, seekTo, jumpToQueueIndex, reorderQueue,
   addTracksToQueue,
 ]);

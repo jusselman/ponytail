@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUI } from '../context/UIContext';
+import { usePlayer } from '../context/PlayerContext';
+import { clearRadioSession } from '../context/radioSession';
 import { logout, deleteAccount } from '../services/authService';
 import EditProfilePanel from './EditProfilePanel';
 import ChangePasswordPanel from './ChangePasswordPanel';
@@ -146,11 +148,12 @@ const SettingIcon = ({ type, danger }) => {
 export default function SettingsPanel() {
   const {
     isSettingsOpen, closeSettings,
-    closeProfile, setUser, setProfileImage, setScreen,
+    closeProfile, setUser, setProfileImage, setScreen, resetSession,
     user,
     myUploads, refreshMyUploads, updateMyUploadLocal, removeMyUploadLocal,
     myPlaylists, refreshMyPlaylists, addMyPlaylist,
   } = useUI();
+  const { resetPlayer } = usePlayer();
   const isArtist = !!user?.is_artist;
 
   // ── Library: which list is open, plus the full-width editors those lists
@@ -235,12 +238,16 @@ export default function SettingsPanel() {
   // account's data or an already-open settings panel), then hands navigation
   // back to App.js's top-level screen switcher to land on the login screen —
   // completing the session either way. ──
+  //
+  // Also stops and empties the player, clears every per-account value in the
+  // app and the Radio dial, and removes this account's data stored on the
+  // device, so a shared laptop (a demo) never shows the next person the
+  // previous person's music, playlists or card (SECURITY_RISKS.md SR-44 to SR-46). ──
   const endSession = async () => {
+    resetPlayer();
     await logout();
-    closeSettings();
-    closeProfile();
-    setUser(null);
-    setProfileImage(null);
+    clearRadioSession();
+    resetSession();
     setScreen("login");
   };
 

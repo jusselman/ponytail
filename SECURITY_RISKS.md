@@ -4,7 +4,7 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 
 **Current priority:** while Ponytail is an investor demo, fix the risks a person could see or run into while using the app first ("Visible in demo: Yes"). Risks that only matter once real users, real money or a public server are involved stay open here until we come back for them.
 
-**Last updated:** 2026-10-31 (Google sign-in switched off, usernames chosen at signup)
+**Last updated:** 2026-10-31 (logout now fully ends a session)
 
 ## How to read this
 
@@ -51,12 +51,19 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 | SR-35 | Usernames were built from the email address and shown publicly | Yes | Medium | Fixed for new accounts |
 | SR-36 | No email verification; Google sign-in joins any account with the same email | No | High | Open |
 | SR-37 | Deleting an account doesn't ask for the password | No | Medium | Open |
-| SR-38 | The server doesn't check signup details (email format, password length, username) | No | Medium | Open |
+| SR-38 | The server doesn't check email format or password length at signup | No | Medium | Open (usernames now checked) |
 | SR-39 | Google sign-in has no protection against forged sign-in requests | No | Medium | Open |
 | SR-40 | Duplicate-email race returns the wrong message | No | Low | Open |
 | SR-41 | No security emails (new sign-in, password changed) | No | Low | Roadmap |
 | SR-42 | Usernames were case-sensitive: @Josh and @josh could be different people | Yes | Medium | Fixed |
 | SR-43 | Login token carries the email address | No | Low | Open |
+| SR-44 | Logging out leaves the music playing, and the next person inherits the queue and recent plays | Yes | Medium | Fixed |
+| SR-45 | "Loved" albums and the saved card belong to the device, not the account | Yes | Medium | Fixed |
+| SR-46 | Logging out doesn't clear all of the previous account's in-app data | Yes | Low | Fixed |
+| SR-47 | A deleted account's login token keeps working | No | Medium | Open |
+| SR-48 | An expired or rejected session isn't noticed by the app | No | Low | Open |
+| SR-49 | The login token is read from storage in a dozen places | No | Low | Open |
+| SR-50 | Token signing: algorithm not pinned, secret not managed | No | Low | Open |
 | SR-25 | Listeners can use catalog artist names | Yes | Low | Accepted |
 | SR-26 | Usernames made from email get digits added when taken | — | — | Retired (people choose usernames now, SR-35) |
 | SR-27 | Email already in use is only reported at the end of signup | Yes | Low | Accepted |
@@ -77,9 +84,14 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 - **Fix:** one message for both in `passport.js`: "Email or password is incorrect." Do it together with SR-31 and SR-34, which share the same code. The signup check for an email already in use stays (see SR-27), and is now rate limited (SR-09).
 
 ### SR-11: Login token storage and lifetime
-- **What:** the login token is kept in AsyncStorage, which is unencrypted on the phone and becomes `localStorage` on web, so any script running on the page can read it. It lasts 7 days and can't be cancelled; logging out or changing the password doesn't invalidate a stolen token.
-- **Where:** `frontend/src/services/authService.js` (`ponytail_token`), plus direct reads in `PlayerContext.jsx`, `SearchScreen.jsx` and `placesService.js`; `JWT_EXPIRES_IN=7d` in `backend/.env`.
-- **Fix:** on iOS and Android, store the token with `expo-secure-store` (Keychain / Keystore), and read it in one place only. Switch to short-lived access tokens (about 15 minutes) plus a refresh token stored in the database that can be revoked on logout, password change or account deletion.
+- **What:** the login token is kept in AsyncStorage, which is unencrypted on the phone and becomes `localStorage` on web, so any script running on the page can read it. It lasts 7 days and can't be cancelled: logging out only deletes the app's copy, and neither logging out, changing the password nor deleting the account stops a copied token from working until it expires. It also stays in browser storage after the tab is closed (the app ignores it and always opens on the login screen, but it can still be copied out and used).
+- **Why it isn't visible in the demo:** nothing on screen changes; it only matters once someone steals or copies a token.
+- **Web vs phone:** `expo-secure-store` covers iOS (Keychain) and Android (Keystore) only; it doesn't work on web, and the demo runs in a browser. On web the safer equivalent is an `httpOnly` cookie, which page scripts can't read (it needs `sameSite` settings and CSRF protection, and goes with SR-12).
+- **Where:** `frontend/src/services/authService.js` (`ponytail_token`) and the direct reads listed in SR-49; `JWT_EXPIRES_IN=7d` in `backend/.env`; `generateToken` in `controllers/authController.js`; `middleware/authMiddleware.js`.
+- **Fix, in steps:**
+  1. *Quick interim:* add `users.token_version`, put it in the token, check it in `requireAuth`, and bump it on password change, "log out everywhere" and account deletion. That gives instant revocation without new tables.
+  2. *Proper:* short-lived access tokens (about 15 minutes) plus a refresh token stored hashed in a `sessions` table, rotated on every use and deleted on logout, password change or account deletion; reuse of an old refresh token revokes the whole session.
+  3. *Storage:* `expo-secure-store` in the native apps, an `httpOnly` cookie on web, all behind one token helper (SR-49).
 
 ### SR-12: Session cookie not ready for production
 - **What:** `express-session` runs with defaults. The cookie isn't marked `secure`, and sessions live in server memory, which loses them on restart and leaks memory over time. Sessions only seem to be needed for the Google sign-in handshake.
@@ -162,9 +174,9 @@ The original item 3 (SR-10, different login messages) is not visible today, but 
 - **Fix:** ask for the current password in the delete modal and check it on the server (for Google-only accounts, re-confirm with Google or an emailed code).
 
 ### SR-38: Signup details aren't checked by the server
-- **What:** the 8-character password minimum, the email format and the username rules exist only in the app's screens. Calling the API directly can create an account with a one-letter password, a malformed email, or a username with spaces or symbols. bcrypt also silently ignores anything past 72 bytes of a password.
+- **What:** the 8-character password minimum and the email format exist only in the app's screens. Calling the API directly can create an account with a one-letter password or a malformed email. bcrypt also silently ignores anything past 72 bytes of a password. (Usernames are now checked on the server, see SR-35.)
 - **Where:** `register` in `controllers/authController.js`.
-- **Fix:** validate on the server: email format and length, password 8 to 72 bytes (optionally rejecting known breached passwords), username 3 to 30 characters of letters, digits, `.` and `_`, and a length cap on display names.
+- **Fix:** validate on the server: email format and length, password 8 to 72 bytes (optionally rejecting known breached passwords), and a length cap on display names.
 
 ### SR-39: Forged Google sign-in requests
 - **What:** the Google sign-in flow doesn't use OAuth's `state` check, so a malicious page can complete a Google sign-in for the attacker's own account inside a victim's browser. The victim then uses Ponytail signed in as the attacker, and anything they upload, message or tip lands in the attacker's account.
@@ -183,6 +195,46 @@ The original item 3 (SR-10, different login messages) is not visible today, but 
 
 ### SR-41: Security emails
 Once Ponytail sends email (SR-36), notify people about a new sign-in, a password change, an email change and account deletion, so a takeover doesn't go unnoticed.
+
+## Session and device risks (item 4 review, 2026-10-31)
+
+The original item 4 is SR-11 above. Reviewing it found three problems that show up when several people use the same laptop, which is what a demo looks like (SR-44 to SR-46), and some quieter ones.
+
+### SR-44: Logging out leaves the previous person's music
+- **Fixed 2026-10-31:** see the Fixed table below.
+- **What:** the player sits above every screen and nothing resets it on logout. Music keeps playing on the login screen, and the next person who signs in finds the previous person's current track, queue and recent plays in the mini player and full player.
+- **Where:** `frontend/src/context/PlayerContext.jsx` (no reset); `endSession` in `components/SettingsPanel.jsx`.
+- **Fix:** a `resetPlayer()` in the player context (pause, clear current track, queue and history, close the full player), called from `endSession`.
+
+### SR-45: Loved albums and saved card belong to the device
+- **Fixed 2026-10-31:** see the Fixed table below.
+- **What:** the Search screen's "Loved" list (`ponytail_loved`) and the tip panel's saved card (`ponytail_saved_card`: brand, last four digits and expiry) are stored on the device under one shared name, not per account, and logging out doesn't clear them. The next person to sign in on that laptop sees the previous person's loved albums, and their tip checkout offers the previous person's card. No full card number is involved, but it's someone else's payment detail and taste on show. "Loved" also never reaches the server, so it doesn't follow a person to another device.
+- **Where:** `screens/SearchScreen.jsx` (`ponytail_loved`), `services/paymentService.js` (`SAVED_CARD_KEY`).
+- **Fix:** store both under the account (`ponytail_loved:<user id>`, `ponytail_saved_card:<user id>`) and clear the device's copies on logout. With real Stripe, saved cards live in Stripe against the customer and nothing is kept on the device (SR-19). Later, save "Loved" on the server.
+
+### SR-46: Logging out doesn't clear all in-app data
+- **Fixed 2026-10-31:** see the Fixed table below.
+- **What:** logging out clears the signed-in user and avatar but not the rest of the shared app state: your playlists and uploads lists, an open conversation, a viewed profile or playlist, a pending tip. Most of it is re-fetched when the next person opens those screens, but it can briefly show the previous account's playlists or reopen their panels.
+- **Where:** `context/UIContext.jsx`; `endSession` in `components/SettingsPanel.jsx`.
+- **Fix:** one `resetSession()` in the UI context that returns every per-account value to its starting state, called from `endSession` alongside SR-44's player reset.
+
+### SR-47: A deleted account's token keeps working
+- **What:** `requireAuth` only checks the token's signature and expiry, not that the account still exists. After an account is deleted, its token still passes for up to 7 days; most routes then fail, and some would try to save rows for an account that no longer exists.
+- **Where:** `middleware/authMiddleware.js`; `PUT /api/auth/update-profile` checks tokens itself.
+- **Fix:** comes with SR-11 step 1: `requireAuth` looks up the account and its `token_version`, so a deleted account (or a revoked token) is refused with 401. Move `update-profile` onto `requireAuth`.
+
+### SR-48: Expired sessions aren't noticed
+- **What:** when the server refuses a token (expired after 7 days, revoked once SR-11 exists, or the account deleted), the app doesn't notice: screens just load empty or show generic errors instead of returning to the login screen. Unlikely during a short demo, since every visit starts at login, but it will matter once sessions last across visits.
+- **Where:** API calls across `frontend/src` (axios and `fetch`, no shared 401 handling).
+- **Fix:** one shared API client that, on a 401 from a signed-in request, ends the session (SR-44/46) and shows a "You've been signed out" notice.
+
+### SR-49: The token is read in a dozen places
+- **What:** the token is read straight from AsyncStorage under its key in 11 places (`PlayerContext.jsx`, `SearchScreen.jsx`, `placesService.js`, `authService.js` and others) rather than through one helper, so changing how it's stored (SR-11) means finding every copy.
+- **Fix:** use `getToken()` everywhere, ideally inside the shared API client from SR-48. (`accountKey()` in `authService.js` already reads the account through `getToken()`.)
+
+### SR-50: Token signing
+- **What:** `jwt.verify` doesn't pin the signing algorithm (the library's defaults are safe today, but pinning removes any doubt), and `JWT_SECRET` is a hand-made value in `.env` with no plan for replacing it.
+- **Fix:** `jwt.verify(token, secret, { algorithms: ['HS256'] })`; generate a 64-byte random secret, keep it in the secrets manager (SR-22), and support a previous secret during rotation.
 
 ---
 
@@ -241,6 +293,7 @@ Turn on Dependabot or `npm audit` in CI, keep personal data out of logs, add err
 | SR-10, SR-31, SR-34 | Sign-in had separate messages for an unknown email and a wrong password, answered faster for unknown emails, and crashed (500, "Something went wrong") for accounts created with Google, each revealing which emails are registered. | Every failed sign-in gets the same 401 and "Email or password is incorrect", and the password check always runs (against a stand-in hash when there's no real one), so all failures take the same time. | `backend/src/config/passport.js` |
 | SR-33 | Emails were case-sensitive, so `Josh@gmail.com` couldn't sign in as `josh@gmail.com` and both could be registered. | Emails are trimmed and lowercased on signup, sign-in and Google sign-in; stored emails lowercased; unique index on `lower(email)`. | `backend/src/utils/email.js`, migration `020_email_case.sql` |
 | SR-42 | Usernames were case-sensitive, and signup built them from the email as typed, so `@Josh` and `@josh` could be two different people. | New usernames are stored in lower case, every username lookup ignores capitals, and the database refuses a username that differs only by capitals. Existing usernames keep their capitals on screen. | `controllers/authController.js`, `config/passport.js`, username lookups in `authRoutes.js`, `blockController.js`, `messageController.js`; migration `021_username_case.sql` |
+| SR-44, SR-45, SR-46 | On a shared laptop, logging out left the music playing and handed the next person the previous person's track, queue, recent plays, Radio stations, loved albums, saved card (brand, last four, expiry), playlists list and open panels. | Logout now runs one end-of-session routine: the player stops and empties (`resetPlayer`), every per-account value in the app resets (`resetSession`), the Radio dial cache is cleared (`context/radioSession.js`), and the token and saved card are removed. Loved albums and the saved card are stored per account (`accountKey` in `authService.js`), so another account on the same device never sees them; loved albums come back when their owner signs in again, while the card is forgotten at logout. Loved lists stored the old, shared way are discarded at the first logout. | `context/PlayerContext.jsx`, `context/UIContext.jsx`, `context/radioSession.js`, `components/SettingsPanel.jsx`, `services/authService.js`, `services/paymentService.js`, `screens/SearchScreen.jsx` |
 | SR-08 | A reserved name was only rejected at the last signup step, in a browser `alert()`. | The name step checks with the server before moving on and shows an in-app notice sheet. | `POST /api/auth/check-artist-name`, `MusicianOnboardingScreen.jsx`, `components/PonytailNotice.jsx` |
 
 ---

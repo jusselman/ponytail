@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { radioSession } from '../context/radioSession';
 import {
   getMe, getHotInHere, getMyStation,
   getRadioStations, createRadioStation, deleteRadioStation,
@@ -603,7 +604,7 @@ const RoundAction = ({ onClick, children, danger = false, disabled = false, titl
 // are kept too, so the dial is drawn in place straight away instead of
 // starting at 0 and sliding over while they reload. The fetches still run
 // in the background to pick up anything new. Lasts until the app is reloaded. ──
-const radioSession = {};
+// (lives in context/radioSession.js so logout can clear it)
 
 // useState whose value is also kept in radioSession under `key`
 function useSessionState(key, initial) {

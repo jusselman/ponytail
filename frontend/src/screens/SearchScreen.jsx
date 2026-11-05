@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { getMe } from '../services/authService';
+import { getMe, accountKey } from '../services/authService';
 import { searchPlaces, getPlaceOptions, searchCities, setHomeCity } from '../services/placesService';
 import { useUI } from '../context/UIContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -1893,7 +1893,9 @@ export default function SearchScreen({ setScreen }) {
   useEffect(() => {
     const loadLoved = async () => {
       try {
-        const stored = await AsyncStorage.getItem('ponytail_loved');
+        // Kept per account, so the next person on this device doesn't see it (SR-45)
+        const key = await accountKey('ponytail_loved');
+        const stored = key ? await AsyncStorage.getItem(key) : null;
         if (stored) setLoved(JSON.parse(stored));
       } catch (err) {
         console.log('Failed to load loved tracks:', err);
@@ -1973,7 +1975,8 @@ export default function SearchScreen({ setScreen }) {
 
     const updated = [album, ...prev].slice(0, 15);
 
-    AsyncStorage.setItem('ponytail_loved', JSON.stringify(updated))
+    accountKey('ponytail_loved')
+      .then(key => key && AsyncStorage.setItem(key, JSON.stringify(updated)))
       .catch(err => console.log('Failed to save loved tracks:', err));
 
     return updated;

@@ -123,6 +123,26 @@ export function UIProvider({ children, setScreen }) {
     return () => clearInterval(interval);
   }, [user?.id, refreshUnreadCount]);
 
+  // ── Back to a signed-out app: every value that belongs to one account goes
+  // back to how it starts, so the next person who signs in on this device
+  // never sees the previous account's data (SECURITY_RISKS.md SR-46) ──
+  const resetSession = useCallback(() => {
+    setIsProfileOpen(false);
+    setIsSettingsOpen(false);
+    setProfileImage(null);
+    setUser(null);
+    setMyPlaylists([]);
+    setMyUploads([]);
+    setIsUserProfileOpen(false);
+    setViewedUsername(null);
+    setIsPublicPlaylistOpen(false);
+    setViewedPlaylistId(null);
+    setTipTarget(null);
+    setIsInboxOpen(false);
+    setActiveConversation(null);
+    setUnreadMessageCount(0);
+  }, []);
+
   return (
     <UIContext.Provider value={{
       isProfileOpen, openProfile, closeProfile,
@@ -137,6 +157,7 @@ export function UIProvider({ children, setScreen }) {
       activeConversation, openConversation, closeConversation,
       unreadMessageCount, refreshUnreadCount,
       tipTarget, openTip, closeTip,
+      resetSession,
       setScreen,
     }}>
       {children}

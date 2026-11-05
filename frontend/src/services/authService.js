@@ -13,9 +13,42 @@ export const getToken = async () => {
   return await AsyncStorage.getItem('ponytail_token');
 };
 
-// Clear token on logout
+// The signed-in account's id, read from the login token (its middle part is
+// plain base64 JSON: { id, ... }). Null when signed out or unreadable.
+const accountIdFromToken = (token) => {
+  try {
+    const part = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = part + '='.repeat((4 - (part.length % 4)) % 4);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    let bits = '', json = '';
+    for (const c of padded.replace(/=+$/, '')) bits += chars.indexOf(c).toString(2).padStart(6, '0');
+    for (let i = 0; i + 8 <= bits.length; i += 8) json += String.fromCharCode(parseInt(bits.slice(i, i + 8), 2));
+    return JSON.parse(decodeURIComponent(escape(json))).id || null;
+  } catch {
+    return null;
+  }
+};
+
+// Name for something stored on this device for the signed-in account only,
+// e.g. 'ponytail_loved' -> 'ponytail_loved:<account id>'. Null when signed out.
+// Keeps one person's saved data from showing up for the next person on a
+// shared device (SECURITY_RISKS.md SR-45).
+export const accountKey = async (base) => {
+  const id = accountIdFromToken(await getToken());
+  return id ? `${base}:${id}` : null;
+};
+
+// Logout: forget the token and this account's saved card on this device.
+// "Loved" stays, stored under the account, for when they sign back in. The
+// two unscoped names are from before data was kept per account.
 export const logout = async () => {
-  await AsyncStorage.removeItem('ponytail_token');
+  const cardKey = await accountKey('ponytail_saved_card');
+  await AsyncStorage.multiRemove([
+    'ponytail_token',
+    'ponytail_saved_card',
+    'ponytail_loved',
+    ...(cardKey ? [cardKey] : []),
+  ]);
 };
 
 // Register. `is_artist` and `display_name` are optional — `is_artist` is only ever

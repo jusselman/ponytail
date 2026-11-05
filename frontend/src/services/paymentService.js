@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { accountKey } from './authService';
 
 // ─── Mock payments ────────────────────────────────────────────────────────────
 // Ponytail will take payments through Stripe. For the demo nothing is charged:
@@ -127,10 +128,14 @@ export const confirmSavedCardPayment = async ({ amountCents, savedCard }) => {
   return { ref: mockPaymentRef(), brand: savedCard.brand, last4: savedCard.last4 };
 };
 
-// Saved card: just the brand, last four and expiry, like a Stripe saved card
+// Saved card: just the brand, last four and expiry, like a Stripe saved card.
+// Stored for the signed-in account only and forgotten on logout, so the next
+// person on a shared device is never offered someone else's card (SR-45).
 export const getSavedCard = async () => {
   try {
-    const raw = await AsyncStorage.getItem(SAVED_CARD_KEY);
+    const key = await accountKey(SAVED_CARD_KEY);
+    if (!key) return null;
+    const raw = await AsyncStorage.getItem(key);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -139,14 +144,18 @@ export const getSavedCard = async () => {
 
 export const saveCard = async ({ brand, last4, exp }) => {
   try {
-    await AsyncStorage.setItem(SAVED_CARD_KEY, JSON.stringify({ brand, last4, exp }));
+    const key = await accountKey(SAVED_CARD_KEY);
+    if (key) await AsyncStorage.setItem(key, JSON.stringify({ brand, last4, exp }));
   } catch {
     // Not saving the card is fine, they'll just type it again next time
   }
 };
 
 export const forgetSavedCard = async () => {
-  try { await AsyncStorage.removeItem(SAVED_CARD_KEY); } catch { /* ignore */ }
+  try {
+    const key = await accountKey(SAVED_CARD_KEY);
+    if (key) await AsyncStorage.removeItem(key);
+  } catch { /* ignore */ }
 };
 
 // Stripe's standard US pricing, 2.9% + 30c. Kept in sync with feeFor in
