@@ -4,7 +4,7 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 
 **Current priority:** while Ponytail is an investor demo, fix the risks a person could see or run into while using the app first ("Visible in demo: Yes"). Risks that only matter once real users, real money or a public server are involved stay open here until we come back for them.
 
-**Last updated:** 2026-10-31 (logout now fully ends a session)
+**Last updated:** 2026-11-05 (one login per browser, startup settings check)
 
 ## How to read this
 
@@ -64,6 +64,11 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 | SR-48 | An expired or rejected session isn't noticed by the app | No | Low | Open |
 | SR-49 | The login token is read from storage in a dozen places | No | Low | Open |
 | SR-50 | Token signing: algorithm not pinned, secret not managed | No | Low | Open |
+| SR-51 | Two accounts in one browser: signing in on one tab silently switches the other tab's account | Yes | Medium | Fixed |
+| SR-52 | A fresh setup is missing login settings, so nobody can sign in, with no clear error | Yes | Medium | Fixed |
+| SR-53 | No sign-out after inactivity on a shared device | No | Low | Open |
+| SR-54 | Signed-in API responses can be kept in the browser cache | No | Low | Open |
+| SR-55 | Unused signup form logs the new user's details to the console | No | Low | Open |
 | SR-25 | Listeners can use catalog artist names | Yes | Low | Accepted |
 | SR-26 | Usernames made from email get digits added when taken | — | — | Retired (people choose usernames now, SR-35) |
 | SR-27 | Email already in use is only reported at the end of signup | Yes | Low | Accepted |
@@ -236,6 +241,30 @@ The original item 4 is SR-11 above. Reviewing it found three problems that show 
 - **What:** `jwt.verify` doesn't pin the signing algorithm (the library's defaults are safe today, but pinning removes any doubt), and `JWT_SECRET` is a hand-made value in `.env` with no plan for replacing it.
 - **Fix:** `jwt.verify(token, secret, { algorithms: ['HS256'] })`; generate a 64-byte random secret, keep it in the secrets manager (SR-22), and support a previous secret during rotation.
 
+### SR-51: Two accounts in one browser
+- **Fixed 2026-11-05:** see the Fixed table below.
+- **What:** every tab in a browser shares one stored login token. With Ponytail open in two tabs, signing in as account B in the second tab makes the first tab, which still shows account A, act as B: anything sent, liked or tipped from it goes out as B. Logging out in one tab likewise leaves the other looking signed in while its requests fail. A demo of two accounts messaging each other would run straight into this.
+- **Where:** `ponytail_token` in `services/authService.js`; no tab listens for the token changing.
+- **Fix:** listen for the browser's `storage` event; when the token changes or disappears in another tab, end this tab's session (SR-44/46) and show "You signed in with a different account in another tab". To demo two accounts side by side, use two browsers or a private window.
+
+### SR-52: Missing login settings on a fresh setup
+- **Fixed 2026-11-05:** see the Fixed table below.
+- **What:** `backend/.env.example` lists only `PORT`, `DATABASE_URL` and `NODE_ENV`. A laptop set up from it has no `JWT_SECRET`, `JWT_EXPIRES_IN` or `SESSION_SECRET`, so creating a login token throws and every sign-in and signup fails with "Something went wrong on our end", with nothing explaining why.
+- **Where:** `backend/.env.example`; `generateToken` in `controllers/authController.js`.
+- **Fix:** list every setting in `.env.example` with a placeholder and a comment (`JWT_SECRET`, `JWT_EXPIRES_IN`, `SESSION_SECRET`, `GOOGLE_*`, `GOOGLE_SIGNIN_ENABLED`, `TRUST_PROXY`), and check at startup that the required ones are set (and `JWT_SECRET` is long enough), stopping with a clear message if not.
+
+### SR-53: No sign-out after inactivity
+- **What:** a tab left open stays signed in for as long as it's open, so on a shared laptop the next person can use the previous person's account.
+- **Fix:** an optional idle timeout (for example 30 minutes without interaction ends the session with a notice), configurable and off during demos. Goes with SR-11 and SR-48.
+
+### SR-54: Browser cache of signed-in responses
+- **What:** API responses carry no `Cache-Control` header, so the browser may keep copies of signed-in data (profile, messages, tips) in its cache on a shared machine after logout.
+- **Fix:** send `Cache-Control: no-store` on every `/api` response (one middleware in `index.js`).
+
+### SR-55: Debug logging of a new user
+- **What:** the unused `SignupScreen` in `LoginScreen.jsx` logs the new user, including the email, to the browser console.
+- **Fix:** remove that unused form (the real signups are `OnboardingScreen.jsx` and `MusicianOnboardingScreen.jsx`), or at least the log line.
+
 ---
 
 ## Roadmap (before or soon after public launch)
@@ -294,6 +323,8 @@ Turn on Dependabot or `npm audit` in CI, keep personal data out of logs, add err
 | SR-33 | Emails were case-sensitive, so `Josh@gmail.com` couldn't sign in as `josh@gmail.com` and both could be registered. | Emails are trimmed and lowercased on signup, sign-in and Google sign-in; stored emails lowercased; unique index on `lower(email)`. | `backend/src/utils/email.js`, migration `020_email_case.sql` |
 | SR-42 | Usernames were case-sensitive, and signup built them from the email as typed, so `@Josh` and `@josh` could be two different people. | New usernames are stored in lower case, every username lookup ignores capitals, and the database refuses a username that differs only by capitals. Existing usernames keep their capitals on screen. | `controllers/authController.js`, `config/passport.js`, username lookups in `authRoutes.js`, `blockController.js`, `messageController.js`; migration `021_username_case.sql` |
 | SR-44, SR-45, SR-46 | On a shared laptop, logging out left the music playing and handed the next person the previous person's track, queue, recent plays, Radio stations, loved albums, saved card (brand, last four, expiry), playlists list and open panels. | Logout now runs one end-of-session routine: the player stops and empties (`resetPlayer`), every per-account value in the app resets (`resetSession`), the Radio dial cache is cleared (`context/radioSession.js`), and the token and saved card are removed. Loved albums and the saved card are stored per account (`accountKey` in `authService.js`), so another account on the same device never sees them; loved albums come back when their owner signs in again, while the card is forgotten at logout. Loved lists stored the old, shared way are discarded at the first logout. | `context/PlayerContext.jsx`, `context/UIContext.jsx`, `context/radioSession.js`, `components/SettingsPanel.jsx`, `services/authService.js`, `services/paymentService.js`, `screens/SearchScreen.jsx` |
+| SR-51 | Every tab shares one stored login, so signing in as account B in one tab made another tab, still showing account A, act as B; signing out in one tab left others looking signed in. | Each tab listens for the stored login changing in another tab. If a different account signs in, or the login is removed, a signed-in tab ends its own session (player, app state and Radio cleared; the other tab's login left alone) and the login screen explains why. The same account signing in again elsewhere is ignored. Log Out and Delete Account use the same `endSession` routine, now in `UIContext.jsx`. | `context/UIContext.jsx`, `App.js`, `components/SettingsPanel.jsx`, `screens/LoginScreen.jsx`, `accountIdOf` in `services/authService.js` |
+| SR-52 | `backend/.env.example` listed only three settings, so a laptop set up from it had no `JWT_SECRET`, `JWT_EXPIRES_IN` or `SESSION_SECRET`, and every sign-in failed with "Something went wrong". | `.env.example` lists every setting with comments and placeholders, and the backend checks them before starting (`JWT_SECRET` at least 32 characters, `JWT_EXPIRES_IN` a valid length of time, Google settings only when Google sign-in is on), stopping with a list of exactly what to fix. | `backend/.env.example`, `backend/src/config/checkEnv.js`, `backend/src/index.js` |
 | SR-08 | A reserved name was only rejected at the last signup step, in a browser `alert()`. | The name step checks with the server before moving on and shows an in-app notice sheet. | `POST /api/auth/check-artist-name`, `MusicianOnboardingScreen.jsx`, `components/PonytailNotice.jsx` |
 
 ---

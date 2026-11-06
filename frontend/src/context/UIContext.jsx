@@ -1,7 +1,9 @@
-import { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import { getMyPlaylists } from "../services/playlistService";
 import { getUnreadCount } from "../services/messageService";
-import { getMyUploads } from "../services/authService";
+import { getMyUploads, logout, accountIdOf } from "../services/authService";
+import { usePlayer } from "./PlayerContext";
+import { clearRadioSession } from "./radioSession";
 
 const UIContext = createContext(null);
 
@@ -9,7 +11,11 @@ const UIContext = createContext(null);
 // component below the provider (e.g. SettingsPanel's logout confirm) can
 // navigate — like back to "login" — without prop-drilling it through every
 // screen's <ProfilePanel />/<SettingsPanel /> call site.
-export function UIProvider({ children, setScreen }) {
+// Screens where someone is signed in and using the app (not login or signup)
+const SIGNED_IN_SCREENS = ["home", "search", "mymusic", "radio", "bulletin"];
+
+export function UIProvider({ children, setScreen, screen }) {
+  const { resetPlayer } = usePlayer();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
@@ -143,6 +149,53 @@ export function UIProvider({ children, setScreen }) {
     setUnreadMessageCount(0);
   }, []);
 
+  // ── End the session: stop and empty the player, forget the Radio dial, reset
+  // every per-account value, and go back to the login screen
+  // (SECURITY_RISKS.md SR-44 to SR-46). `forgetLogin` also removes the stored
+  // login (normal logout); a tab that was signed out by another tab leaves it,
+  // because it now belongs to the other tab's account (SR-51). ──
+  const [signedOutNotice, setSignedOutNotice] = useState(null);
+  const endSession = useCallback(async ({ forgetLogin = true, notice = null } = {}) => {
+    resetPlayer();
+    if (forgetLogin) await logout();
+    clearRadioSession();
+    resetSession();
+    setSignedOutNotice(notice);
+    setScreen("login");
+  }, [resetPlayer, resetSession, setScreen]);
+
+  // ── One login per browser: every tab shares the stored login, so when
+  // another tab signs in to a different account or signs out, this tab would
+  // otherwise keep showing its old account while acting as the new one.
+  // Browsers tell other tabs when stored values change; end this tab's session
+  // and explain why (SECURITY_RISKS.md SR-51). Web only. ──
+  const screenRef = useRef(screen);
+  screenRef.current = screen;
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.addEventListener) return;
+    const onStorage = (e) => {
+      const tokenChanged = e.key === "ponytail_token" || e.key === null; // null: storage cleared
+      if (!tokenChanged) return;
+      // Same account signing in again elsewhere just refreshes the login: fine
+      if (accountIdOf(e.oldValue) === accountIdOf(e.newValue)) return;
+      if (!SIGNED_IN_SCREENS.includes(screenRef.current)) return;
+      endSession({
+        forgetLogin: false,
+        notice: e.newValue
+          ? {
+              title: "You were signed out here",
+              message: "Ponytail was signed in to a different account in another tab, and a browser can only use one account at a time. To use two accounts side by side, open the second one in a private window or another browser.",
+            }
+          : {
+              title: "You signed out in another tab",
+              message: "Sign in again to keep listening.",
+            },
+      });
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [endSession]);
+
   return (
     <UIContext.Provider value={{
       isProfileOpen, openProfile, closeProfile,
@@ -158,6 +211,7 @@ export function UIProvider({ children, setScreen }) {
       unreadMessageCount, refreshUnreadCount,
       tipTarget, openTip, closeTip,
       resetSession,
+      endSession, signedOutNotice, clearSignedOutNotice: () => setSignedOutNotice(null),
       setScreen,
     }}>
       {children}

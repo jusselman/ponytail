@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUI } from '../context/UIContext';
-import { usePlayer } from '../context/PlayerContext';
-import { clearRadioSession } from '../context/radioSession';
-import { logout, deleteAccount } from '../services/authService';
+import { deleteAccount } from '../services/authService';
 import EditProfilePanel from './EditProfilePanel';
 import ChangePasswordPanel from './ChangePasswordPanel';
 import HelpCenterPanel from './HelpCenterPanel';
@@ -148,12 +146,11 @@ const SettingIcon = ({ type, danger }) => {
 export default function SettingsPanel() {
   const {
     isSettingsOpen, closeSettings,
-    closeProfile, setUser, setProfileImage, setScreen, resetSession,
+    closeProfile, setUser, setProfileImage, setScreen, endSession: endSessionShared,
     user,
     myUploads, refreshMyUploads, updateMyUploadLocal, removeMyUploadLocal,
     myPlaylists, refreshMyPlaylists, addMyPlaylist,
   } = useUI();
-  const { resetPlayer } = usePlayer();
   const isArtist = !!user?.is_artist;
 
   // ── Library: which list is open, plus the full-width editors those lists
@@ -243,13 +240,9 @@ export default function SettingsPanel() {
   // app and the Radio dial, and removes this account's data stored on the
   // device, so a shared laptop (a demo) never shows the next person the
   // previous person's music, playlists or card (SECURITY_RISKS.md SR-44 to SR-46). ──
-  const endSession = async () => {
-    resetPlayer();
-    await logout();
-    clearRadioSession();
-    resetSession();
-    setScreen("login");
-  };
+  // Shared with the other-tab check in UIContext.jsx
+  const endSession = () => endSessionShared();
+
 
   const handleConfirmLogout = async () => {
     setIsLogoutConfirmOpen(false);

@@ -29,6 +29,9 @@ const accountIdFromToken = (token) => {
   }
 };
 
+// The account a stored login token belongs to (null if none or unreadable)
+export const accountIdOf = (token) => (token ? accountIdFromToken(token) : null);
+
 // Name for something stored on this device for the signed-in account only,
 // e.g. 'ponytail_loved' -> 'ponytail_loved:<account id>'. Null when signed out.
 // Keeps one person's saved data from showing up for the next person on a

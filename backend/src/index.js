@@ -1,3 +1,7 @@
+// Load backend/.env and check it before anything else runs (SECURITY_RISKS.md SR-52)
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+require('./config/checkEnv')();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -14,7 +18,6 @@ const tipRoutes = require('./routes/tipRoutes');
 const claimRoutes = require('./routes/claimRoutes');
 const path = require('path');
 const { guardUploadsStatic } = require('./utils/uploads');
-require('dotenv').config();
 
 const app = express();
 

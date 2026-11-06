@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { register, login } from '../services/authService';
 import logo from '../assets/images/ponyLogo.png';
 import PonytailNotice from '../components/PonytailNotice';
+import { useUI } from '../context/UIContext';
 
 // Google sign-in is switched off until email verification exists: without it,
 // signing in with Google could land someone in an account an attacker created
@@ -576,6 +577,13 @@ const LoginScreen = ({ setLocalScreen, setAppScreen, showNotice }) => {
 export default function AuthScreen({ setScreen: setAppScreen }) {
   const [localScreen, setLocalScreen] = useState("landing");
   const [notice, setNotice] = useState(null);   // in-app sheet instead of alert()
+
+  // Signed out because another tab switched accounts or signed out (SR-51)
+  const { signedOutNotice, clearSignedOutNotice } = useUI();
+  useEffect(() => {
+    if (signedOutNotice) { setNotice(signedOutNotice); clearSignedOutNotice(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signedOutNotice]);
 
   return (
     <>
