@@ -4,7 +4,7 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 
 **Current priority:** while Ponytail is an investor demo, fix the risks a person could see or run into while using the app first ("Visible in demo: Yes"). Risks that only matter once real users, real money or a public server are involved stay open here until we come back for them.
 
-**Last updated:** 2026-11-05 (one login per browser, startup settings check)
+**Last updated:** 2026-11-06 (Google sign-in and the session cookie removed)
 
 ## How to read this
 
@@ -29,8 +29,8 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 | SR-09 | No rate limiting on login, signup, claims or uploads | No | High | Fixed (shared store before scaling) |
 | SR-10 | Login messages could reveal which emails have accounts | No | Low | Fixed |
 | SR-11 | Login token stored unencrypted and valid for 7 days with no revocation | No | High | Open |
-| SR-12 | Session cookie not ready for production | No | Medium | Open |
-| SR-13 | Password hashes loaded by `SELECT * FROM users` | No | Low | Open |
+| SR-12 | Session cookie not ready for production | No | Medium | Fixed (removed) |
+| SR-13 | Password hashes loaded by `SELECT * FROM users` | No | Low | Open (one query left) |
 | SR-14 | Deleting an account leaves the artist's music and files online | Yes | High | Open |
 | SR-15 | Uploaded photos keep hidden metadata, possibly GPS location | No | Medium | Open |
 | SR-16 | Rejected uploads stay on disk; no storage limits | No | Medium | Open |
@@ -45,14 +45,14 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 | SR-29 | Signed-out search and catalog routes run heavy queries with only the flood guard | No | Medium | Open |
 | SR-30 | Password reset not built yet; a real reset flow needs its own protections | No | Medium | Open |
 | SR-31 | Login takes longer for emails that exist | No | Low | Fixed |
-| SR-32 | "Continue with Google" leads to a dead page, and puts the login token in the address | No (hidden) | High | Switched off; rebuild with SR-36 |
+| SR-32 | "Continue with Google" leads to a dead page, and puts the login token in the address | — | — | Retired (Google sign-in removed) |
 | SR-33 | Emails are case-sensitive: "Josh@" and "josh@" are different accounts | Yes | Medium | Fixed |
 | SR-34 | Password sign-in on a Google account gives "Something went wrong" and reveals the account | Yes | Medium | Fixed |
 | SR-35 | Usernames were built from the email address and shown publicly | Yes | Medium | Fixed for new accounts |
-| SR-36 | No email verification; Google sign-in joins any account with the same email | No | High | Open |
+| SR-36 | No email verification | No | Medium | Open |
 | SR-37 | Deleting an account doesn't ask for the password | No | Medium | Open |
 | SR-38 | The server doesn't check email format or password length at signup | No | Medium | Open (usernames now checked) |
-| SR-39 | Google sign-in has no protection against forged sign-in requests | No | Medium | Open |
+| SR-39 | Google sign-in has no protection against forged sign-in requests | — | — | Retired (Google sign-in removed) |
 | SR-40 | Duplicate-email race returns the wrong message | No | Low | Open |
 | SR-41 | No security emails (new sign-in, password changed) | No | Low | Roadmap |
 | SR-42 | Usernames were case-sensitive: @Josh and @josh could be different people | Yes | Medium | Fixed |
@@ -91,7 +91,7 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 ### SR-11: Login token storage and lifetime
 - **What:** the login token is kept in AsyncStorage, which is unencrypted on the phone and becomes `localStorage` on web, so any script running on the page can read it. It lasts 7 days and can't be cancelled: logging out only deletes the app's copy, and neither logging out, changing the password nor deleting the account stops a copied token from working until it expires. It also stays in browser storage after the tab is closed (the app ignores it and always opens on the login screen, but it can still be copied out and used).
 - **Why it isn't visible in the demo:** nothing on screen changes; it only matters once someone steals or copies a token.
-- **Web vs phone:** `expo-secure-store` covers iOS (Keychain) and Android (Keystore) only; it doesn't work on web, and the demo runs in a browser. On web the safer equivalent is an `httpOnly` cookie, which page scripts can't read (it needs `sameSite` settings and CSRF protection, and goes with SR-12).
+- **Web vs phone:** `expo-secure-store` covers iOS (Keychain) and Android (Keystore) only; it doesn't work on web, and the demo runs in a browser. On web the safer equivalent is an `httpOnly` cookie, which page scripts can't read (it needs `secure`, `httpOnly` and `sameSite` settings plus CSRF protection; see the note in SR-12).
 - **Where:** `frontend/src/services/authService.js` (`ponytail_token`) and the direct reads listed in SR-49; `JWT_EXPIRES_IN=7d` in `backend/.env`; `generateToken` in `controllers/authController.js`; `middleware/authMiddleware.js`.
 - **Fix, in steps:**
   1. *Quick interim:* add `users.token_version`, put it in the token, check it in `requireAuth`, and bump it on password change, "log out everywhere" and account deletion. That gives instant revocation without new tables.
@@ -99,13 +99,14 @@ A running list of every known security and privacy risk in Ponytail: what it is,
   3. *Storage:* `expo-secure-store` in the native apps, an `httpOnly` cookie on web, all behind one token helper (SR-49).
 
 ### SR-12: Session cookie not ready for production
-- **What:** `express-session` runs with defaults. The cookie isn't marked `secure`, and sessions live in server memory, which loses them on restart and leaks memory over time. Sessions only seem to be needed for the Google sign-in handshake.
+- **Fixed 2026-11-06 by removal:** sessions were only used by Google sign-in, which was removed (SR-32). `express-session`, `cookie-parser` and `passport-google-oauth20` are uninstalled, `passport.session()` and `serializeUser`/`deserializeUser` are gone, `SESSION_SECRET` is no longer needed, and CORS no longer allows credentials. The API sets no cookies at all; sign-in uses the token in the `Authorization` header. If cookies come back later (for example the `httpOnly` login cookie in SR-11), set `secure`, `httpOnly` and `sameSite`, and add CSRF protection.
+- **Was:** `express-session` runs with defaults. The cookie isn't marked `secure`, and sessions live in server memory, which loses them on restart and leaks memory over time. Sessions only seem to be needed for the Google sign-in handshake.
 - **Where:** `backend/src/index.js`.
 - **Fix:** limit sessions to the Google OAuth routes, set `cookie: { secure: true, httpOnly: true, sameSite: 'lax' }` in production, and use a Postgres-backed session store (`connect-pg-simple`).
 
 ### SR-13: Password hashes loaded unnecessarily
-- **What:** three queries use `SELECT * FROM users`, which loads `password_hash` along with everything else. Today it isn't sent to the app, but one careless `res.json(user)` would leak it.
-- **Where:** `backend/src/config/passport.js` (local and Google strategies, `deserializeUser`).
+- **What:** the sign-in check uses `SELECT * FROM users`, which loads `password_hash` along with everything else and passes the whole row on as the signed-in user. Today it isn't sent to the app, but one careless `res.json(user)` would leak it. (The Google strategy and `deserializeUser`, which did the same, were removed with Google sign-in.)
+- **Where:** local strategy in `backend/src/config/passport.js`.
 - **Fix:** select only the columns each query needs, and load `password_hash` only in the password check.
 
 ### SR-14: Deleting an account leaves the artist's music online
@@ -144,6 +145,7 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 The original item 3 (SR-10, different login messages) is not visible today, but the review found the account problems below. SR-32 to SR-35 can be seen or hit while using the app.
 
 ### SR-32: Google sign-in is a dead end, and exposes the login token
+- **Retired 2026-11-06: Google sign-in removed.** The buttons, the Google strategy, both `/api/auth/google` routes, the Google settings and the `passport-google-oauth20` package are gone; the routes return 404. If the board wants it back, rebuild it after email verification (SR-36) using the notes below, with OAuth `state`/PKCE (old SR-39), a single-use code instead of a token in the address, and the username step for new Google accounts. Accounts created earlier with Google have no password and can't sign in any more (see SR-34).
 - **Switched off 2026-10-31:** the three "Continue with Google" buttons are hidden (`GOOGLE_SIGNIN_ENABLED` in `LoginScreen.jsx`), and the server's Google routes answer 404 and the Google strategy isn't loaded unless `GOOGLE_SIGNIN_ENABLED=true` is set in `backend/.env`. Rebuild it together with SR-36, using the fix below, and give Google sign-ups the username step too.
 - **What:** "Continue with Google" (three buttons on the login screens) sends people through Google, then back to `http://localhost:19006/auth/google/success?token=...`. The app now runs on port 8081 and nothing handles that address, so the person lands on a browser error page and isn't signed in. The redirect also puts the login token in the address itself, where it's kept in browser history, server logs and anything the page links to.
 - **Where:** `GET /api/auth/google/callback` in `backend/src/routes/authRoutes.js`; Google buttons in `frontend/src/screens/LoginScreen.jsx`.
@@ -158,6 +160,7 @@ The original item 3 (SR-10, different login messages) is not visible today, but 
 
 ### SR-34: Password sign-in on a Google account
 - **Fixed 2026-10-31:** see the Fixed table below.
+- **Note 2026-11-06:** with Google sign-in removed, any account created through Google has no password and no way to sign in. Find them with `SELECT username, email FROM users WHERE password_hash IS NULL;` and delete them, or give the owner a password once password reset (SR-30) exists.
 - **What:** accounts created with Google have no password. Trying to sign in to one with a password crashes the password check (`bcrypt.compare` with no hash), so the server answers 500 and the app shows "Something went wrong". Because only a real Google account produces that error, it also tells an attacker the email is registered, whatever the login messages say.
 - **Where:** local strategy in `backend/src/config/passport.js`.
 - **Fix:** in one pass with SR-10 and SR-31: treat a missing password like a wrong one; one message, "Email or password is incorrect"; run the same bcrypt check against a dummy hash when the email isn't found or has no password, so every failure takes the same time.
@@ -168,15 +171,15 @@ The original item 3 (SR-10, different login messages) is not visible today, but 
 - **Where:** `handleFinishSignup` in `MusicianOnboardingScreen.jsx` and `OnboardingScreen.jsx`; `registerFromEmail` in `services/authService.js`; Google sign-in in `config/passport.js` does the same.
 - **Fix:** let people choose a username at signup (a step with a suggestion and a live "available" check), or build it from the artist name for musicians. Run new usernames through the same artist-name check as display names, so nobody can take @radiohead. Existing accounts keep theirs; offer a one-time username change in Edit Profile.
 
-### SR-36: No email verification; Google joins accounts by email
-- **What:** nothing checks that someone owns the email they sign up with. Combined with Google sign-in, which logs into whichever account has the same email, that enables account pre-hijacking: an attacker signs up with `victim@gmail.com` and a password of their choosing; later the real owner taps "Continue with Google", lands in the attacker's account and starts using it, while the attacker can still sign in with the password and see everything. It also means people can sign up with addresses that aren't theirs, and that a future password reset (SR-30) would send links to unverified addresses.
-- **Where:** `register` in `controllers/authController.js`; Google strategy in `config/passport.js`.
-- **Fix:** send a verification link at signup and mark `email_verified`; limit unverified accounts (no tips, uploads or messages); only join a Google sign-in to an existing account if that account's email is verified, otherwise ask for its password first; when Google joins an unverified account, remove the password and sign out other sessions (needs SR-11). Once verification exists, signup can answer "check your inbox" for every email, which also retires SR-27.
+### SR-36: No email verification
+- **What:** nothing checks that someone owns the email they sign up with, so people can sign up with addresses that aren't theirs (blocking the real owner from signing up), and a future password reset (SR-30) would send links to unverified addresses. (With Google sign-in this was worse, allowing account pre-hijacking; Google sign-in has been removed, see SR-32.)
+- **Where:** `register` in `controllers/authController.js`.
+- **Fix:** send a verification link at signup and mark `email_verified`; limit unverified accounts (no tips, uploads or messages); let the real owner of an email reclaim it from an unverified account. Once verification exists, signup can answer "check your inbox" for every email, which also retires SR-27. If Google sign-in returns, only join it to an account whose email is verified.
 
 ### SR-37: Deleting an account without the password
 - **What:** `DELETE /api/auth/account` only needs a valid login token. Anyone holding a stolen token (SR-11), or using an unlocked laptop, can wipe the account, its playlists and its music.
 - **Where:** `DELETE /api/auth/account` in `authRoutes.js`; `frontend/src/components/DeleteAccountModal.jsx`.
-- **Fix:** ask for the current password in the delete modal and check it on the server (for Google-only accounts, re-confirm with Google or an emailed code).
+- **Fix:** ask for the current password in the delete modal and check it on the server.
 
 ### SR-38: Signup details aren't checked by the server
 - **What:** the 8-character password minimum and the email format exist only in the app's screens. Calling the API directly can create an account with a one-letter password or a malformed email. bcrypt also silently ignores anything past 72 bytes of a password. (Usernames are now checked on the server, see SR-35.)
@@ -184,6 +187,7 @@ The original item 3 (SR-10, different login messages) is not visible today, but 
 - **Fix:** validate on the server: email format and length, password 8 to 72 bytes (optionally rejecting known breached passwords), and a length cap on display names.
 
 ### SR-39: Forged Google sign-in requests
+- **Retired 2026-11-06:** Google sign-in was removed (SR-32). Kept here as a requirement if it's ever rebuilt.
 - **What:** the Google sign-in flow doesn't use OAuth's `state` check, so a malicious page can complete a Google sign-in for the attacker's own account inside a victim's browser. The victim then uses Ponytail signed in as the attacker, and anything they upload, message or tip lands in the attacker's account.
 - **Where:** `GET /api/auth/google` and `/google/callback` in `authRoutes.js`.
 - **Fix:** turn on `state` (passport-google-oauth20 supports it) or PKCE, using a short-lived cookie rather than server sessions.

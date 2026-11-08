@@ -1201,29 +1201,6 @@ router.post('/login',
 // Get current user (protected route)
 router.get('/me', requireAuth, getMe);
 
-// Google OAuth
-// Google sign-in is off unless GOOGLE_SIGNIN_ENABLED=true (see config/passport.js)
-const googleOnly = (req, res, next) =>
-  passport.googleSigninEnabled ? next() : res.status(404).json({ error: 'Google sign-in is not available yet.' });
-
-router.get('/google',
-  googleOnly,
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-router.get('/google/callback',
-  googleOnly,
-  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
-  (req, res) => {
-    const token = jwt.sign(
-      { id: req.user.id, email: req.user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
-    res.redirect(`http://localhost:19006/auth/google/success?token=${token}`);
-  }
-);
-
 // Update profile — favorite_artists (listener taste picker) plus, now, the
 // same fields the musician onboarding flow collects (display_name/artist name,
 // location, genre, subgenre, mood, sound_description), so EditProfilePanel can
@@ -1352,8 +1329,8 @@ router.delete('/account', requireAuth, async (req, res) => {
 
 // Change password — works the same for a listener or an artist account, requires
 // the current password to verify identity before setting a new one. A Google-only
-// account (password_hash never set at signup — see the Google strategy in
-// config/passport.js) gets a clear error instead of a confusing bcrypt.compare
+// account (made with the old Google sign-in, now removed, so password_hash was
+// never set) gets a clear error instead of a confusing bcrypt.compare
 // failure against a null hash.
 router.put('/change-password', requireAuth, limits.changePassword, async (req, res) => {
   const { currentPassword, newPassword } = req.body;

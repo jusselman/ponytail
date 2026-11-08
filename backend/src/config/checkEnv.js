@@ -11,7 +11,6 @@ module.exports = function checkEnv() {
   const missing = (name, why) => problems.push(`${name} is missing (${why})`);
 
   if (!env.DATABASE_URL) missing('DATABASE_URL', 'the database connection');
-  if (!env.SESSION_SECRET) missing('SESSION_SECRET', 'used by the session cookie');
 
   if (!env.JWT_SECRET) missing('JWT_SECRET', 'signs login tokens');
   else if (env.JWT_SECRET.length < 32) problems.push('JWT_SECRET is too short: use at least 32 random characters');
@@ -20,12 +19,6 @@ module.exports = function checkEnv() {
   else {
     try { jwt.sign({}, 'check', { expiresIn: env.JWT_EXPIRES_IN }); }
     catch { problems.push(`JWT_EXPIRES_IN "${env.JWT_EXPIRES_IN}" isn't a valid length of time: use something like 7d, 12h or 30m`); }
-  }
-
-  if (env.GOOGLE_SIGNIN_ENABLED === 'true') {
-    ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_CALLBACK_URL'].forEach((name) => {
-      if (!env[name]) missing(name, 'needed because GOOGLE_SIGNIN_ENABLED=true');
-    });
   }
 
   if (problems.length) {

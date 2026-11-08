@@ -5,8 +5,6 @@ require('./config/checkEnv')();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
 const passport = require('./config/passport');
 const authRoutes = require('./routes/authRoutes');
 const playlistRoutes = require('./routes/playlistRoutes');
@@ -37,19 +35,13 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 app.use(cors({
+  // Sign-in uses a token in the Authorization header, not cookies, so the
+  // browser is never told to send cookies to the API (SECURITY_RISKS.md SR-12)
   origin: ['http://localhost:8081', 'http://localhost:19006'],
-  credentials: true,
 }));
 app.use(express.json());
 app.use('/api', require('./middleware/rateLimits').general);
-app.use(cookieParser());
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-}));
 app.use(passport.initialize());
-app.use(passport.session());
 
 // ── Static assets ──
 app.use('/uploads', guardUploadsStatic, express.static(path.join(__dirname, '../assets/uploads')));

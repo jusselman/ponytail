@@ -4,12 +4,6 @@ import logo from '../assets/images/ponyLogo.png';
 import PonytailNotice from '../components/PonytailNotice';
 import { useUI } from '../context/UIContext';
 
-// Google sign-in is switched off until email verification exists: without it,
-// signing in with Google could land someone in an account an attacker created
-// with their email (SECURITY_RISKS.md SR-32, SR-36). The server's Google routes
-// are off too unless GOOGLE_SIGNIN_ENABLED=true is set in backend/.env.
-const GOOGLE_SIGNIN_ENABLED = false;
-const GOOGLE_SIGNIN_URL = 'http://localhost:5000/api/auth/google';
 
 // ─── Colors & Styles ──────────────────────────────────────────────────────────
 const colors = {
@@ -174,15 +168,6 @@ const baseStyles = {
   },
 };
 
-// ─── Google Icon ──────────────────────────────────────────────────────────────
-const GoogleIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 48 48" style={{ marginRight: 10 }}>
-    <path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.84l6.08-6.08C34.36 3.09 29.44 1 24 1 14.82 1 7.01 6.48 3.58 14.22l7.09 5.51C12.3 13.59 17.67 9.5 24 9.5z"/>
-    <path fill="#4285F4" d="M46.52 24.5c0-1.64-.15-3.22-.42-4.75H24v9h12.68c-.55 2.97-2.2 5.48-4.68 7.17l7.18 5.57C43.36 37.36 46.52 31.36 46.52 24.5z"/>
-    <path fill="#FBBC05" d="M10.67 28.27A14.6 14.6 0 0 1 9.5 24c0-1.48.25-2.91.67-4.27L3.08 14.22A23.93 23.93 0 0 0 1 24c0 3.86.92 7.51 2.58 10.72l7.09-6.45z"/>
-    <path fill="#34A853" d="M24 47c5.44 0 10.01-1.8 13.35-4.88l-7.18-5.57C28.38 38.1 26.3 38.5 24 38.5c-6.33 0-11.7-4.09-13.33-9.73l-7.09 5.51C7.01 41.52 14.82 47 24 47z"/>
-  </svg>
-);
 
 // ─── Reusable Input ───────────────────────────────────────────────────────────
 const PonytailInput = ({ name, focused, onFocus, onBlur, ...props }) => (
@@ -237,26 +222,6 @@ const LandingScreen = ({ setLocalScreen, setAppScreen }) => {
           Sign up
         </button>
 
-        {GOOGLE_SIGNIN_ENABLED && (<>
-<button
-          style={{
-            width: "100%", padding: "14px 16px", borderRadius: "50px",
-            border: `1.5px solid ${hovered === "google" ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.2)"}`,
-            color: colors.text, fontSize: "15px", fontWeight: "500", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.2s ease",
-            transform: hovered === "google" ? "translateY(-1px)" : "translateY(0)",
-            backgroundColor: hovered === "google" ? "rgba(255,255,255,0.05)" : "transparent",
-            fontFamily: "'Kanit', sans-serif",
-          }}
-          onMouseEnter={() => setHovered("google")}
-          onMouseLeave={() => setHovered(null)}
-          onClick={() => window.location.href = GOOGLE_SIGNIN_URL}
-        >
-          <GoogleIcon />
-          Continue with Google
-        </button>
-</>)}
 
         <button
           style={{
@@ -416,32 +381,6 @@ const SignupScreen = ({ setLocalScreen, showNotice }) => {
         >
           Create account
         </button>
-{GOOGLE_SIGNIN_ENABLED && (<>
-
-        <div style={baseStyles.divider}>
-          <div style={baseStyles.dividerLine}/>
-          <span style={baseStyles.dividerText}>or</span>
-          <div style={baseStyles.dividerLine}/>
-        </div>
-
-        <button
-          style={{
-            width: "100%", padding: "14px 16px", borderRadius: "50px",
-            border: `1.5px solid ${hovered === "google" ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.2)"}`,
-            color: colors.text, fontSize: "15px", fontWeight: "500", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.2s ease",
-            backgroundColor: hovered === "google" ? "rgba(255,255,255,0.05)" : "transparent",
-            fontFamily: "'Kanit', sans-serif",
-          }}
-          onMouseEnter={() => setHovered("google")}
-          onMouseLeave={() => setHovered(null)}
-          onClick={() => window.location.href = GOOGLE_SIGNIN_URL}
-        >
-          <GoogleIcon />
-          Continue with Google
-        </button>
-</>)}
 
         <div style={baseStyles.switchText}>
           Already have an account?{" "}
@@ -537,32 +476,6 @@ const LoginScreen = ({ setLocalScreen, setAppScreen, showNotice }) => {
         >
           Log in
         </button>
-{GOOGLE_SIGNIN_ENABLED && (<>
-
-        <div style={baseStyles.divider}>
-          <div style={baseStyles.dividerLine}/>
-          <span style={baseStyles.dividerText}>or</span>
-          <div style={baseStyles.dividerLine}/>
-        </div>
-
-        <button
-          style={{
-            width: "100%", padding: "14px 16px", borderRadius: "50px",
-            border: `1.5px solid ${hovered === "google" ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.2)"}`,
-            color: colors.text, fontSize: "15px", fontWeight: "500", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.2s ease",
-            backgroundColor: hovered === "google" ? "rgba(255,255,255,0.05)" : "transparent",
-            fontFamily: "'Kanit', sans-serif",
-          }}
-          onMouseEnter={() => setHovered("google")}
-          onMouseLeave={() => setHovered(null)}
-          onClick={() => window.location.href = GOOGLE_SIGNIN_URL}
-        >
-          <GoogleIcon />
-          Continue with Google
-        </button>
-</>)}
 
         <div style={baseStyles.switchText}>
           Don't have an account?{" "}
