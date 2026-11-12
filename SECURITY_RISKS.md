@@ -4,7 +4,7 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 
 **Current priority:** while Ponytail is an investor demo, fix the risks a person could see or run into while using the app first ("Visible in demo: Yes"). Risks that only matter once real users, real money or a public server are involved stay open here until we come back for them.
 
-**Last updated:** 2026-11-06 (Google sign-in and the session cookie removed)
+**Last updated:** 2026-11-12 (password hashes kept out of every response)
 
 ## How to read this
 
@@ -30,7 +30,7 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 | SR-10 | Login messages could reveal which emails have accounts | No | Low | Fixed |
 | SR-11 | Login token stored unencrypted and valid for 7 days with no revocation | No | High | Open |
 | SR-12 | Session cookie not ready for production | No | Medium | Fixed (removed) |
-| SR-13 | Password hashes loaded by `SELECT * FROM users` | No | Low | Open (one query left) |
+| SR-13 | Password hashes loaded by `SELECT * FROM users` | No | Low | Fixed |
 | SR-14 | Deleting an account leaves the artist's music and files online | Yes | High | Open |
 | SR-15 | Uploaded photos keep hidden metadata, possibly GPS location | No | Medium | Open |
 | SR-16 | Rejected uploads stay on disk; no storage limits | No | Medium | Open |
@@ -69,6 +69,11 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 | SR-53 | No sign-out after inactivity on a shared device | No | Low | Open |
 | SR-54 | Signed-in API responses can be kept in the browser cache | No | Low | Open |
 | SR-55 | Unused signup form logs the new user's details to the console | No | Low | Open |
+| SR-56 | Backend reachable by anyone on the same Wi-Fi | Yes | Medium | Fixed |
+| SR-57 | Whole seed music catalog downloadable without signing in | No (laptop only) | High | Contained for the demo; fix before deploying |
+| SR-58 | Seed media folders serve any file type | No | Low | Fixed |
+| SR-59 | Postgres network exposure not confirmed | No | Low | Resolved (localhost only) |
+| SR-60 | Public catalog routes accept any `limit` | No | Low | Open |
 | SR-25 | Listeners can use catalog artist names | Yes | Low | Accepted |
 | SR-26 | Usernames made from email get digits added when taken | — | — | Retired (people choose usernames now, SR-35) |
 | SR-27 | Email already in use is only reported at the end of signup | Yes | Low | Accepted |
@@ -105,6 +110,7 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 - **Fix:** limit sessions to the Google OAuth routes, set `cookie: { secure: true, httpOnly: true, sameSite: 'lax' }` in production, and use a Postgres-backed session store (`connect-pg-simple`).
 
 ### SR-13: Password hashes loaded unnecessarily
+- **Fixed 2026-11-12:** see the Fixed table below.
 - **What:** the sign-in check uses `SELECT * FROM users`, which loads `password_hash` along with everything else and passes the whole row on as the signed-in user. Today it isn't sent to the app, but one careless `res.json(user)` would leak it. (The Google strategy and `deserializeUser`, which did the same, were removed with Google sign-in.)
 - **Where:** local strategy in `backend/src/config/passport.js`.
 - **Fix:** select only the columns each query needs, and load `password_hash` only in the password check.
@@ -269,6 +275,46 @@ The original item 4 is SR-11 above. Reviewing it found three problems that show 
 - **What:** the unused `SignupScreen` in `LoginScreen.jsx` logs the new user, including the email, to the browser console.
 - **Fix:** remove that unused form (the real signups are `OnboardingScreen.jsx` and `MusicianOnboardingScreen.jsx`), or at least the log line.
 
+## Server setup (item 5 follow-up, 2026-11-07)
+
+Searched every tracked file and the full git history for keys, Google secrets and database passwords: none found (the only match was the placeholder in `backend/.env.example`). With cookies removed (SR-12), cross-site request forgery doesn't apply: the API only accepts the login token in a header, which other sites can't make a browser send.
+
+### SR-56: Backend reachable on the local network
+- **Fixed 2026-11-07:** the backend listens on `127.0.0.1` unless `HOST` is set in `backend/.env`; the startup line says which. For phone testing over Wi-Fi, set `HOST=0.0.0.0`, restart, and clear it afterwards (and only on a trusted network). Phone testing also needs the app to stop pointing at `localhost` (SR-18).
+- **What:** `app.listen(PORT)` listens on every network interface, so on shared Wi-Fi (a pitch venue, co-working space, conference) anyone who finds the laptop's address can use the API at port 5000 directly, including the open media folders in SR-57. The demo runs entirely on the laptop and doesn't need this.
+- **Where:** `backend/src/index.js`.
+- **Fix:** listen on `127.0.0.1` by default, with a `HOST` setting to opt in to the network when testing on a phone. In production the server sits behind HTTPS and a proxy (SR-18).
+
+### SR-57: Seed catalog downloadable without signing in
+- **Contained for the demo 2026-11-07:** with SR-56, only the laptop can reach it. Still open for any deployment or `HOST=0.0.0.0` session.
+- **What:** `/audio` and `/covers` serve the seed catalog (17,153 MP3s and their cover art, including commercial recordings) to anyone who can reach the server, with no sign-in, because a browser's audio player can't attach a login token. Anyone on the same network (SR-56), or on the internet once deployed, could download the whole library. That's a music-licensing exposure as well as a bandwidth one, and a question investors may ask.
+- **Where:** static routes in `backend/src/index.js`; `backend/assets/dev_seed/`.
+- **Fix:** for the demo, SR-56 keeps it on the laptop. Before any deployment: confirm the rights to every recording served (or serve only licensed or artist-uploaded music, plus short previews), and serve audio through signed links that expire after a few minutes, from object storage behind a CDN (SR-17).
+
+### SR-58: Seed media folders serve any file
+- **Fixed 2026-11-07:** `/covers`, `/audio` and `/vinyl` now use the same image/audio-only check and sandbox headers as `/uploads` (`guardUploadsStatic`). The stray `covers/desktop.ini` is no longer served and can be deleted.
+- **What:** `/uploads` only serves image and audio extensions (SR-01), but `/covers`, `/audio` and `/vinyl` serve any file in those folders; there's a stray Windows `desktop.ini` in `covers`. Hidden files like `.DS_Store` are already refused.
+- **Fix:** put the same extension check and sandbox headers (`guardUploadsStatic`) in front of all media folders, and delete the stray files.
+
+### SR-59: Postgres network exposure
+- **Resolved 2026-11-07:** `SHOW listen_addresses;` returns `localhost` on the development laptop. Re-check on any new machine.
+- **What:** not checked yet: if the database listens beyond the laptop, anyone on the network could try to connect to it directly.
+- **Fix:** confirm `SHOW listen_addresses;` returns `localhost` (Homebrew's default). In production, use a managed database reachable only from the app servers (SR-22).
+
+## Data exposure review (item 6 follow-up, 2026-11-12)
+
+Checked the known ways around "never send the password hash" (SR-13), all clear:
+- **SQL injection** (the usual way password tables get dumped): every value a person sends goes in as a query parameter. The few queries assembled from text (`services/geo.js`, `/tracks/similar`, places search, Bulletin's block filter) only join fixed text and numbered placeholders written in the code.
+- **Error messages quoting data:** no route sends raw database errors to the app; the final error handler returns a generic message (SR-03).
+- **Disguised data:** no query renames the hash or packs rows into JSON text (`row_to_json`, `json_agg`), and nothing is sent outside `res.json`, so the server-wide rule always applies.
+- **Mass assignment** (sending extra fields like `artist_verified: true`): no route saves a request body wholesale; signup and profile updates only take named fields.
+- **Other people's records by ID:** messages check the reader is in the conversation; Bulletin deletes, playlist changes, radio station changes and track edits all check ownership; claims and received tips only ever return the requester's own.
+
+### SR-60: Unbounded `limit` on catalog routes
+- **What:** `/tracks/random`, `/albums/random`, `/tracks/new-releases`, `/tracks/suggested` and `/tracks/similar` pass `limit` straight to the database. `limit=1000000` returns the whole catalog list in one request (easy scraping; SR-29), and `limit=abc` causes a server error.
+- **Where:** `backend/src/routes/authRoutes.js`.
+- **Fix:** one helper that turns `limit` into a whole number between 1 and 50, defaulting when it's missing or invalid.
+
 ---
 
 ## Roadmap (before or soon after public launch)
@@ -277,7 +323,7 @@ The original item 4 is SR-11 above. Reviewing it found three problems that show 
 Everything in `/uploads` is public, so any listener can save an artist's audio file. Move uploads to object storage (S3 or Cloudflare R2) behind a CDN, serve audio through signed links that expire after a few minutes, and consider streaming formats (HLS) that are harder to rip.
 
 ### SR-18: Hard-coded server addresses, no HTTPS
-Upload URLs saved in the database (`http://localhost:5000/uploads/...`) and the frontend's `API_URL` are hard-coded, and CORS only allows localhost. In production every connection must use HTTPS. Store relative paths in the database, read server addresses from environment config, and set CORS origins per environment.
+Upload URLs saved in the database (`http://localhost:5000/uploads/...`) and the server address in the app are hard-coded (32 times across 17 files in `frontend/src`), and CORS only allows localhost. This also blocks phone testing: on a phone, `localhost` means the phone itself. In production every connection must use HTTPS. Store relative paths in the database, read server addresses from environment config, and set CORS origins per environment.
 
 ### SR-19: Real payments
 Payments are mocked (`frontend/src/services/paymentService.js`). The current design is sound: the full card number never reaches the server. With real Stripe:
@@ -329,6 +375,7 @@ Turn on Dependabot or `npm audit` in CI, keep personal data out of logs, add err
 | SR-44, SR-45, SR-46 | On a shared laptop, logging out left the music playing and handed the next person the previous person's track, queue, recent plays, Radio stations, loved albums, saved card (brand, last four, expiry), playlists list and open panels. | Logout now runs one end-of-session routine: the player stops and empties (`resetPlayer`), every per-account value in the app resets (`resetSession`), the Radio dial cache is cleared (`context/radioSession.js`), and the token and saved card are removed. Loved albums and the saved card are stored per account (`accountKey` in `authService.js`), so another account on the same device never sees them; loved albums come back when their owner signs in again, while the card is forgotten at logout. Loved lists stored the old, shared way are discarded at the first logout. | `context/PlayerContext.jsx`, `context/UIContext.jsx`, `context/radioSession.js`, `components/SettingsPanel.jsx`, `services/authService.js`, `services/paymentService.js`, `screens/SearchScreen.jsx` |
 | SR-51 | Every tab shares one stored login, so signing in as account B in one tab made another tab, still showing account A, act as B; signing out in one tab left others looking signed in. | Each tab listens for the stored login changing in another tab. If a different account signs in, or the login is removed, a signed-in tab ends its own session (player, app state and Radio cleared; the other tab's login left alone) and the login screen explains why. The same account signing in again elsewhere is ignored. Log Out and Delete Account use the same `endSession` routine, now in `UIContext.jsx`. | `context/UIContext.jsx`, `App.js`, `components/SettingsPanel.jsx`, `screens/LoginScreen.jsx`, `accountIdOf` in `services/authService.js` |
 | SR-52 | `backend/.env.example` listed only three settings, so a laptop set up from it had no `JWT_SECRET`, `JWT_EXPIRES_IN` or `SESSION_SECRET`, and every sign-in failed with "Something went wrong". | `.env.example` lists every setting with comments and placeholders, and the backend checks them before starting (`JWT_SECRET` at least 32 characters, `JWT_EXPIRES_IN` a valid length of time, Google settings only when Google sign-in is on), stopping with a list of exactly what to fix. | `backend/.env.example`, `backend/src/config/checkEnv.js`, `backend/src/index.js` |
+| SR-13 | The sign-in check loaded the whole user row with `SELECT *`, including `password_hash`, and passed it on as the signed-in user, so one careless `res.json(user)` would have leaked the hash. | No `SELECT * FROM users` remains (the other two left with Google sign-in). Sign-in selects only the columns it needs and drops the hash after checking it, so the signed-in user never carries it. A server-wide JSON rule (`json replacer` in `index.js`) also removes any `password_hash` field from every response, however deeply nested. Checked: the other `RETURNING *` queries (messages, claims) go through field-picking functions; no route returns other users' emails or the hash; anonymous tippers stay hidden. | `backend/src/config/passport.js`, `backend/src/index.js` |
 | SR-08 | A reserved name was only rejected at the last signup step, in a browser `alert()`. | The name step checks with the server before moving on and shows an in-app notice sheet. | `POST /api/auth/check-artist-name`, `MusicianOnboardingScreen.jsx`, `components/PonytailNotice.jsx` |
 
 ---

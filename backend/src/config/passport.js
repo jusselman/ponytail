@@ -21,18 +21,22 @@ passport.use(new LocalStrategy(
   { usernameField: 'email' },
   async (email, password, done) => {
     try {
+      // Only the columns sign-in needs (SECURITY_RISKS.md SR-13)
       const result = await db.query(
-        'SELECT * FROM users WHERE lower(email) = $1',
+        `SELECT id, email, username, display_name, is_artist, artist_verified, password_hash
+         FROM users WHERE lower(email) = $1`,
         [normalizeEmail(email)]
       );
 
-      const user = result.rows[0];
-      const passwordMatch = await bcrypt.compare(String(password || ''), user?.password_hash || STAND_IN_HASH);
+      const row = result.rows[0];
+      const passwordMatch = await bcrypt.compare(String(password || ''), row?.password_hash || STAND_IN_HASH);
 
-      if (!user || !user.password_hash || !passwordMatch) {
+      if (!row || !row.password_hash || !passwordMatch) {
         return done(null, false, { message: LOGIN_FAILED });
       }
 
+      // The hash is only for the check above; the signed-in user never carries it
+      const { password_hash, ...user } = row;
       return done(null, user);
     } catch (err) {
       return done(err);

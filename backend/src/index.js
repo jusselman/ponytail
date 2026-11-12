@@ -19,6 +19,11 @@ const { guardUploadsStatic } = require('./utils/uploads');
 
 const app = express();
 
+// Safety net: whatever a route sends back, a password hash is never included,
+// even if a whole user row is passed to res.json by mistake (SECURITY_RISKS.md SR-13)
+const NEVER_SENT = new Set(['password_hash']);
+app.set('json replacer', (key, value) => (NEVER_SENT.has(key) ? undefined : value));
+
 // Behind a hosting proxy or load balancer (most production setups), set
 // TRUST_PROXY=1 so rate limits see each visitor's real address instead of the
 // proxy's. The value is the number of proxies in front of the app (usually 1).
@@ -44,10 +49,12 @@ app.use('/api', require('./middleware/rateLimits').general);
 app.use(passport.initialize());
 
 // ── Static assets ──
+// Every media folder only serves image and audio files, sandboxed so nothing in
+// them can run as a page (SECURITY_RISKS.md SR-01, SR-58)
 app.use('/uploads', guardUploadsStatic, express.static(path.join(__dirname, '../assets/uploads')));
-app.use('/covers', express.static(path.join(__dirname, '../assets/dev_seed/covers')));
-app.use('/audio', express.static(path.join(__dirname, '../assets/dev_seed/mp3')));
-app.use('/vinyl', express.static(path.join(__dirname, '../assets/dev_seed/VinylCases')));
+app.use('/covers', guardUploadsStatic, express.static(path.join(__dirname, '../assets/dev_seed/covers')));
+app.use('/audio', guardUploadsStatic, express.static(path.join(__dirname, '../assets/dev_seed/mp3')));
+app.use('/vinyl', guardUploadsStatic, express.static(path.join(__dirname, '../assets/dev_seed/VinylCases')));
 
 // ── Routes ──
 app.use('/api/auth', authRoutes);
@@ -82,6 +89,14 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: 'Something went wrong.' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Only this computer can reach the backend unless HOST says otherwise, so
+// nobody else on the same Wi-Fi can use the API or download the catalog
+// (SECURITY_RISKS.md SR-56, SR-57). To test on a phone over Wi-Fi, set
+// HOST=0.0.0.0 in backend/.env, restart, and set it back afterwards.
+const HOST = process.env.HOST || '127.0.0.1';
+app.listen(PORT, HOST, () => {
+  const reach = HOST === '127.0.0.1' || HOST === 'localhost'
+    ? 'this computer only'
+    : 'other devices on the network too (HOST in backend/.env)';
+  console.log(`Server running on port ${PORT}, reachable from ${reach}`);
 });
