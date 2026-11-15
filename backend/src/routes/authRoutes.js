@@ -18,6 +18,7 @@ const geo = require('../services/geo');
 const { isAllowed, safeFilename, verifyUploads, uploadPathFromUrl } = require('../utils/uploads');
 const { assertNameAvailable, effectiveName, sendNameError, verifiedAccountForArtist, NameError } = require('../services/artistIdentity');
 const { assertUsernameAvailable } = require('../services/usernames');
+const { cleanLine, cleanParagraph, LIMITS } = require('../utils/cleanText');
 
 // ── Ensure uploads directory exists ──
 const uploadDir = path.join(__dirname, '../../assets/uploads');
@@ -108,8 +109,9 @@ router.post(
       const audioFile = req.files?.audio?.[0];
       if (!audioFile) return res.status(400).json({ error: 'An audio file is required.' });
 
-      const { title, album } = req.body;
-      if (!title || !title.trim()) return res.status(400).json({ error: 'Title is required.' });
+      const title = cleanLine(req.body.title, LIMITS.trackTitle);
+      const album = cleanLine(req.body.album, LIMITS.album) || null;
+      if (!title) return res.status(400).json({ error: 'Title is required.' });
 
       const artistName = account.display_name || account.username;
       const uploadedAudioUrl = `http://localhost:5000/uploads/${audioFile.filename}`;
@@ -255,10 +257,12 @@ router.delete('/tracks/:id', requireAuth, async (req, res) => {
 // same pattern playlistRoutes.js uses for playlist covers.
 router.put('/tracks/:id', requireAuth, limits.uploads, upload.single('cover'), verifyUploads, async (req, res) => {
   const { id } = req.params;
-  const { title, album, genre } = req.body;
+  const { genre } = req.body;
+  const title = cleanLine(req.body.title, LIMITS.trackTitle);
+  const album = cleanLine(req.body.album, LIMITS.album) || null;
 
   try {
-    if (!title || !title.trim()) return res.status(400).json({ error: 'Title is required.' });
+    if (!title) return res.status(400).json({ error: 'Title is required.' });
 
     const ownCheck = await pool.query(
       `SELECT uploaded_cover_url FROM seed_tracks
@@ -1175,7 +1179,7 @@ router.post('/check-username', limits.nameCheck, async (req, res) => {
 // as register (services/artistIdentity.js). Artist names are public anyway, so
 // answering this reveals nothing private.
 router.post('/check-artist-name', limits.nameCheck, async (req, res) => {
-  const name = String(req.body?.name || '').trim().slice(0, 100);
+  const name = cleanLine(req.body?.name, LIMITS.displayName);
   if (!name) return res.status(400).json({ error: 'Please enter a name.' });
   try {
     await assertNameAvailable(name, { isArtist: true });
@@ -1215,8 +1219,13 @@ router.put('/update-profile', async (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const {
-      favorite_artists, display_name, location, genre, subgenre, mood, sound_description,
+      favorite_artists, genre, subgenre, mood, sound_description,
     } = req.body;
+    // One line, no hidden characters, length-capped (SR-61, SR-62)
+    const display_name = req.body.display_name === undefined ? undefined
+      : (req.body.display_name === null ? null : cleanLine(req.body.display_name, LIMITS.displayName));
+    const location = req.body.location === undefined ? undefined
+      : (req.body.location === null ? null : cleanLine(req.body.location, LIMITS.location));
 
     const fields = [];
     const values = [];

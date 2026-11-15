@@ -800,6 +800,7 @@ export default function PlaylistPanel({ isOpen, onClose, onCreated, playlist }) 
                   onChange={(e) => setName(e.target.value.slice(0, MAX_NAME_LENGTH))}
                   onKeyDown={handleKeyDown}
                   placeholder="My Playlist"
+                  maxLength={100}
                   disabled={submitting}
                   style={{
                     width: "100%", padding: "12px 14px",
@@ -824,6 +825,7 @@ export default function PlaylistPanel({ isOpen, onClose, onCreated, playlist }) 
                   value={description}
                   onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))}
                   placeholder="Give listeners a sense of the vibe"
+                  maxLength={500}
                   disabled={submitting}
                   rows={3}
                   style={{

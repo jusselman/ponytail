@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { cleanDeep } = require('./cleanText');
 const path = require('path');
 
 // ── Upload safety ──
@@ -120,6 +121,10 @@ const removeQuietly = (filePath) => fs.unlink(filePath, () => {});
 // saved file; if any one is not what it claims to be, deletes all of them and
 // answers 400 so nothing half-saved is left behind.
 const verifyUploads = (req, res, next) => {
+  // Upload forms are read by multer after index.js's text cleaning has run, so
+  // clean their text fields here (SECURITY_RISKS.md SR-61)
+  if (req.body && typeof req.body === 'object') cleanDeep(req.body);
+
   const files = [
     ...(req.file ? [req.file] : []),
     ...(Array.isArray(req.files) ? req.files : Object.values(req.files || {}).flat()),

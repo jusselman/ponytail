@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { cityLabel } = require('../services/geo');
 const { normalizeEmail } = require('../utils/email');
+const { cleanLine, LIMITS } = require('../utils/cleanText');
 const { assertUsernameAvailable, normalizeUsername } = require('../services/usernames');
 const { assertNameAvailable, effectiveName, sendNameError, NameError } = require('../services/artistIdentity');
 
@@ -26,14 +27,17 @@ const register = async (req, res) => {
   // seed both the personalized radio station and the track upload endpoint, which
   // stamps every new upload with these same values instead of asking per track.
   const {
-    email: rawEmail, username: rawUsername, password, display_name, is_artist,
-    location, location_place_id, genre, subgenre, mood, sound_description,
+    email: rawEmail, username: rawUsername, password, display_name: rawDisplayName, is_artist,
+    location: rawLocation, location_place_id, genre, subgenre, mood, sound_description,
   } = req.body;
 
   const email = normalizeEmail(rawEmail);
   // Usernames are chosen at signup, stored in lower case and compared ignoring
   // capitals (SECURITY_RISKS.md SR-35, SR-42); the rules are in services/usernames.js
   const username = normalizeUsername(rawUsername);
+  // Names and places: one line, no hidden characters, length-capped (SR-61, SR-62)
+  const display_name = rawDisplayName == null ? null : (cleanLine(rawDisplayName, LIMITS.displayName) || null);
+  const location = rawLocation == null ? null : (cleanLine(rawLocation, LIMITS.location) || null);
 
   try {
     // Check if email already exists

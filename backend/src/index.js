@@ -45,6 +45,8 @@ app.use(cors({
   origin: ['http://localhost:8081', 'http://localhost:19006'],
 }));
 app.use(express.json());
+// Strip invisible direction and control characters from everything sent (SR-61)
+app.use(require('./utils/cleanText').cleanRequestBody);
 app.use('/api', require('./middleware/rateLimits').general);
 app.use(passport.initialize());
 

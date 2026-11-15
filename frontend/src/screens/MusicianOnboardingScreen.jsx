@@ -292,6 +292,7 @@ const ArtistNameStep = ({ artistName, setArtistName, onNext, onNameProblem }) =>
         name="artistName" focused={focused}
         onFocus={setFocused} onBlur={setFocused}
         placeholder="Your artist or band name"
+        maxLength={50}
         value={artistName}
         onChange={e => setArtistName(e.target.value)}
         onKeyDown={e => { if (e.key === "Enter") handleNext(); }}
@@ -362,6 +363,7 @@ const LocationStep = ({ location, setLocation, locationPlaceId, setLocationPlace
           name="location" focused={focused}
           onFocus={setFocused} onBlur={setFocused}
           placeholder="Start typing your city"
+          maxLength={100}
           value={location}
           onChange={handleType}
           autoComplete="off"

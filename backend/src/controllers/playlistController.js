@@ -1,12 +1,17 @@
+const { cleanLine, cleanParagraph, LIMITS } = require('../utils/cleanText');
 const db = require('../config/db');
 const { getCoverUrl, getAudioUrl } = require('../utils/trackUrls');
 
 // POST /api/playlists — create a new playlist owned by the current user.
 // Sent as multipart/form-data so an optional cover image ('cover' field) can ride along.
 const createPlaylist = async (req, res) => {
-  const { title, description, is_public } = req.body;
+  const { is_public } = req.body;
+  // One-line title and a capped description, no hidden characters (SR-61, SR-62)
+  const title = cleanLine(req.body.title, LIMITS.playlistTitle);
+  const description = req.body.description == null ? null
+    : (cleanParagraph(req.body.description, LIMITS.playlistDescription) || null);
 
-  if (!title || !title.trim()) {
+  if (!title) {
     return res.status(400).json({ error: 'Playlist name is required.' });
   }
 
@@ -272,7 +277,10 @@ const updatePlaylist = async (req, res) => {
     if (!playlist) return res.status(404).json({ error: 'Playlist not found.' });
     if (!owned) return res.status(403).json({ error: 'Not your playlist.' });
 
-    const { title, description, is_public } = req.body;
+    const { is_public } = req.body;
+    const title = req.body.title === undefined ? undefined : cleanLine(req.body.title, LIMITS.playlistTitle);
+    const description = req.body.description === undefined ? undefined
+      : (req.body.description === null ? null : cleanParagraph(req.body.description, LIMITS.playlistDescription));
 
     const nextTitle = title !== undefined ? title.trim() : playlist.title;
     if (!nextTitle) {

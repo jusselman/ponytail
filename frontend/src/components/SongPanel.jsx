@@ -239,6 +239,7 @@ export default function SongPanel({ isOpen, track, onClose, onSaved, onDeleted }
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Track title"
+              maxLength={150}
               disabled={submitting || deleting}
               style={{
                 width: "100%", padding: "12px 14px",
@@ -260,6 +261,7 @@ export default function SongPanel({ isOpen, track, onClose, onSaved, onDeleted }
               value={album}
               onChange={(e) => setAlbum(e.target.value)}
               placeholder="Album or single name"
+              maxLength={150}
               disabled={submitting || deleting}
               style={{
                 width: "100%", padding: "12px 14px",

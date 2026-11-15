@@ -4,7 +4,7 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 
 **Current priority:** while Ponytail is an investor demo, fix the risks a person could see or run into while using the app first ("Visible in demo: Yes"). Risks that only matter once real users, real money or a public server are involved stay open here until we come back for them.
 
-**Last updated:** 2026-11-12 (password hashes kept out of every response)
+**Last updated:** 2026-11-14 (package updates, demo build)
 
 ## How to read this
 
@@ -74,6 +74,11 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 | SR-58 | Seed media folders serve any file type | No | Low | Fixed |
 | SR-59 | Postgres network exposure not confirmed | No | Low | Resolved (localhost only) |
 | SR-60 | Public catalog routes accept any `limit` | No | Low | Open |
+| SR-61 | Hidden direction characters let a name display as a reserved artist | Yes | High | Fixed |
+| SR-62 | No length limit on names, titles and descriptions | Yes | Medium | Fixed |
+| SR-63 | The app's development server is reachable over Wi-Fi and has known flaws | Yes | High | Fixed for demos (`npm run demo`) |
+| SR-64 | Known vulnerabilities in installed packages | No | Medium | Fixed for the running app; Expo upgrade on roadmap |
+| SR-65 | Demo laptop and demo accounts | Yes | Medium | Open |
 | SR-25 | Listeners can use catalog artist names | Yes | Low | Accepted |
 | SR-26 | Usernames made from email get digits added when taken | — | — | Retired (people choose usernames now, SR-35) |
 | SR-27 | Email already in use is only reported at the end of signup | Yes | Low | Accepted |
@@ -315,6 +320,40 @@ Checked the known ways around "never send the password hash" (SR-13), all clear:
 - **Where:** `backend/src/routes/authRoutes.js`.
 - **Fix:** one helper that turns `limit` into a whole number between 1 and 50, defaulting when it's missing or invalid.
 
+## Demo probing review (2026-11-14)
+
+Thinking like someone at a demo looking for a way in. Already clear: no user content is ever inserted as raw HTML (React escapes it), and Bulletin links are forced to `https://`/`http://` on the server, so a `javascript:` link can't be posted.
+
+### SR-61: Hidden direction characters in names
+- **Fixed 2026-11-14:** see the Fixed table below.
+- **What:** Unicode has invisible characters that change the direction text is drawn in. A display name made of a right-to-left override followed by `daehoidaR` passes the reserved-name check (SR-04), but every browser draws it as **Radiohead**. Tested: plain "Radiohead" is refused; the disguised one is accepted and shows as "Radiohead". Zero-width and other invisible characters can likewise make two names look identical. Precedent: "Trojan Source" (2021) used the same characters to disguise code, and malware has long used them to disguise file names.
+- **Where:** display names and artist names (signup, `update-profile`, the artist name check); also playlist, station and track titles, posts and messages, which can carry the same characters.
+- **Fix:** on the server, remove invisible formatting characters (direction controls U+202A–202E and U+2066–2069, zero-width characters, other control characters) from every name and title before checking and saving, and refuse names that are empty afterwards. Usernames are already limited to `a-z 0-9 . _` (SR-35).
+
+### SR-62: No length limit on names and titles
+- **Fixed 2026-11-14:** see the Fixed table below.
+- **What:** display and artist names, location, playlist titles and descriptions, and track titles and albums have no length limit (posts, replies, messages and station names do). Anyone can save a name tens of thousands of characters long, which wrecks every screen it appears on (Bulletin, search, profiles, the player) during a demo.
+- **Where:** `register` in `controllers/authController.js`; `update-profile`, `/tracks/upload` and `PUT /tracks/:id` in `authRoutes.js`; `controllers/playlistController.js`.
+- **Fix:** limits on the server, matched by `maxLength` in the app: display/artist name 50, location 100, playlist title 100, description 500, track title and album 150.
+
+### SR-63: Development server open on Wi-Fi
+- **Fixed for demos 2026-11-14:** `npm run demo` (in `frontend/`) builds the production web app and serves it with `frontend/scripts/serveDemo.js`, which listens on `127.0.0.1:8081` only, serves nothing outside the build, refuses hidden files and anything but reads, and has no developer endpoints. `npm run demo:serve` serves the last build without rebuilding. For development, `npm run web` now starts Expo with `--localhost` (`npm run web:lan` for phone testing); confirm once with `lsof -nP -iTCP:8081 -sTCP:LISTEN` that Expo shows `127.0.0.1`, since Expo's own binding isn't under our control.
+- **What:** the demo runs the app through Expo's development server (`expo start`, port 8081), which by default listens on the network so phones can connect. Anyone on the same Wi-Fi can load the app's full source code from it, and use its developer endpoints, whose dependencies currently include a critical known flaw (`shell-quote`, command injection; SR-64). The React Native dev server had a similar remotely exploitable flaw in 2025 (CVE-2025-11953). The backend is already limited to the laptop (SR-56); this is the other open door.
+- **Where:** `frontend/package.json` scripts.
+- **Fix:** for demos, run a production web build served only on the laptop (`npx expo export --platform web`, then a local static server), which is also faster and has no developer endpoints. For development, start Expo with `--localhost` unless testing on a phone. Confirm with `lsof -nP -iTCP:8081 -sTCP:LISTEN` that it shows `127.0.0.1`, not `*`.
+
+### SR-64: Known package vulnerabilities
+- **Next step:** run `npm audit fix` (no `--force`) on the Mac in `backend/` and `frontend/` (not from a Linux shell: some packages ship separate Mac builds), then restart both and run `npm run demo` to check the app still builds.
+- **Backend done 2026-11-14:** `npm audit fix` updated `multer` (2.5.0), `body-parser` (2.4.0), `qs` (6.17.1) and `proxy-addr` (2.0.8); `npm audit --omit=dev` now reports 0 vulnerabilities. Accepted: 2 moderate in `nodemon` (via `minimatch`), a development-only restart tool that isn't part of the running server; `--force` would only swap in an older `nodemon`. 
+- **Frontend done 2026-11-14:** `npm audit fix` took the frontend from 27 issues to 13, removing the critical one (`shell-quote`, now 1.12.0) and updating `axios` (1.21.1). The app still builds (`expo export`), and the production bundle contains none of the remaining packages. All 13 left are in build tools on the laptop, not in the app people load: `deepmerge`, `glob` and `minimatch` (moderate) inside Expo's tooling, which only an Expo upgrade (55 to 57, a major version with breaking changes) fixes; `zod` (high, memory exhaustion) inside Expo's command-line tool and `image-size` (high, endless loop on crafted HEIF/JXL/ICNS images) inside Metro, the bundler, both pinned by those tools so `npm audit fix` can't move them. None can be reached from the demo, since the app is served as a finished build (SR-63).
+- **Remaining:** plan the Expo 57 upgrade as its own task (it also refreshes React Native), re-test the whole app, then re-run `npm audit`. Add `npm audit` to CI (SR-24).
+- **What:** `npm audit` reports 4 in the backend (high: `multer` upload denial of service; high: `body-parser` and moderate: `qs`, both denial of service; critical: `proxy-addr` address spoofing, which only affects subnet-based `trust proxy` settings, not the hop count used here) and 27 in the frontend, mostly in development tooling (critical: `shell-quote`), plus `axios` (high).
+- **Fix:** `npm audit fix` (without `--force`) in both folders updates all backend ones and most frontend ones to compatible versions; re-test, then handle what's left (the Expo upgrade is a major version). Add `npm audit` to CI (SR-24).
+
+### SR-65: Demo laptop and demo accounts
+- **What:** at a demo, the laptop is the attack surface: an unlocked screen gives access to a signed-in account, the login token in browser storage (SR-11), saved browser passwords and `backend/.env`. Team demo accounts with simple shared passwords are easy to guess.
+- **Fix:** dedicated demo accounts with strong passwords not reused elsewhere; screen lock on; no saved passwords for the demo site; close developer tools; sign out at the end (SR-44 to SR-46 clean up after it). Mock payments accept any `pi_mock_` reference, so fake tips can be recorded through the API; that's contained to the laptop by SR-56 and goes away with real Stripe (SR-19).
+
 ---
 
 ## Roadmap (before or soon after public launch)
@@ -376,6 +415,7 @@ Turn on Dependabot or `npm audit` in CI, keep personal data out of logs, add err
 | SR-51 | Every tab shares one stored login, so signing in as account B in one tab made another tab, still showing account A, act as B; signing out in one tab left others looking signed in. | Each tab listens for the stored login changing in another tab. If a different account signs in, or the login is removed, a signed-in tab ends its own session (player, app state and Radio cleared; the other tab's login left alone) and the login screen explains why. The same account signing in again elsewhere is ignored. Log Out and Delete Account use the same `endSession` routine, now in `UIContext.jsx`. | `context/UIContext.jsx`, `App.js`, `components/SettingsPanel.jsx`, `screens/LoginScreen.jsx`, `accountIdOf` in `services/authService.js` |
 | SR-52 | `backend/.env.example` listed only three settings, so a laptop set up from it had no `JWT_SECRET`, `JWT_EXPIRES_IN` or `SESSION_SECRET`, and every sign-in failed with "Something went wrong". | `.env.example` lists every setting with comments and placeholders, and the backend checks them before starting (`JWT_SECRET` at least 32 characters, `JWT_EXPIRES_IN` a valid length of time, Google settings only when Google sign-in is on), stopping with a list of exactly what to fix. | `backend/.env.example`, `backend/src/config/checkEnv.js`, `backend/src/index.js` |
 | SR-13 | The sign-in check loaded the whole user row with `SELECT *`, including `password_hash`, and passed it on as the signed-in user, so one careless `res.json(user)` would have leaked the hash. | No `SELECT * FROM users` remains (the other two left with Google sign-in). Sign-in selects only the columns it needs and drops the hash after checking it, so the signed-in user never carries it. A server-wide JSON rule (`json replacer` in `index.js`) also removes any `password_hash` field from every response, however deeply nested. Checked: the other `RETURNING *` queries (messages, claims) go through field-picking functions; no route returns other users' emails or the hash; anonymous tippers stay hidden. | `backend/src/config/passport.js`, `backend/src/index.js` |
+| SR-61, SR-62 | A right-to-left override plus "daehoidaR" passed the reserved-name check but displayed as "Radiohead"; names made of blank-looking characters could look empty or identical; and names, places, playlist and track titles and descriptions had no length limit. | Every request's text is cleaned on arrival (`cleanRequestBody` in `index.js`, and in `verifyUploads` for upload forms): direction overrides, control codes and hidden tag characters removed, line breaks and emoji joiners kept, passwords never changed. Names and titles are also flattened to one line, stripped of blank-looking filler and capped: display/artist name 50, location 100, playlist title 100, description 500, track title and album 150; the app's boxes have the same limits. Tested: the disguised name is stored and shown as plain "daehoidaR"; a filler-only name falls back to the username; a 10,000-character name is cut to 50; emoji and line breaks in descriptions survive; a password with odd characters still signs in exactly as typed. | `backend/src/utils/cleanText.js`, `index.js`, `utils/uploads.js`, `controllers/authController.js`, `routes/authRoutes.js`, `controllers/playlistController.js`; `maxLength` in `MusicianOnboardingScreen.jsx`, `EditProfilePanel.jsx`, `PlaylistPanel.jsx`, `UploadTrackPanel.jsx`, `SongPanel.jsx` |
 | SR-08 | A reserved name was only rejected at the last signup step, in a browser `alert()`. | The name step checks with the server before moving on and shows an in-app notice sheet. | `POST /api/auth/check-artist-name`, `MusicianOnboardingScreen.jsx`, `components/PonytailNotice.jsx` |
 
 ---

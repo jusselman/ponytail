@@ -6,7 +6,10 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web --localhost",
+    "web:lan": "expo start --web --lan",
+    "demo": "expo export --platform web && node scripts/serveDemo.js",
+    "demo:serve": "node scripts/serveDemo.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

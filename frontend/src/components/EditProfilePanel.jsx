@@ -298,6 +298,7 @@ export default function EditProfilePanel({ isOpen, onClose }) {
             <FieldLabel>{isArtist ? "Artist / Stage Name" : "Display Name"}</FieldLabel>
             <PonytailInput
               placeholder="Your name"
+              maxLength={50}
               value={displayName}
               disabled={verified}
               onChange={e => setDisplayName(e.target.value)}
@@ -313,6 +314,7 @@ export default function EditProfilePanel({ isOpen, onClose }) {
                 <FieldLabel top>Location</FieldLabel>
                 <PonytailInput
                   placeholder="Your city"
+                  maxLength={100}
                   value={location}
                   onChange={e => setLocation(e.target.value)}
                 />

@@ -277,6 +277,7 @@ export default function UploadTrackPanel({ isOpen, onClose, onUploaded }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Track title"
+              maxLength={150}
               disabled={submitting}
               style={{
                 width: "100%", padding: "12px 14px",
@@ -298,6 +299,7 @@ export default function UploadTrackPanel({ isOpen, onClose, onUploaded }) {
               value={album}
               onChange={(e) => setAlbum(e.target.value)}
               placeholder="Album or single name"
+              maxLength={150}
               disabled={submitting}
               style={{
                 width: "100%", padding: "12px 14px",
