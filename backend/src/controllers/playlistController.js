@@ -1,6 +1,7 @@
 const { cleanLine, cleanParagraph, LIMITS } = require('../utils/cleanText');
 const db = require('../config/db');
 const { getCoverUrl, getAudioUrl } = require('../utils/trackUrls');
+const { deleteUploadedFile } = require('../utils/uploads');
 
 // POST /api/playlists — create a new playlist owned by the current user.
 // Sent as multipart/form-data so an optional cover image ('cover' field) can ride along.
@@ -307,6 +308,9 @@ const updatePlaylist = async (req, res) => {
       [nextTitle, nextDescription, nextIsPublic, nextCoverArtUrl, id]
     );
 
+    // New cover saved, so the one it replaced can go
+    if (req.file && playlist.cover_art_url !== nextCoverArtUrl) deleteUploadedFile(playlist.cover_art_url);
+
     res.json({ playlist: { ...result.rows[0], creator_username: playlist.creator_username } });
   } catch (err) {
     console.error('Update playlist error:', err);
@@ -324,6 +328,7 @@ const deletePlaylist = async (req, res) => {
     if (!owned) return res.status(403).json({ error: 'Not your playlist.' });
 
     await db.query(`DELETE FROM playlists WHERE id = $1`, [id]);
+    deleteUploadedFile(playlist.cover_art_url);
 
     res.json({ success: true });
   } catch (err) {

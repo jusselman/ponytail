@@ -136,6 +136,13 @@ const verifyUploads = (req, res, next) => {
   if (badIndex === -1) {
     try {
       files.forEach((f, i) => renameTo(f, detected[i].ext));
+      // If the route ends up answering with an error (validation, not found,
+      // a failed DB write...), nothing points at these files, so remove them
+      // rather than leaving orphans in assets/uploads. Routes that succeed
+      // keep them.
+      res.on('finish', () => {
+        if (res.statusCode >= 400) files.forEach((f) => removeQuietly(f.path));
+      });
       return next();
     } catch (err) {
       files.forEach((f) => removeQuietly(f.path));
@@ -171,7 +178,29 @@ const uploadPathFromUrl = (uploadDir, publicUrl) => {
   return base ? path.join(uploadDir, base) : null;
 };
 
+// ── The one folder every upload route writes to ──
+const UPLOAD_DIR = path.join(__dirname, '../../assets/uploads');
+
+// Best-effort removal of a stored upload, given the public URL saved in the DB.
+// Never throws: a file that's already gone shouldn't block the delete that
+// called this. URLs that don't point into /uploads/ (seed catalog, external
+// images) resolve to null and are left alone.
+const deleteUploadedFile = (publicUrl) => {
+  if (!publicUrl) return;
+  try {
+    const filePath = uploadPathFromUrl(UPLOAD_DIR, publicUrl);
+    if (!filePath) return;
+    fs.unlink(filePath, (err) => {
+      if (err && err.code !== 'ENOENT') console.error('Failed to delete upload file:', filePath, err.message);
+    });
+  } catch (err) {
+    console.error('Failed to resolve upload file path for deletion:', err.message);
+  }
+};
+
 module.exports = {
+  UPLOAD_DIR,
+  deleteUploadedFile,
   isAllowed,
   extensionFor,
   safeFilename,

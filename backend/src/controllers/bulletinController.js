@@ -1,6 +1,4 @@
-const path = require('path');
-const { uploadPathFromUrl } = require('../utils/uploads');
-const fs = require('fs');
+const { deleteUploadedFile } = require('../utils/uploads');
 const db = require('../config/db');
 
 // ── Bulletin: the community feed. Anyone can post, like and reply; which tags
@@ -16,8 +14,6 @@ const MAX_BODY_LENGTH = 1000;
 const MAX_REPLY_LENGTH = 500;
 const MAX_FIELD_LENGTH = 120;
 const PAGE_SIZE = 20;
-
-const uploadDir = path.join(__dirname, '../../assets/uploads');
 
 const allowedTagsFor = (isArtist) => (
   isArtist ? [...MUSICIAN_TAGS, ...SHARED_TAGS] : [...LISTENER_TAGS, ...SHARED_TAGS]
@@ -118,14 +114,6 @@ const parseJsonField = (value) => {
   try { return JSON.parse(value); } catch { throw 'Malformed request.'; }
 };
 
-// Best-effort removal of an uploaded post photo
-const deleteUploadedFile = (publicUrl) => {
-  const filePath = uploadPathFromUrl(uploadDir, publicUrl);
-  if (!filePath) return;
-  fs.unlink(filePath, (err) => {
-    if (err && err.code !== 'ENOENT') console.error('Failed to delete post image:', err.message);
-  });
-};
 
 // ── Author shape: real accounts link to a profile; seeded demo posts carry
 // a display-only author. ──

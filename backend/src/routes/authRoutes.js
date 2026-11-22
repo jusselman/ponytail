@@ -15,7 +15,7 @@ const fs = require('fs');
 // utils/trackUrls.js for the fuzzy-filesystem-match + upload-branching logic. ──
 const { getCoverUrl, getAudioUrl, buildTrackUrls } = require('../utils/trackUrls');
 const geo = require('../services/geo');
-const { isAllowed, safeFilename, verifyUploads, uploadPathFromUrl } = require('../utils/uploads');
+const { isAllowed, safeFilename, verifyUploads, deleteUploadedFile } = require('../utils/uploads');
 const { assertNameAvailable, effectiveName, sendNameError, verifiedAccountForArtist, NameError } = require('../services/artistIdentity');
 const { assertUsernameAvailable } = require('../services/usernames');
 const { cleanLine, cleanParagraph, LIMITS } = require('../utils/cleanText');
@@ -46,10 +46,17 @@ router.post('/upload-avatar', requireAuth, limits.uploads, upload.single('avatar
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     const avatarUrl = `http://localhost:5000/uploads/${req.file.filename}`;
-    await pool.query(
-      'UPDATE users SET profile_picture = $1 WHERE id = $2',
+    // Swap in the new picture and get the old one back in the same statement,
+    // then remove the old file so replaced avatars don't pile up on disk.
+    const result = await pool.query(
+      `UPDATE users u SET profile_picture = $1
+       FROM (SELECT profile_picture FROM users WHERE id = $2) prev
+       WHERE u.id = $2
+       RETURNING prev.profile_picture AS previous`,
       [avatarUrl, req.user.id]
     );
+    const previous = result.rows[0]?.previous;
+    if (previous && previous !== avatarUrl) deleteUploadedFile(previous);
     res.json({ avatarUrl });
   } catch (err) {
     console.error('Avatar upload error:', err);
@@ -123,6 +130,14 @@ router.post(
       // upload — every track this musician publishes gets the same tags, matching
       // the enriched_db.csv vocabulary just like Andrew's imported catalog rows,
       // and feeding the personalized radio station / Hot in Here matching. ──
+      // ── Re-uploading a title this musician already has overwrites that row
+      // (ON CONFLICT below), so note its current files to remove afterwards. ──
+      const previousFiles = await pool.query(
+        `SELECT uploaded_audio_url, uploaded_cover_url FROM seed_tracks
+         WHERE title = $1 AND artist = $2 AND uploader_user_id = $3 AND is_user_upload = TRUE`,
+        [title.trim(), artistName, req.user.id]
+      );
+
       const result = await pool.query(
         `INSERT INTO seed_tracks
            (title, artist, album, genre, subgenre, mood, tag5, location,
@@ -165,6 +180,11 @@ router.post(
         if (coverFile) fs.unlink(coverFile.path, () => {});
         return res.status(409).json({ error: `A track called "${title.trim()}" by ${artistName} already exists.` });
       }
+      const previous = previousFiles.rows[0];
+      if (previous) {
+        if (previous.uploaded_audio_url !== uploadedAudioUrl) deleteUploadedFile(previous.uploaded_audio_url);
+        if (previous.uploaded_cover_url !== uploadedCoverUrl) deleteUploadedFile(previous.uploaded_cover_url);
+      }
       res.status(201).json({
         track: {
           ...track,
@@ -205,22 +225,6 @@ router.get('/tracks/mine', requireAuth, async (req, res) => {
   }
 });
 
-// ── Best-effort removal of a locally-stored upload file from assets/uploads,
-// given its public URL. Never throws — a missing/already-deleted file shouldn't
-// block the DB delete from succeeding. ──
-const deleteUploadedFile = (publicUrl) => {
-  if (!publicUrl) return;
-  try {
-    const filePath = uploadPathFromUrl(uploadDir, publicUrl);
-    if (!filePath) return;
-    fs.unlink(filePath, (err) => {
-      if (err && err.code !== 'ENOENT') console.error('Failed to delete upload file:', filePath, err.message);
-    });
-  } catch (err) {
-    console.error('Failed to resolve upload file path for deletion:', err.message);
-  }
-};
-
 // Delete one of the current musician's own uploaded tracks. Ownership is checked
 // via uploader_user_id so a musician can't delete another account's upload, and
 // is_user_upload=true so this can never touch Andrew's imported catalog rows.
@@ -240,6 +244,11 @@ router.delete('/tracks/:id', requireAuth, async (req, res) => {
     }
 
     const { uploaded_audio_url, uploaded_cover_url } = result.rows[0];
+    // Playlist rows store a copy of the track's URLs, so drop the ones
+    // pointing at this upload instead of leaving dead entries in playlists.
+    if (uploaded_audio_url) {
+      await pool.query('DELETE FROM playlist_tracks WHERE audio_url = $1', [uploaded_audio_url]);
+    }
     deleteUploadedFile(uploaded_audio_url);
     deleteUploadedFile(uploaded_cover_url);
 
@@ -271,11 +280,10 @@ router.put('/tracks/:id', requireAuth, limits.uploads, upload.single('cover'), v
     );
     if (ownCheck.rows.length === 0) return res.status(404).json({ error: 'Upload not found.' });
 
-    let uploadedCoverUrl = ownCheck.rows[0].uploaded_cover_url;
-    if (req.file) {
-      deleteUploadedFile(uploadedCoverUrl); // replace, not accumulate — remove the old cover file
-      uploadedCoverUrl = `http://localhost:5000/uploads/${req.file.filename}`;
-    }
+    const previousCoverUrl = ownCheck.rows[0].uploaded_cover_url;
+    const uploadedCoverUrl = req.file
+      ? `http://localhost:5000/uploads/${req.file.filename}`
+      : previousCoverUrl;
 
     const result = await pool.query(
       `UPDATE seed_tracks
@@ -286,6 +294,9 @@ router.put('/tracks/:id', requireAuth, limits.uploads, upload.single('cover'), v
     );
 
     const track = result.rows[0];
+    // Replace, not accumulate: the old cover goes only after the update
+    // succeeded, so a failed save never leaves the track pointing at nothing.
+    if (req.file && previousCoverUrl !== uploadedCoverUrl) deleteUploadedFile(previousCoverUrl);
     res.json({
       track: {
         ...track,
@@ -1296,35 +1307,58 @@ router.put('/update-profile', async (req, res) => {
   }
 });
 
-// Permanently delete the current user's account. Most of what they own cascades
-// automatically via ON DELETE CASCADE on the users row (playlists → playlist_tracks,
-// playlist_follows, user_follows — see schema.sql and migrations 004/005). Tracks
-// they uploaded are deliberately NOT deleted: seed_tracks.uploader_user_id is
-// ON DELETE SET NULL (migration 006), so their uploads stay in the shared catalog,
-// just unattributed — same as how track deletion already leaves the catalog intact
-// for everyone else. user_play_history and user_search_selections aren't declared
-// in any tracked schema file (see the schema-drift note — enriched_db/seed_tracks
-// evolved outside schema.sql, and these two tables did too), so this can't assume
-// they cascade; they're cleared explicitly in the same transaction instead.
+// Permanently delete the current user's account and everything they made.
+// Most rows cascade from the users row (playlists → playlist_tracks,
+// playlist_follows, user_follows, bulletin posts/replies, messages — see
+// schema.sql and the migrations). Three things don't, and are handled here:
+//   1. Tracks they uploaded: seed_tracks.uploader_user_id is ON DELETE SET NULL
+//      (migration 006), which used to leave uploads live in the catalog, just
+//      unattributed. The privacy policy and the App Store / Google Play
+//      deletion rules promise they're removed, so they're deleted explicitly,
+//      along with other users' playlist entries that point at them.
+//   2. user_play_history and user_search_selections aren't in any tracked
+//      schema file (schema drift), so they're cleared explicitly.
+//   3. Files on disk: avatar, track audio + covers, playlist covers and post
+//      photos are collected inside the transaction and removed after COMMIT.
 router.delete('/account', requireAuth, async (req, res) => {
+  const userId = req.user.id;
   // ── A real transaction needs one dedicated client — pool.query() (this file's
   // `pool` is actually config/db.js's { query, pool } wrapper) borrows a fresh
   // connection per call, so BEGIN/COMMIT would land on different connections.
   // Same pattern as playlistController.js's reorderPlaylistTracks. ──
   const client = await pool.pool.connect();
   try {
-    const userResult = await client.query('SELECT profile_picture FROM users WHERE id = $1', [req.user.id]);
-    const avatarUrl = userResult.rows[0]?.profile_picture || null;
-
     await client.query('BEGIN');
-    await client.query('DELETE FROM user_play_history WHERE user_id = $1', [req.user.id]);
-    await client.query('DELETE FROM user_search_selections WHERE user_id = $1', [req.user.id]);
-    await client.query('DELETE FROM users WHERE id = $1', [req.user.id]);
+
+    // Every uploaded file this account owns, gathered before the rows go
+    const files = await client.query(
+      `SELECT profile_picture AS url FROM users WHERE id = $1
+       UNION ALL SELECT uploaded_audio_url FROM seed_tracks WHERE uploader_user_id = $1 AND is_user_upload = TRUE
+       UNION ALL SELECT uploaded_cover_url FROM seed_tracks WHERE uploader_user_id = $1 AND is_user_upload = TRUE
+       UNION ALL SELECT cover_art_url FROM playlists WHERE user_id = $1
+       UNION ALL SELECT image_url FROM bulletin_posts WHERE author_id = $1`,
+      [userId]
+    );
+    const fileUrls = files.rows.map((r) => r.url).filter(Boolean);
+
+    // Their tracks leave everyone's playlists, then the catalog
+    await client.query(
+      `DELETE FROM playlist_tracks WHERE audio_url IN (
+         SELECT uploaded_audio_url FROM seed_tracks
+         WHERE uploader_user_id = $1 AND is_user_upload = TRUE AND uploaded_audio_url IS NOT NULL)`,
+      [userId]
+    );
+    await client.query('DELETE FROM seed_tracks WHERE uploader_user_id = $1 AND is_user_upload = TRUE', [userId]);
+
+    await client.query('DELETE FROM user_play_history WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM user_search_selections WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM users WHERE id = $1', [userId]);
     await client.query('COMMIT');
 
-    // Best-effort — an avatar file missing on disk shouldn't undo an otherwise
-    // successful account deletion.
-    deleteUploadedFile(avatarUrl);
+    // Files go only once the rows are gone for good. Best-effort: a file
+    // already missing on disk shouldn't undo a successful deletion, and
+    // scripts/sweepOrphanUploads.js catches anything left behind.
+    fileUrls.forEach(deleteUploadedFile);
 
     res.json({ success: true });
   } catch (err) {
