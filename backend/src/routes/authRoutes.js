@@ -30,7 +30,7 @@ if (!fs.existsSync(uploadDir)) {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   // Extension comes from the checked type, never the user's filename
-  filename: (req, file, cb) => cb(null, safeFilename('avatar', req.user.id, file.mimetype)),
+  filename: (req, file, cb) => cb(null, safeFilename('avatar', file.mimetype)),
 });
 
 const upload = multer({
@@ -71,7 +71,7 @@ const trackStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
     const prefix = file.fieldname === 'audio' ? 'track-audio' : 'track-cover';
-    cb(null, safeFilename(prefix, req.user.id, file.mimetype));
+    cb(null, safeFilename(prefix, file.mimetype));
   },
 });
 

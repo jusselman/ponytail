@@ -1,4 +1,6 @@
 const fs = require('fs');
+const crypto = require('crypto');
+const sharp = require('sharp');
 const { cleanDeep } = require('./cleanText');
 const path = require('path');
 
@@ -76,8 +78,11 @@ const extensionFor = (mimetype) => ALLOWED[mimetype]?.ext;
 const isAllowed = (mimetype, kind) => ALLOWED[mimetype]?.kind === kind;
 
 // For multer's diskStorage filename: `${prefix}-${userId}-${timestamp}${ext}`
-const safeFilename = (prefix, userId, mimetype) =>
-  `${prefix}-${userId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${extensionFor(mimetype)}`;
+// Random, unguessable names. They used to carry the uploader's user ID and the
+// upload time, which told anyone holding a link who uploaded it and when, and
+// made other files' names easier to guess.
+const safeFilename = (prefix, mimetype) =>
+  `${prefix}-${crypto.randomUUID()}${extensionFor(mimetype)}`;
 
 const readHead = (filePath) => {
   const fd = fs.openSync(filePath, 'r');
@@ -117,6 +122,32 @@ const renameTo = (file, ext) => {
 
 const removeQuietly = (filePath) => fs.unlink(filePath, () => {});
 
+// ── Image clean-up (SECURITY_RISKS.md SR-15) ──
+// Phone photos carry EXIF metadata: camera, time taken and often the GPS
+// position where the photo was taken. The privacy policy says Ponytail never
+// collects precise location, so every uploaded image is decoded and saved
+// again with sharp, which keeps only the pixels. That also turns phone photos
+// the right way up, caps their size, and drops anything hidden inside a file
+// that only pretends to be an image.
+const MAX_IMAGE_SIDE = 2048;
+const OUTPUT = {
+  '.jpg':  (img) => img.jpeg({ quality: 85, mozjpeg: true }),
+  '.png':  (img) => img.png({ compressionLevel: 9 }),
+  '.webp': (img) => img.webp({ quality: 85 }),
+  '.gif':  (img) => img.gif(),
+};
+
+const cleanImage = async (filePath) => {
+  const ext = path.extname(filePath).toLowerCase();
+  const animated = ext === '.gif' || ext === '.webp';
+  let img = sharp(filePath, { animated, limitInputPixels: 40_000_000 });
+  // Turn by the EXIF orientation before it's dropped (still images only)
+  if (!animated) img = img.rotate();
+  img = img.resize({ width: MAX_IMAGE_SIDE, height: MAX_IMAGE_SIDE, fit: 'inside', withoutEnlargement: true });
+  const data = await OUTPUT[ext](img).toBuffer();   // metadata is not copied
+  await fs.promises.writeFile(filePath, data);
+};
+
 // Express middleware: run straight after a multer middleware. Checks every
 // saved file; if any one is not what it claims to be, deletes all of them and
 // answers 400 so nothing half-saved is left behind.
@@ -131,11 +162,31 @@ const verifyUploads = (req, res, next) => {
   ];
   if (files.length === 0) return next();
 
+  const reject = (file) => {
+    files.forEach((f) => removeQuietly(f.path));
+    return res.status(400).json({
+      error: file.mimetype.startsWith('audio/')
+        ? "That audio file couldn't be read. Please use an MP3, M4A, WAV, AAC or OGG file."
+        : "That image couldn't be read. Please use a JPG, PNG, WEBP or GIF image.",
+    });
+  };
+
   const detected = files.map(detectFormat);
   const badIndex = detected.findIndex((d) => !d);
-  if (badIndex === -1) {
-    try {
-      files.forEach((f, i) => renameTo(f, detected[i].ext));
+  if (badIndex !== -1) return reject(files[badIndex]);
+
+  try {
+    files.forEach((f, i) => renameTo(f, detected[i].ext));
+  } catch (err) {
+    files.forEach((f) => removeQuietly(f.path));
+    return next(err);
+  }
+
+  // Strip metadata from every image before any route sees it. A file whose
+  // header looked right but won't decode is treated like any other bad image.
+  const images = files.filter((f, i) => detected[i] && MIME_FOR_EXT[detected[i].ext]?.startsWith('image/'));
+  Promise.all(images.map((f) => cleanImage(f.path).catch(() => { throw f; })))
+    .then(() => {
       // If the route ends up answering with an error (validation, not found,
       // a failed DB write...), nothing points at these files, so remove them
       // rather than leaving orphans in assets/uploads. Routes that succeed
@@ -143,20 +194,9 @@ const verifyUploads = (req, res, next) => {
       res.on('finish', () => {
         if (res.statusCode >= 400) files.forEach((f) => removeQuietly(f.path));
       });
-      return next();
-    } catch (err) {
-      files.forEach((f) => removeQuietly(f.path));
-      return next(err);
-    }
-  }
-  const bad = files[badIndex];
-
-  files.forEach((f) => removeQuietly(f.path));
-  return res.status(400).json({
-    error: bad.mimetype.startsWith('audio/')
-      ? "That audio file couldn't be read. Please use an MP3, M4A, WAV, AAC or OGG file."
-      : "That image couldn't be read. Please use a JPG, PNG, WEBP or GIF image.",
-  });
+      next();
+    })
+    .catch((badFile) => reject(badFile));
 };
 
 // Static-serving guard for /uploads: only known media extensions, and the
@@ -200,6 +240,7 @@ const deleteUploadedFile = (publicUrl) => {
 
 module.exports = {
   UPLOAD_DIR,
+  cleanImage,
   deleteUploadedFile,
   isAllowed,
   extensionFor,

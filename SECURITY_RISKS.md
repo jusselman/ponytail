@@ -4,7 +4,7 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 
 **Current priority:** while Ponytail is an investor demo, fix the risks a person could see or run into while using the app first ("Visible in demo: Yes"). Risks that only matter once real users, real money or a public server are involved stay open here until we come back for them.
 
-**Last updated:** 2026-11-14 (package updates, demo build)
+**Last updated:** 2026-11-25 (upload clean-up, photo metadata, random filenames)
 
 ## How to read this
 
@@ -31,9 +31,9 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 | SR-11 | Login token stored unencrypted and valid for 7 days with no revocation | No | High | Open |
 | SR-12 | Session cookie not ready for production | No | Medium | Fixed (removed) |
 | SR-13 | Password hashes loaded by `SELECT * FROM users` | No | Low | Fixed |
-| SR-14 | Deleting an account leaves the artist's music and files online | Yes | High | Open |
-| SR-15 | Uploaded photos keep hidden metadata, possibly GPS location | No | Medium | Open |
-| SR-16 | Rejected uploads stay on disk; no storage limits | No | Medium | Open |
+| SR-14 | Deleting an account leaves the artist's music and files online | Yes | High | Fixed |
+| SR-15 | Uploaded photos keep hidden metadata, possibly GPS location | No | Medium | Fixed |
+| SR-16 | Rejected uploads stay on disk; no storage limits | No | Medium | Partly fixed (storage limits open) |
 | SR-17 | Uploaded music can be downloaded by anyone with the link | No | Medium | Roadmap |
 | SR-18 | Server addresses hard-coded as `http://localhost:5000`; no HTTPS | No | Medium | Roadmap |
 | SR-19 | Payments are mocked; the real Stripe integration has its own requirements | No | High | Roadmap |
@@ -121,16 +121,19 @@ A running list of every known security and privacy risk in Ponytail: what it is,
 - **Fix:** select only the columns each query needs, and load `password_hash` only in the password check.
 
 ### SR-14: Deleting an account leaves the artist's music online
+- **Fixed 2026-11-21:** see the Fixed table below.
 - **What:** when an artist deletes their account, their uploaded tracks stay public, because the database only clears the owner (`ON DELETE SET NULL` on `seed_tracks.uploader_user_id`). Their audio, covers, playlist covers and Bulletin photos also stay on disk, downloadable by anyone with the link. That breaks the promise that artists own their work, and conflicts with privacy laws (CCPA, GDPR) and app store rules on account deletion.
 - **Where:** `DELETE /api/auth/account` in `backend/src/routes/authRoutes.js` (only the avatar file is removed); migration `006_seed_tracks_uploads.sql`.
 - **Fix:** in the same transaction, delete the user's uploaded `seed_tracks` rows, then remove every file the account owns (track audio and covers, playlist covers, post photos, avatar). Decide what happens to tips the artist received and to other users' playlists that include those tracks.
 
 ### SR-15: Hidden photo metadata
+- **Fixed 2026-11-25:** see the Fixed table below.
 - **What:** photos are saved exactly as uploaded. Phone photos usually carry EXIF metadata such as camera model, date and often GPS location, so a Bulletin photo taken at home could reveal a home address. Two of the JPGs already in `assets/uploads` contain EXIF data (without GPS).
 - **Where:** all image uploads (avatar, playlist cover, track cover, Bulletin photo); `backend/src/utils/uploads.js`.
 - **Fix:** after `verifyUploads`, re-encode every image with `sharp`. That strips metadata, fixes rotation, caps dimensions, and removes anything hidden inside a file that only pretends to be an image. Run a one-off script over the existing uploads.
 
 ### SR-16: Rejected uploads stay on disk; no storage limits
+- **Partly fixed 2026-11-21:** `verifyUploads` now removes a request's saved files whenever the route answers with an error, on every upload route. Still open: checking permission before multer runs, per-account storage limits, and multer `fields`/`files` limits.
 - **What:** the track upload saves the file (up to 25MB) before checking that the account is an artist, and the file isn't deleted when the request is refused (not an artist, missing title). Someone could fill the server's disk with repeated attempts. There is also no per-account storage limit, and the multer setups don't cap the number of form fields.
 - **Where:** `POST /api/auth/tracks/upload` and `PUT /api/auth/tracks/:id` in `authRoutes.js`; `playlistRoutes.js` and `bulletinRoutes.js`.
 - **Fix:** check permission before multer runs; delete any saved file whenever a request ends without success (one shared helper); add per-account storage limits and multer `fields`/`files` limits; rate limit uploads (SR-09).
@@ -359,6 +362,7 @@ Thinking like someone at a demo looking for a way in. Already clear: no user con
 ## Roadmap (before or soon after public launch)
 
 ### SR-17: Music can be downloaded by anyone with the link
+Partial step 2026-11-25: upload filenames are now random UUIDs (`avatar-<uuid>.png`) instead of `<prefix>-<user id>-<timestamp>`, so a link no longer reveals who uploaded a file or when, and names can't be guessed. Older files keep their names until replaced. When uploads move to object storage, keep the bucket private (block all public access, no listing) and serve files only through the CDN or signed links.
 Everything in `/uploads` is public, so any listener can save an artist's audio file. Move uploads to object storage (S3 or Cloudflare R2) behind a CDN, serve audio through signed links that expire after a few minutes, and consider streaming formats (HLS) that are harder to rip.
 
 ### SR-18: Hard-coded server addresses, no HTTPS
@@ -417,6 +421,8 @@ Turn on Dependabot or `npm audit` in CI, keep personal data out of logs, add err
 | SR-13 | The sign-in check loaded the whole user row with `SELECT *`, including `password_hash`, and passed it on as the signed-in user, so one careless `res.json(user)` would have leaked the hash. | No `SELECT * FROM users` remains (the other two left with Google sign-in). Sign-in selects only the columns it needs and drops the hash after checking it, so the signed-in user never carries it. A server-wide JSON rule (`json replacer` in `index.js`) also removes any `password_hash` field from every response, however deeply nested. Checked: the other `RETURNING *` queries (messages, claims) go through field-picking functions; no route returns other users' emails or the hash; anonymous tippers stay hidden. | `backend/src/config/passport.js`, `backend/src/index.js` |
 | SR-61, SR-62 | A right-to-left override plus "daehoidaR" passed the reserved-name check but displayed as "Radiohead"; names made of blank-looking characters could look empty or identical; and names, places, playlist and track titles and descriptions had no length limit. | Every request's text is cleaned on arrival (`cleanRequestBody` in `index.js`, and in `verifyUploads` for upload forms): direction overrides, control codes and hidden tag characters removed, line breaks and emoji joiners kept, passwords never changed. Names and titles are also flattened to one line, stripped of blank-looking filler and capped: display/artist name 50, location 100, playlist title 100, description 500, track title and album 150; the app's boxes have the same limits. Tested: the disguised name is stored and shown as plain "daehoidaR"; a filler-only name falls back to the username; a 10,000-character name is cut to 50; emoji and line breaks in descriptions survive; a password with odd characters still signs in exactly as typed. | `backend/src/utils/cleanText.js`, `index.js`, `utils/uploads.js`, `controllers/authController.js`, `routes/authRoutes.js`, `controllers/playlistController.js`; `maxLength` in `MusicianOnboardingScreen.jsx`, `EditProfilePanel.jsx`, `PlaylistPanel.jsx`, `UploadTrackPanel.jsx`, `SongPanel.jsx` |
 | SR-08 | A reserved name was only rejected at the last signup step, in a browser `alert()`. | The name step checks with the server before moving on and shows an in-app notice sheet. | `POST /api/auth/check-artist-name`, `MusicianOnboardingScreen.jsx`, `components/PonytailNotice.jsx` |
+| SR-14 | Deleting an account cleared only the owner on the artist's tracks, so their music stayed live in the catalog, and left their audio, covers, playlist covers and post photos on disk. Replaced avatars and playlist covers, deleted playlists' covers and re-uploaded tracks' old files also piled up. | Account deletion removes the user's uploaded tracks (and other users' playlist entries for them) in the same transaction, then every file the account owned. Replacing or deleting an avatar, playlist cover, track cover or re-uploaded track removes the old file, only after the save succeeds. `scripts/sweepOrphanUploads.js` reports or deletes files no row points to. | `routes/authRoutes.js`, `controllers/playlistController.js`, `utils/uploads.js`, `scripts/sweepOrphanUploads.js` |
+| SR-15 | Images were saved exactly as uploaded, keeping EXIF metadata (camera, time taken, possibly GPS location). 12 of the 22 images in `assets/uploads` carried it. | `verifyUploads` re-encodes every image with `sharp` before any route sees it: metadata dropped, phone photos turned upright, longest side capped at 2048px, oversized images refused, files that don't decode rejected. `scripts/stripImageMetadata.js` cleans images uploaded before the fix. | `utils/uploads.js`, `scripts/stripImageMetadata.js` |
 
 ---
 

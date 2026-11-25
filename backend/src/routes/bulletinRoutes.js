@@ -19,7 +19,7 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 const imageUpload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, safeFilename('post', req.user.id, file.mimetype)),
+    filename: (req, file, cb) => cb(null, safeFilename('post', file.mimetype)),
   }),
   limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
   fileFilter: (req, file, cb) => {

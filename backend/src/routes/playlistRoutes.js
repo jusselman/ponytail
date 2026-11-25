@@ -29,7 +29,7 @@ if (!fs.existsSync(uploadDir)) {
 // ── Multer config for playlist cover images ──
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, safeFilename('playlist-cover', req.user.id, file.mimetype)),
+  filename: (req, file, cb) => cb(null, safeFilename('playlist-cover', file.mimetype)),
 });
 
 const upload = multer({
